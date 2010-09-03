@@ -3,6 +3,8 @@
 module Main where
   
   import Data.Data
+  import Language.C
+  import Language.C.System.GCC
   import System.Console.CmdArgs
   import Text.Printf
   
@@ -10,16 +12,24 @@ module Main where
     path :: FilePath
   } deriving (Show, Data, Typeable)
   
+  usage :: Options
   usage = Options {
     path = def &= typFile &= argPos 0
   }
   
+  arguments :: IO Options
   arguments = cmdArgs $ usage &= program "pony" &= summary "pony v0.0.0.1, (c) Patrick Thomson 2010"
   
-  compileFile :: Options -> IO Bool
-  compileFile opts = do
-    printf "going to compile file '%s'." (path opts)
-    return True
+  gccPath :: FilePath
+  gccPath = "/usr/bin/llvm-gcc"
+  
+  compileFile :: Options -> IO ()
+  compileFile (Options { path = p }) = do
+    let gcc = newGCC gccPath
+    parsed ← parseCFile gcc Nothing [] p
+    case parsed of 
+      Left err → print err
+      Right trans → print $ pretty trans
   
   main :: IO ()
-  main = (print =<< compileFile =<< arguments) >> return ()
+  main = arguments >>= compileFile
