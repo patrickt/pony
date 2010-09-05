@@ -1,17 +1,19 @@
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE UnicodeSyntax, TypeFamilies, GADTs #-}
 
 module Language.Pony.Node where
   
-  import Data.Data
-  import Data.Dynamic
-  import Data.Maybe
   import Language.C.Data.Node
-  import Language.C.Pretty
   import Language.C.Syntax.AST
-  import Text.PrettyPrint.HughesPJ
-  
-  class PNode a where
-    -- Pony nodes may be convertible directly into C nodes.
-    toCNode :: (CNode c) => a -> Maybe c
-  
-  instance (CNode a) => (PNode a) where toCNode = id
+  import Language.C.Syntax.Constants
+    
+  -- The Concrete data family represents things that can be compiled down to CNodes.
+  -- At the end of all of the transformations, every node in the syntax tree must 
+  -- be a Concrete node. The ConcreteRep type is necessary 
+  class Concrete a where
+    type CNodelike :: *
+    toCNode :: a -> CNodelike
+    
+  instance Concrete Integer where
+    type CNodelike = CConst
+    toCNode x = CIntConst (cInteger x) internalNode
+    
