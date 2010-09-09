@@ -12,9 +12,23 @@ module Language.Pony.Parser where
   
   type Parser t = ∀ a. ParsecT String a Identity t
   
+  preamble :: Parser String
+  preamble = string "%% Language: "
+  
   languageDeclarator :: Parser Language
-  languageDeclarator = do
-    string "%% Language: "
-    lang ← manyTill anyChar (try (string "\n"))
-    return $ Language lang
+  languageDeclarator = preamble >> anyChar `manyTill` newline >>= return . Language
+  
+  pony :: Language -> Parser [String]
+  pony a = case (runParser languageDeclarator () "console" a) of 
+      (Right _) → ponyC
+      (Left _) → parserFail "Pony only supports PonyC at this point."
+  
+  whitespace :: Parser ()
+  whitespace = Token.whiteSpace lexer
+  
+  ponyC :: Parser [String]
+  ponyC = anything `sepEndBy` whitespace
+  
+  anything :: Parser String
+  anything = many1 anyChar
   

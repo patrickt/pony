@@ -22,7 +22,14 @@ module Main where
   arguments = cmdArgs $ usage &= program "pony" &= summary "pony v0.0.0.1, (c) Patrick Thomson 2010"
   
   parsePony :: Options -> IO ()
-  parsePony (Options { path }) = readFile path >>= parseTest languageDeclarator
+  parsePony (Options { path }) = do
+    contents ← readFile path
+    let parser = runParser languageDeclarator () "preamble" contents
+    case Parser of 
+      (Left a) → print a
+      (Right b) → 
+    parseTest parser contents
     
   main :: IO ()
-  main = arguments >>= parsePony
+  main = do
+    arguments >>= parsePony

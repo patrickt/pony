@@ -1,8 +1,8 @@
-{-# LANGUAGE UnicodeSyntax, TypeFamilies, GADTs #-}
+{-# LANGUAGE UnicodeSyntax #-}
 
 module Language.Pony.Node where
   
-  import Control.Applicative
+  import Data.Word
   import Language.C.Data.Node
   import Language.C.Syntax.AST
   import Language.C.Syntax.Constants
@@ -12,14 +12,13 @@ module Language.Pony.Node where
   -- be a Concrete node. New functions and builtins can be provided by implementing new 
   -- instances of Concrete.
   class Concrete a where
-    toExpr :: a -> CExpr
+    toExpr :: a → CExpr
   
   -- All C expressions are representable in a concrete manner, obviously.
   instance Concrete CExpr where toExpr = id
   
-  -- But so are all Haskell Ints.
-  instance Concrete Int where
-    toExpr i = CConst $ CIntConst boosted internalNode where boosted = cInteger . toInteger $ i
-    
-    
-  
+  -- But so are all Haskell Words.
+  instance Concrete Word where
+    toExpr i = buildNode upcast
+      where upcast = cInteger . toInteger $ i
+            buildNode x = CConst $ CIntConst x internalNode
