@@ -4,6 +4,7 @@ module Language.Pony.Node where
 
   import Data.Tree
   import Data.Data
+  import Data.Maybe
   import Language.C.Data.Node
   import Language.C.Syntax.AST
   import Language.C.Syntax.Constants
