@@ -1,4 +1,4 @@
-%% Language: C99
+
 
 int puts(const char *);
 

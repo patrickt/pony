@@ -21,8 +21,8 @@ A syntax transformer maps a stream of tokens to some semantic information.
 
 Given some semantic precedence,
 > data SemanticPrecedence
-a compiler is a kind that combines transformers according to that precedence.
-> type Compiler t n = TokenStream t -> [Transformer t n] -> SemanticPrecedence t n -> S n
+a compiler is a kind that combines transformers according to a given precedence.
+> type Compiler t n = TokenStream t -> [Transformer t (Semantic n)] -> SemanticPrecedence -> S n
 
 Given a notion of a C99 node and some FoFCode type that can be compiled to Filet-O-Fish,
 > data FoFCode
@@ -32,3 +32,4 @@ PonyC is a compiler that generates Filet-o-Fish code from C99-like nodes.
 > ponyC :: Compiler C99 FoFCode
 > ponyC = undefined
 
+I need to learn how monad transformers work.
