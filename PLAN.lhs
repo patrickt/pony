@@ -33,3 +33,9 @@ PonyC is a compiler that generates Filet-o-Fish code from C99-like nodes.
 > ponyC = undefined
 
 I need to learn how monad transformers work.
+Why? I need to be able to describe at the type-level that a nodelike type - say PyNode - has behavior with respect to some other type a, and that at some point there will exist a type a such that PyNode can be converted into an a and made into a CNode.
+
+Notes on type, newtype, data, family, and instance:
+data x = Y <Constant> :: world-effectful. declares type 'x' and constructor Y :: Constant.
+
+type x = (y :: type) :: type-effectful. declares type 'x' as a synonym for y
