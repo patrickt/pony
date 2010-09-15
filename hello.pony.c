@@ -1,5 +1,3 @@
-
-
 int puts(const char *);
 
 int main(int argc, char const** argv)

@@ -1,0 +1,11 @@
+FunAttr (in Constructs) could be extended.
+FoFConst should become a data family, I think.
+FoFConst maybe should derive Functor, if possible
+
+Expressions.lhs is the sort of shit that has GOT TO GO.
+Otherwise, people could just lug around FoF and 
+
+class family PonyConstant where
+  PonyConstant :: Data
+
+Does runAlgebra need to be abstracted to the type-level?
