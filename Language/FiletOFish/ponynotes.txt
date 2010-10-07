@@ -1,9 +1,9 @@
 FunAttr (in Constructs) could be extended.
 FoFConst should become a data family, I think.
-FoFConst maybe should derive Functor, if possible
+FoFConst maybe should derive Functor, if possible.
 
 Expressions.lhs is the sort of shit that has GOT TO GO.
-Otherwise, people could just lug around FoF and 
+Otherwise, people could just lug around FoF.
 
 class family PonyConstant where
   PonyConstant :: Data

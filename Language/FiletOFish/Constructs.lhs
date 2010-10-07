@@ -1,3 +1,5 @@
+{-# LANGUAGE GADTs #-}
+
 %if false  
   Copyright (c) 2009, ETH Zurich.
   All rights reserved.
@@ -27,88 +29,38 @@ The FoF language is defined by the syntax tree below. It gathers every
 constructs defined in the |Constructs| directory as well as foreign
 functions defined in the |Libc| and |Libbarrelfish| directories.
 
-
-> data FoFConst a 
-
-Foreign-call to libc Assert:
-
->     = Assert PureExpr a
-
-Foreign-call to libc Printf:
-
->     | Printf String [PureExpr] a
-
-Foreign-call to libarrelfish |has_descendants|:
-
->     | HasDescendants (Maybe String) PureExpr (PureExpr -> a)
-
-Foreign-call to libarrelfish |mem_to_phys|:
-
->     | MemToPhys (Maybe String) PureExpr (PureExpr -> a)
-
-Support for Union:
-
->     | NewUnion (Maybe String) AllocUnion String [(String,TypeExpr)] (String, Data) (Loc -> a)
->     | ReadUnion Loc String (Data -> a)
->     | WriteUnion Loc String Data a
-
-Support for Typedef:
-
->     | Typedef TypeExpr a
->     | TypedefE String TypeExpr a
-
-Support for Structures:
-
->     | NewStruct (Maybe String) AllocStruct String [(String,(TypeExpr,Data))] (Loc -> a)
->     | ReadStruct Loc String (Data -> a)
->     | WriteStruct Loc String Data a
-
-Support for Strings:
-
->     | NewString (Maybe String) String (Loc -> a)
-
-Support for Reference cells:
-
->      | NewRef (Maybe String) Data (Loc -> a)
->      | ReadRef Loc (Data -> a)
->      | WriteRef Loc Data a
-
-Support for Functions:
-
->      | NewDef [FunAttr] String Function TypeExpr [(TypeExpr, Maybe String)] 
->               (PureExpr -> a)
->      | CallDef (Maybe String) PureExpr [PureExpr] 
->                (PureExpr -> a)
->      | Return PureExpr
-
-Support for Enumerations:
-
->      | NewEnum (Maybe String) String Enumeration String (Loc -> a)
-
-Support for Conditionals:
-
->      | If (FoFCode PureExpr)
->           (FoFCode PureExpr) 
->           (FoFCode PureExpr) a
->      | For (FoFCode PureExpr)  
->            (FoFCode PureExpr) 
->            (FoFCode PureExpr) 
->            (FoFCode PureExpr) a
->      | While (FoFCode PureExpr) 
->              (FoFCode PureExpr) a
->      | DoWhile (FoFCode PureExpr) 
->                (FoFCode PureExpr) a
->      | Switch PureExpr 
->               [(PureExpr, FoFCode PureExpr)] 
->               (FoFCode PureExpr) a
->      | Break
->      | Continue 
-
-Support for Arrays:
-
->      | NewArray (Maybe String) AllocArray [Data] (Loc -> a)
->      | ReadArray Loc Index (Data -> a)
->      | WriteArray Loc Index Data a
+% NB: Pony replaced this with a GADT.
+> data FoFConst a where
+>   Assert :: PureExpr -> a -> FoFConst a
+>   Printf :: String -> [PureExpr] -> a -> FoFConst a
+>   -- do we need the extra parens here? I think so. (to ensure uniqueness?)
+>   HasDescendants :: Maybe String -> PureExpr -> (PureExpr -> a) -> FoFConst a
+>   MemToPhys :: Maybe String -> PureExpr -> (PureExpr -> a) -> FoFConst a
+>   NewUnion :: Maybe String -> AllocUnion -> String -> [(String,TypeExpr)] -> (String, Data) -> (Loc -> a) -> FoFConst a
+>   ReadUnion :: Loc -> String -> (Data -> a) -> FoFConst a
+>   WriteUnion :: Loc -> String -> Data -> a -> FoFConst a
+>   Typedef :: TypeExpr -> a -> FoFConst a
+>   TypedefE :: String -> TypeExpr -> a -> FoFConst a
+>   NewStruct :: Maybe String -> AllocStruct -> String -> [(String, (TypeExpr, Data))] -> (Loc -> a) -> FoFConst a
+>   ReadStruct :: Loc -> String -> (Data -> a) -> FoFConst a
+>   WriteStruct :: Loc -> String -> Data -> a -> FoFConst a
+>   NewString :: Maybe String -> String -> (Loc -> a) -> FoFConst a
+>   NewRef :: Maybe String -> Data -> (Loc -> a) -> FoFConst a
+>   WriteRef :: Loc -> Data -> a -> FoFConst a
+>   NewDef :: [FunAttr] -> String -> Function -> TypeExpr -> [(TypeExpr, Maybe String)] -> (PureExpr -> a) -> FoFConst a
+>   CallDef :: Maybe String -> PureExpr -> [PureExpr] -> (PureExpr -> a) -> FoFConst a
+>   Return :: PureExpr -> FoFConst PureExpr -- not valid Haskell 98, but it's safer
+>   NewEnum :: Maybe String -> String -> Enumeration -> String -> (Loc -> a) -> FoFConst a
+>   If :: FoFCode PureExpr -> FoFCode PureExpr -> FoFCode PureExpr -> a -> FoFConst a
+>   For :: FoFCode PureExpr -> FoFCode PureExpr -> FoFCode PureExpr -> FoFCode PureExpr -> a -> FoFConst a
+>   While :: FoFCode PureExpr -> FoFCode PureExpr -> a -> FoFConst a
+>   DoWhile :: FoFCode PureExpr -> FoFCode PureExpr -> a -> FoFConst a
+>   Switch :: PureExpr -> [(PureExpr, FoFCode PureExpr)] -> FoFCode PureExpr -> a -> FoFConst a
+>   Break :: FoFConst Nil -- not valid Haskell 98
+>   Continue :: FoFConst Nil -- ditto
+>   NewArray :: Maybe String -> AllocArray -> [Data] -> (Loc -> a) -> FoFConst a
+>   ReadArray :: Loc -> Index -> (Data -> a) -> FoFConst a
+>   WriteArray :: Loc -> Index -> Data -> a -> FoFConst a
 
 The following type synonyms have been used above as a documentation
 purpose. A |Data| represents a value used to initialize a

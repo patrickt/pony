@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 %if false  
   Copyright (c) 2009, ETH Zurich.
   All rights reserved.
@@ -52,6 +54,8 @@ a C variable is \emph{not} a value -- but a construct. So, the type of
 the variable
 $x$ defined by \verb!int32_t x = 4! is \emph{not} |TInt Signed TInt32|. 
 
+% NB: Pony added the derivation of Typeable and Data
+
 > data TypeExpr = TVoid
 >               | TInt Signedness Size
 >               | TFloat
@@ -64,7 +68,7 @@ $x$ defined by \verb!int32_t x = 4! is \emph{not} |TInt Signed TInt32|.
 >               | TPointer TypeExpr Mode
 >               | TTypedef TypeExpr String
 >               | TFun String Function TypeExpr [(TypeExpr, Maybe String)]
->                 deriving (Eq, Show)
+>                 deriving (Eq, Show, Typeable, Data)
 
 %%%%%%%%%%%%%%%%
 \paragraph{Functions}
