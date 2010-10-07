@@ -12,5 +12,4 @@ module Language.Pony.Node where
   import Language.FiletOFish.PureExpressions hiding (cast)
   import Language.FiletOFish.Semantics
   
-  data Info = Info NodeInfo deriving (Typeable)
   
