@@ -4,7 +4,6 @@ module Main where
   
   import Control.Applicative
   import Data.Generics
-  import Data.Generics.Schemes
   import Language.C
   import Language.C.System.GCC
   import Language.Pony.Node
@@ -24,13 +23,21 @@ module Main where
   arguments :: IO Options
   arguments = cmdArgs $ usage &= program "pony" &= summary "pony v0.0.0.1, (c) Patrick Thomson 2010"
   
+  changeString :: CString -> CString
+  changeString _ = CString "goodbye, world" False
+  
+  transform :: GenericT
+  transform = mkT changeString
+  
   parsePony :: Options -> IO ()
   parsePony (Options { path }) = do
     result ← parseCFilePre path
     case result of
       Left parseError → print "error!"
       -- everything max gnodecount translUnit
-      Right translUnit → printf "There are %d nodes in the tree .\n" (everything max gnodecount translUnit)
+      Right translUnit → do
+        let transformed = everywhere transform translUnit
+        print $ pretty transformed
     
   main :: IO ()
   main = arguments >>= parsePony

@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-
 %if false  
   Copyright (c) 2009, ETH Zurich.
   All rights reserved.
@@ -16,7 +14,7 @@
 > module Language.FiletOFish.PureExpressions where
 
 > import Data.Char
-
+> import Data.Data
 > import {-# SOURCE #-} Language.FiletOFish.Constructs
 
 %endif
@@ -68,7 +66,7 @@ $x$ defined by \verb!int32_t x = 4! is \emph{not} |TInt Signed TInt32|.
 >               | TPointer TypeExpr Mode
 >               | TTypedef TypeExpr String
 >               | TFun String Function TypeExpr [(TypeExpr, Maybe String)]
->                 deriving (Eq, Show, Typeable, Data)
+>                 deriving (Eq, Show)
 
 %%%%%%%%%%%%%%%%
 \paragraph{Functions}
