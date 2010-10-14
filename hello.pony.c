@@ -1,7 +1,10 @@
 int puts(const char *);
+void* malloc(void *, unsigned int);
 
 int main(int argc, char const** argv)
 {
-  puts("Hello, world!");
-  return 0;
+	puts("Hello, world!");
+	void *whatever;
+	whatever = malloc(sizeof(int) * 10);
+	return 0;
 }

@@ -1,43 +1,28 @@
-{-# LANGUAGE UnicodeSyntax, DeriveDataTypeable, StandaloneDeriving, NamedFieldPuns, ScopedTypeVariables #-}
+{-# LANGUAGE DeriveDataTypeable, NamedFieldPuns, ScopedTypeVariables #-}
 
 module Main where
   
-  import Control.Applicative
   import Data.Generics
   import Language.C
-  import Language.C.System.GCC
-  import Language.Pony.Node
-  import Data.Tree
-  import System.Console.CmdArgs
-  import Text.Printf
+  import Language.Pony.Transformations
+  import System.Environment
   
-  data Options = Options {
-    path :: FilePath
-  } deriving (Show, Data, Typeable)
+  getArguments :: IO (FilePath, FilePath)
+  getArguments = do
+    args <- getArgs
+    return (args !! 0, args !! 1)
   
-  usage :: Options
-  usage = Options {
-    path = def &= typFile &= argPos 0
-  }
-  
-  arguments :: IO Options
-  arguments = cmdArgs $ usage &= program "pony" &= summary "pony v0.0.0.1, (c) Patrick Thomson 2010"
-  
-  changeString :: CString -> CString
-  changeString _ = CString "goodbye, world" False
-  
-  transform :: GenericT
-  transform = mkT changeString
-  
-  parsePony :: Options -> IO ()
-  parsePony (Options { path }) = do
-    result ← parseCFilePre path
+  parsePony :: (FilePath, FilePath) -> IO ()
+  parsePony (input, output) = do
+    result <- parseCFilePre input
     case result of
-      Left parseError → print "error!"
-      -- everything max gnodecount translUnit
-      Right translUnit → do
-        let transformed = everywhere transform translUnit
-        print $ pretty transformed
+      Left parseError -> print "error!"
+      Right translUnit -> do
+        let transformed = everywhere (mkT mallocToXmalloc) translUnit
+        let cCode = show $ pretty transformed
+        if (output == "stdout")
+          then print $ pretty transformed
+          else writeFile output cCode
     
   main :: IO ()
-  main = arguments >>= parsePony
+  main = getArguments >>= parsePony

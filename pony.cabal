@@ -23,8 +23,5 @@ Cabal-version:       >=1.2
 Executable pony
   Main-is:             Main.hs
   
-  Build-depends:       base >= 4.2, cmdargs == 0.3, parsec == 3.1.0, mtl == 1.1.0.2, language-c == 0.3.2
-  
-  -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:         
+  Build-depends:       base >= 4.2, cmdargs == 0.6.1, parsec == 3.1.0, mtl == 1.1.0.2, language-c == 0.3.2, syb >= 0.1        
   
