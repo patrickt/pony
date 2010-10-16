@@ -1,18 +1,20 @@
 Name:                pony
-Version:             0.0.0.1
-Synopsis:            a modular, extensible systems programming language
+Version:             0.0.1
+Synopsis:            a modular, extensible source transformer for systems programming
 
--- A longer description of the package. 
--- TODO: HA! write this.
--- Description:         
+Description:         Pony is a tool intended for programmers of low-level systems. Code authors will write code in PonyC, a C-like language, that is then transformed into C99. It allows for high-level features such as garbage collection, closures, and typesafe memory to be imported individually. It uses the Filet-O-Fish library developed at ETA Zurich to generate C code.
 
 License:             BSD3
 License-file:        LICENSE.md
 Author:              Patrick Thomson
 Maintainer:          thomsonp@gwmail.gwu.edu
-Copyright:           (c) 2010, Patrick Thomson
+Copyright:           (c) 2010 Patrick Thomson
+
 Category:            Language
 Build-type:          Simple
+Stability:           alpha
+tested-with:         GHC
+
 
 -- Extra files to be distributed with the package, such as examples or
 -- a README.
@@ -23,5 +25,14 @@ Cabal-version:       >=1.2
 Executable pony
   Main-is:             Main.hs
   
-  Build-depends:       base >= 4.2, cmdargs == 0.6.1, parsec == 3.1.0, mtl == 1.1.0.2, language-c == 0.3.2, syb >= 0.1        
+  Extensions:          DeriveDataTypeable,
+                       NamedFieldPuns,
+                       Rank2Types
+  
+  Build-depends:       base >= 4.2, 
+                       cmdargs == 0.6.1, 
+                       parsec == 3.1.0, 
+                       mtl == 1.1.0.2, 
+                       language-c == 0.3.2, 
+                       syb >= 0.1        
   

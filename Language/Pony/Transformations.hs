@@ -1,14 +1,19 @@
 module Language.Pony.Transformations where
   
   import Data.Generics
-  import Debug.Trace
   import Language.C
   import Language.C.Data.Ident
   
   helloToGoodbye :: CString -> CString
   helloToGoodbye _ = CString "goodbye, world" False
   
-  mallocToXmalloc :: CStat -> CStat
-  mallocToXmalloc stat@(CExpr (Just expr@(CAssign CAssignOp lvalue (CCall (CVar (Ident "malloc" huh info''') info'') b info') info)) info'''') = 
+  helloTransform :: GenericT
+  helloTransform = mkT helloToGoodbye
+  
+  checkMalloc :: CStat -> CStat
+  checkMalloc (CExpr (Just expr@(CAssign CAssignOp _ (CCall (CVar (Ident "malloc" _ _) _) _ _) _)) _) = 
     CIf (CUnary CNegOp expr internalNode) (CReturn (Just (CConst (CIntConst (cInteger (-1)) internalNode))) internalNode) Nothing internalNode
-  mallocToXmalloc it = it
+  checkMalloc anythingElse = anythingElse
+  
+  mallocTransform :: GenericT
+  mallocTransform = mkT checkMalloc

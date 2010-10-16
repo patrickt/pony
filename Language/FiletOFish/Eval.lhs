@@ -286,7 +286,7 @@ value of this number. This is currently unsupported.
 > symbEvalCast TFloat (CLInteger _ _ x) = 
 >     CLFloat (fromRational $ toRational x)
 > symbEvalCast TFloat vx@(CLFloat x) = v
-% This is probably not correct, but fuck it, it's a proof of concept.
+% NB: This is a Pony addition that allows characters to be cast to integers.
 > symbEvalCast TChar (CLInteger _ _ x) = CLChar (chr x)
 > symbEvalCast _ _ = 
 >     error "symbEvalCast: Not yet implemented/undefined cast"
