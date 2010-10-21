@@ -66,7 +66,7 @@ $x$ defined by \verb!int32_t x = 4! is \emph{not} |TInt Signed TInt32|.
 >               | TPointer TypeExpr Mode
 >               | TTypedef TypeExpr String
 >               | TFun String Function TypeExpr [(TypeExpr, Maybe String)]
->                 deriving (Eq, Show)
+>                 deriving (Eq, Show, Typeable, Data)
 
 %%%%%%%%%%%%%%%%
 \paragraph{Functions}
@@ -85,6 +85,17 @@ too. While we could define a more complete |Show| instance for
 
 > instance Show Function where
 >     show _ = "<fun>"
+
+% TODO: FIX THIS, PATRICK, YOU IDIOT
+
+> instance Typeable Function where
+>     typeOf _ = undefined
+
+> instance Data Function where
+>     gfoldl _ = undefined
+>     gunfold _ = undefined
+>     toConstr _ = undefined
+>     dataTypeOf _ = undefined
 
 Concerning equality, this becomes more tricky. We would have to define
 what "equality" means and if that definition is decidable. Here, we
@@ -109,13 +120,13 @@ evolve in future versions and diverge from this common scheme.
 
 > data AllocStruct = StaticStruct
 >                  | DynamicStruct
->                    deriving (Eq, Show)
+>                    deriving (Eq, Show, Typeable, Data)
 > data AllocUnion = StaticUnion
 >                 | DynamicUnion
->                    deriving (Eq, Show)
+>                    deriving (Eq, Show, Typeable, Data)
 > data AllocArray = StaticArray Int
 >                 | DynamicArray
->                    deriving (Eq, Show)
+>                    deriving (Eq, Show, Typeable, Data)
 
 Both Structures and Unions rely on the |TFieldList|
 synonym. Basically, the type of a Structure corresponds to its name
@@ -138,13 +149,13 @@ original sign and size.
 
 > data Signedness = Unsigned 
 >                 | Signed
->                   deriving (Eq, Ord, Show)
+>                   deriving (Eq, Ord, Show, Typeable, Data)
 >
 > data Size = TInt8
 >           | TInt16
 >           | TInt32
 >           | TInt64
->             deriving (Eq, Ord, Show)    
+>             deriving (Eq, Ord, Show, Typeable, Data)    
 
 
 %%%%%%%%%%%%%%%%
@@ -165,7 +176,7 @@ otherwise.
 
 > data Mode = Avail
 >           | Read
->             deriving (Eq, Show)
+>             deriving (Eq, Show, Typeable, Data)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Smart Constructors}
@@ -288,7 +299,7 @@ eliminate it, to make the compiled code more readable.
 > data VarName = Generated String
 >              | Provided String
 >              | Inherited Int VarName
->                deriving (Show, Eq)
+>                deriving (Show, Eq, Typeable, Data)
 
 A reference is also decorated by its \emph{origin}. This field is used by
 the compiler to identify the scope of variables. Therefore, the
@@ -303,7 +314,7 @@ generated code.
 >             | Global
 >             | Param
 >             | Dynamic
->               deriving (Eq, Show)
+>               deriving (Eq, Show, Typeable, Data)
 
 %%%%%%%%%%%%%%%%
 \paragraph{Unary operations}
@@ -314,7 +325,7 @@ or the logic \emph{complement} operation, or the logic \emph{negation}
 operation.
 
 > data UnaryOp = Minus | Complement | Negation
->              deriving (Eq, Show)
+>              deriving (Eq, Show, Typeable, Data)
 
 %%%%%%%%%%%%%%%%
 \paragraph{Binary operations}
@@ -328,7 +339,7 @@ $==$, and $!=$).
 > data BinaryOp = Plus | Sub | Mul    | Div   | Mod
 >               | Shl  | Shr | AndBit | OrBit | XorBit 
 >               | Le   | Leq | Ge     | Geq   | Eq  | Neq
->                 deriving (Eq, Show)
+>                 deriving (Eq, Show, Typeable, Data)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
