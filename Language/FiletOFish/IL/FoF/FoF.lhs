@@ -46,22 +46,22 @@ Where an |FStatement| is one of the sequential statement of the
 Filet-o-Fish language, that is:
 
 > data FStatement 
->     = FNewUnion VarName AllocUnion String [(String,TypeExpr)] (String, Data)
+>     = FNewUnion VarName AllocUnion String [(String,TypeExpr)] (String, FoFData)
 >     | FReadUnion VarName Loc String
->     | FWriteUnion Loc String Data 
+>     | FWriteUnion Loc String FoFData 
 >     | FTypedef TypeExpr String
 >     | FTypedefE String TypeExpr 
->     | FNewStruct VarName AllocStruct String [(String,(TypeExpr,Data))] 
+>     | FNewStruct VarName AllocStruct String [(String,(TypeExpr,FoFData))] 
 >     | FReadStruct VarName Loc String
->     | FWriteStruct Loc String Data
+>     | FWriteStruct Loc String FoFData
 >     | FNewString VarName String
->     | FNewRef  VarName Data
+>     | FNewRef  VarName FoFData
 >     | FReadRef VarName Loc
->     | FWriteRef Loc Data
+>     | FWriteRef Loc FoFData
 >     | FNewEnum VarName String Enumeration String 
->     | FNewArray VarName AllocArray [Data] 
+>     | FNewArray VarName AllocArray [FoFData] 
 >     | FReadArray VarName Loc Index 
->     | FWriteArray Loc Index Data 
+>     | FWriteArray Loc Index FoFData 
 >     | FCallDef (Maybe VarName) PureExpr [PureExpr]
 >     | FFFICall String [PureExpr]
 

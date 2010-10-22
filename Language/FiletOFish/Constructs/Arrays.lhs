@@ -44,28 +44,28 @@ read from, and write into arrays.
 We can create dynamic and static anonymous arrays using the following
 combinators:
 
-> newArray :: [Data] -> FoFCode Loc
+> newArray :: [FoFData] -> FoFCode Loc
 > newArray value = inject (NewArray Nothing DynamicArray value return)
 
-> newStaticArray :: [Data] -> FoFCode Loc
+> newStaticArray :: [FoFData] -> FoFCode Loc
 > newStaticArray value = inject (NewArray Nothing (StaticArray $ length value) value return)
 
 Similarly, they can be named:
 
-> newArrayN :: String -> [Data] -> FoFCode Loc
+> newArrayN :: String -> [FoFData] -> FoFCode Loc
 > newArrayN name value = inject (NewArray (Just name) DynamicArray value return)
 
-> newStaticArrayN :: String -> [Data] -> FoFCode Loc
+> newStaticArrayN :: String -> [FoFData] -> FoFCode Loc
 > newStaticArrayN name value = inject (NewArray (Just name) (StaticArray $ length value) value return)
 
 Then, we can read the content of an array:
 
-> readArray :: Loc -> Index -> FoFCode Data
+> readArray :: Loc -> Index -> FoFCode FoFData
 > readArray l f = inject (ReadArray l f return)
 
 As well as write some data in a cell:
 
-> writeArray :: Loc -> Index -> Data -> FoFCode ()
+> writeArray :: Loc -> Index -> FoFData -> FoFCode ()
 > writeArray l f d = inject (WriteArray l f d (return ()))
 
 
@@ -82,7 +82,7 @@ following code.
 Creating, reading, and writing to or from an array are trivially
 implemented by the following code:
 
-> runNewArray :: AllocArray -> [Data] -> Heap -> (Loc, Heap)
+> runNewArray :: AllocArray -> [FoFData] -> Heap -> (Loc, Heap)
 > runNewArray alloc initData heap = 
 >     let loc = freshALoc heap in
 >     let sizeInt = length initData in
@@ -92,14 +92,14 @@ implemented by the following code:
 >                        arrayMap = (name, initData) : (arrayMap heap) } in
 >     (ref, heap1)
 >
-> runReadArray :: Loc -> Index -> Heap -> (Data, Heap)
+> runReadArray :: Loc -> Index -> Heap -> (FoFData, Heap)
 > runReadArray (CLRef _ (TArray _ _) loc) index heap = 
 >     let array = fromJust $ loc `lookup` (arrayMap heap) in
 >     let (CLInteger _ _ indexInt) = symbEval index in
 >     let val = array !! (fromInteger indexInt) in
 >     (val, heap)
 >
-> runWriteArray :: Loc -> Index -> Data -> Heap -> Heap
+> runWriteArray :: Loc -> Index -> FoFData -> Heap -> Heap
 > runWriteArray (CLRef _ (TArray _ _) loc) index dat heap = 
 >     let array = fromJust $ loc `lookup` (arrayMap heap) in
 >     let (CLInteger _ _ indexInt) = symbEval index in

@@ -41,7 +41,7 @@ between an anonymous or a named value. All these choices are provided
 by the following four combinators.
 
 > newStaticStruct :: String -> 
->                    [(TypeExpr, String, Data)] -> 
+>                    [(TypeExpr, String, FoFData)] -> 
 >                    FoFCode Loc
 > newStaticStruct name stt = 
 >     inject (NewStruct Nothing StaticStruct name 
@@ -50,7 +50,7 @@ by the following four combinators.
 >
 > newStaticStructN :: String ->
 >                     String -> 
->                    [(TypeExpr, String, Data)] -> 
+>                    [(TypeExpr, String, FoFData)] -> 
 >                    FoFCode Loc
 > newStaticStructN nameStr name stt = 
 >     inject (NewStruct (Just nameStr) StaticStruct name 
@@ -58,7 +58,7 @@ by the following four combinators.
 >                       return)
 >
 > newStruct :: String -> 
->              [(TypeExpr, String, Data)] -> 
+>              [(TypeExpr, String, FoFData)] -> 
 >              FoFCode Loc
 > newStruct name stt = 
 >     inject (NewStruct Nothing DynamicStruct name 
@@ -67,7 +67,7 @@ by the following four combinators.
 >
 > newStructN :: String ->
 >               String -> 
->              [(TypeExpr, String, Data)] -> 
+>              [(TypeExpr, String, FoFData)] -> 
 >              FoFCode Loc
 > newStructN nameStr name stt = 
 >     inject (NewStruct (Just nameStr) DynamicStruct name 
@@ -76,10 +76,10 @@ by the following four combinators.
 
 Follow the read and write combinators:
 
-> readStruct :: Loc -> String -> FoFCode Data
+> readStruct :: Loc -> String -> FoFCode FoFData
 > readStruct l f = inject (ReadStruct l f return)
 >
-> writeStruct :: Loc -> String -> Data -> FoFCode ()
+> writeStruct :: Loc -> String -> FoFData -> FoFCode ()
 > writeStruct l f d = inject (WriteStruct l f d (return ()))
 
 \subsection{Compile Instantiation}
@@ -142,7 +142,7 @@ And the per-construct implementation:
 
 > runNewStruct :: AllocStruct ->
 >                 String -> 
->                 [(String, (TypeExpr,Data))] -> 
+>                 [(String, (TypeExpr,FoFData))] -> 
 >                 Heap -> (Loc, Heap)
 > runNewStruct alloc name struct heap =
 >     let structT = map (\(x1,(x2,_)) -> (x1,x2)) struct in
@@ -154,14 +154,14 @@ And the per-construct implementation:
 >     let heap2 = heap1 { strMap = (varName, structD) : structs } in
 >     (CLRef Local (TStruct alloc name structT) varName, heap2)
 >
-> runReadStruct :: Loc -> String -> Heap -> (Data, Heap)
+> runReadStruct :: Loc -> String -> Heap -> (FoFData, Heap)
 > runReadStruct (CLRef _ _ location) field heap =
 >     let structs = strMap heap in
 >     let struct = fromJust $ location `lookup` structs in
 >     let val = fromJust $ field `lookup` struct in
 >     (val, heap)
 >
-> runWriteStruct :: Loc -> String -> Data -> Heap -> Heap
+> runWriteStruct :: Loc -> String -> FoFData -> Heap -> Heap
 > runWriteStruct (CLRef _ _ location) field value heap =
 >     let structs = strMap heap in
 >     let struct = fromJust $ location `lookup` structs in

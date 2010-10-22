@@ -70,11 +70,11 @@ from strings to values (modelling a structure or union), and
 
 
 > data Heap = Hp { freshLoc :: Int ,
->                  refMap :: [(VarName, Data)],
+>                  refMap :: [(VarName, FoFData)],
 >                  freshSLoc :: Int,
->                  strMap :: [(VarName, [(String, Data)])],
+>                  strMap :: [(VarName, [(String, FoFData)])],
 >                  freshALoc :: Int,
->                  arrayMap :: [(VarName, [Data])]}
+>                  arrayMap :: [(VarName, [FoFData])]}
 
 Then, the one-step interpreter takes a FoF term, a Heap, and returns a
 pair of value and resulting heap. This is simply implemented by

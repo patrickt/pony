@@ -41,18 +41,18 @@ A reference cell is created in an initialized state. The variant
 |newRefN| allows the DSL designer to provide a name to the created
 variable.
 
-> newRef :: Data -> FoFCode Loc
+> newRef :: FoFData -> FoFCode Loc
 > newRef d = inject (NewRef Nothing d return)
 >
-> newRefN :: String -> Data -> FoFCode Loc
+> newRefN :: String -> FoFData -> FoFCode Loc
 > newRefN name d = inject (NewRef (Just name) d return)
 
 Follow primitives to read from and write to these reference cells:
 
-> readRef :: Loc -> FoFCode Data
+> readRef :: Loc -> FoFCode FoFData
 > readRef l = inject (ReadRef l return)
 >
-> writeRef :: Loc -> Data -> FoFCode PureExpr
+> writeRef :: Loc -> FoFData -> FoFCode PureExpr
 > writeRef l d = inject (WriteRef l d (return Void))
 
 The current implementation lacks lots of sanity checks:
@@ -109,7 +109,7 @@ simpler. We start with the dispatcher:
 
 And the per-construct interpreters follow:
 
-> runNewRef :: Data -> Heap -> (Loc, Heap)
+> runNewRef :: FoFData -> Heap -> (Loc, Heap)
 > runNewRef value heap =
 >     ( CLRef Local typeOfVal name, heap2 )
 >         where typeOfVal = typeOf value 
@@ -119,13 +119,13 @@ And the per-construct interpreters follow:
 >               heap1 = heap { freshLoc = loc + 1 } 
 >               heap2 = heap1 { refMap = (name, value) : refs } 
 >
-> runReadRef :: Loc -> Heap -> (Data, Heap)
+> runReadRef :: Loc -> Heap -> (FoFData, Heap)
 > runReadRef (CLRef _ _ location) heap =
 >     let refs = refMap heap in
 >     let val = fromJust $ location `lookup` refs in
 >     (val, heap)
 >
-> runWriteRef :: Loc -> Data -> Heap -> Heap
+> runWriteRef :: Loc -> FoFData -> Heap -> Heap
 > runWriteRef (CLRef _ _ location) value heap =
 >     let refs = refMap heap in
 >     let refs1 = (location, value) : refs in

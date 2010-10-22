@@ -12,7 +12,7 @@
 %if false
 
 > module Language.FiletOFish.Constructs where
-
+> import Data.Typeable
 > import Language.FiletOFish.PureExpressions
 > import Language.FiletOFish.Semantics
 
@@ -48,9 +48,9 @@ Foreign-call to libarrelfish |mem_to_phys|:
 
 Support for Union:
 
->     | NewUnion (Maybe String) AllocUnion String [(String,TypeExpr)] (String, Data) (Loc -> a)
->     | ReadUnion Loc String (Data -> a)
->     | WriteUnion Loc String Data a
+>     | NewUnion (Maybe String) AllocUnion String [(String,TypeExpr)] (String, FoFData) (Loc -> a)
+>     | ReadUnion Loc String (FoFData -> a)
+>     | WriteUnion Loc String FoFData a
 
 Support for Typedef:
 
@@ -59,9 +59,9 @@ Support for Typedef:
 
 Support for Structures:
 
->     | NewStruct (Maybe String) AllocStruct String [(String,(TypeExpr,Data))] (Loc -> a)
->     | ReadStruct Loc String (Data -> a)
->     | WriteStruct Loc String Data a
+>     | NewStruct (Maybe String) AllocStruct String [(String,(TypeExpr,FoFData))] (Loc -> a)
+>     | ReadStruct Loc String (FoFData -> a)
+>     | WriteStruct Loc String FoFData a
 
 Support for Strings:
 
@@ -69,9 +69,9 @@ Support for Strings:
 
 Support for Reference cells:
 
->      | NewRef (Maybe String) Data (Loc -> a)
->      | ReadRef Loc (Data -> a)
->      | WriteRef Loc Data a
+>      | NewRef (Maybe String) FoFData (Loc -> a)
+>      | ReadRef Loc (FoFData -> a)
+>      | WriteRef Loc FoFData a
 
 Support for Functions:
 
@@ -106,16 +106,17 @@ Support for Conditionals:
 
 Support for Arrays:
 
->      | NewArray (Maybe String) AllocArray [Data] (Loc -> a)
->      | ReadArray Loc Index (Data -> a)
->      | WriteArray Loc Index Data a
+>      | NewArray (Maybe String) AllocArray [FoFData] (Loc -> a)
+>      | ReadArray Loc Index (FoFData -> a)
+>      | WriteArray Loc Index FoFData a
+>        deriving (Typeable)
 
 The following type synonyms have been used above as a documentation
-purpose. A |Data| represents a value used to initialize a
+purpose. A |FoFData| represents a value used to initialize a
 data-structure. A |Loc| represents a reference. An |Index| is a value
 used to index an array.
 
-> type Data = PureExpr
+> type FoFData = PureExpr
 > type Loc = PureExpr
 > type Index = PureExpr
 

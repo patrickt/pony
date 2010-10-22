@@ -38,7 +38,7 @@ dynamically allocated, and anonymous or named.
 > newStaticUnion :: String -> 
 >                   [(TypeExpr, String)] -> 
 >                   String ->
->                   Data ->
+>                   FoFData ->
 >                   FoFCode Loc
 > newStaticUnion name fields field dat = 
 >     inject (NewUnion Nothing StaticUnion name 
@@ -50,7 +50,7 @@ dynamically allocated, and anonymous or named.
 >                    String -> 
 >                   [(TypeExpr, String)] -> 
 >                   String ->
->                   Data ->
+>                   FoFData ->
 >                   FoFCode Loc
 > newStaticUnionN nameU name fields field dat = 
 >     inject (NewUnion (Just nameU) StaticUnion name 
@@ -61,7 +61,7 @@ dynamically allocated, and anonymous or named.
 > newUnion ::  String -> 
 >              [(TypeExpr, String)] -> 
 >              String ->
->              Data ->
+>              FoFData ->
 >              FoFCode Loc
 > newUnion name fields field dat = 
 >     inject (NewUnion Nothing DynamicUnion
@@ -74,7 +74,7 @@ dynamically allocated, and anonymous or named.
 >              String -> 
 >              [(TypeExpr, String)] -> 
 >              String ->
->              Data ->
+>              FoFData ->
 >              FoFCode Loc
 > newUnionN nameU name fields field dat = 
 >     inject (NewUnion (Just nameU) DynamicUnion
@@ -85,10 +85,10 @@ dynamically allocated, and anonymous or named.
 
 Reading and writing follow the usual scheme:
 
-> readUnion :: Loc -> String -> FoFCode Data
+> readUnion :: Loc -> String -> FoFCode FoFData
 > readUnion l f = inject (ReadUnion l f return)
 
-> writeUnion :: Loc -> String -> Data -> FoFCode ()
+> writeUnion :: Loc -> String -> FoFData -> FoFCode ()
 > writeUnion l f d = inject (WriteUnion l f d (return ()))
 
 \subsection{Compile Instantiation}
