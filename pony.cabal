@@ -11,7 +11,7 @@ Maintainer:          thomsonp@gwmail.gwu.edu
 Copyright:           (c) 2010 Patrick Thomson
 
 Category:            Language
-Build-type:          Simple
+Build-type:          Configure
 Stability:           alpha
 tested-with:         GHC
 
