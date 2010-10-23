@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+/usr/bin/gcc build/compute_sizes.c -o compute_sizes
+./compute_sizes Language/Pony/MachineSizes.hs
+rm compute_sizes
