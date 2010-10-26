@@ -15,6 +15,11 @@ module Language.Pony.Transformations where
   purifyCConst (CFloatConst (CFloat hStrFloat) _) = CLFloat $ read hStrFloat
   purifyCConst (CStrConst (CString str isWide) _) = Quote str
   
+  purifyTypeSpec :: CTypeSpec -> TypeExpr
+  purifyTypeSpec (CVoidType _) = TVoid
+  purifyTypeSpec (CCharType _) = TChar
+  purifyTypeSpec _ = error "provided type specifier has no semantic meaning"
+  
   helloToGoodbye :: CString -> CString
   helloToGoodbye _ = CString "goodbye, world" False
   

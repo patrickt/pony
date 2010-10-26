@@ -14,7 +14,6 @@
 > module Compile where
 
 > import Language.FiletOFish.Constructs
-> import Language.FiletOFish.Constructs
 > import Language.FiletOFish.PureExpressions
 > import Expressions
 

@@ -1,5 +1,5 @@
 Name:                pony
-Version:             0.0.1
+Version:             0.0.2
 Synopsis:            a modular, extensible source transformer for systems programming
 
 Description:         Pony is a tool intended for programmers of low-level systems. Code authors will write code in PonyC, a C-like language, that is then transformed into C99. It allows for high-level features such as garbage collection, closures, and typesafe memory to be imported individually. It uses the Filet-O-Fish library developed at ETA Zurich to generate C code.
@@ -20,7 +20,7 @@ tested-with:         GHC
 -- a README.
 -- Extra-source-files:  
 
-Cabal-version:       >=1.2
+Cabal-version:       >=1.2.3
 
 Executable pony
   Main-is:             Main.hs
@@ -29,10 +29,11 @@ Executable pony
                        NamedFieldPuns,
                        Rank2Types
   
-  Build-depends:       base >= 4.2, 
+  Build-depends:       base >= 4.2 && < 5,
                        cmdargs == 0.6.1, 
                        parsec == 3.1.0, 
                        mtl == 1.1.0.2, 
                        language-c == 0.3.2, 
-                       syb >= 0.1        
-  
+                       syb >= 0.1,
+                       syz >= 0.2        
+

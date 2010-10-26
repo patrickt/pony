@@ -1000,8 +1000,7 @@ int32_t* x5 = *x4;
 
 
 > main :: IO ()
-> main = do
->        putStrLn "Nothing done."
+> main = putStrLn "Nothing done."
 
 %if false 
 
