@@ -23,6 +23,7 @@ module Language.Pony.PonyC.Lexer where
   operator = T.operator lexer
   reservedOp = T.reservedOp lexer
   charLiteral = T.charLiteral lexer
+  stringLiteral = T.stringLiteral lexer
   natural = T.natural lexer
   integer = T.integer lexer
   float = T.float lexer
