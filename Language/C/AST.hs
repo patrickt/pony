@@ -7,6 +7,8 @@ module Language.C.AST where
     | Identifier String
     | Index CExpr CExpr
     | Call CExpr [CExpr]
+    | UnaryOp String CExpr
+    | BinaryOp String CExpr CExpr
     deriving (Show, Eq)
   
   data CLiteral
@@ -15,3 +17,6 @@ module Language.C.AST where
     | CFloat Double
     | CString String
     deriving (Show, Eq)
+    
+  data CType
+   = IntType
