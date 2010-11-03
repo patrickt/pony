@@ -4,6 +4,10 @@ module Language.C.AST where
   
   data CExpr
     = Constant CLiteral
+    | Identifier String
+    | Index CExpr CExpr
+    | Call CExpr [CExpr]
+    deriving (Show, Eq)
   
   data CLiteral
     = CInteger Integer
