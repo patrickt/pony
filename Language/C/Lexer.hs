@@ -1,19 +1,20 @@
-module Language.Pony.PonyC.Lexer where
+module Language.C.Lexer where
   
   import Text.Parsec
+  import Text.Parsec.Language
   import qualified Text.Parsec.Token as T
   
   -- Currently trigraphs, digraphs, _Bool, _Complex, and _Imaginary are unsupported.
   ponyCDef = javaStyle 
-    { reservedOpNames = ["->", "++", "--", "&", "*", "+", "-", "~", "!", "/", "%", "<<", ">>", 
-                         "/", "%", "<<", ">>", "<", ">", "<=", ">=", "==", "!=", "^", "|", "&&", 
-                         "?", ":", ";", "...", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", 
-                         "&=", "^=", "|=", ",", "#", "##"]    
-    , reservedNames = ["auto", "break", "case", "char", "const", "continue", "default", "do", 
-                       "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", 
-                       "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
-                       "static", "struct", "switch", "typedef", "union", "unsigned", "void", 
-                       "volatile", "while"]
+    { T.reservedOpNames = ["->", "++", "--", "&", "*", "+", "-", "~", "!", "/", "%", "<<", ">>", 
+                          "/", "%", "<<", ">>", "<", ">", "<=", ">=", "==", "!=", "^", "|", "&&", 
+                          "?", ":", ";", "...", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", 
+                          "&=", "^=", "|=", ",", "#", "##"]    
+    , T.reservedNames = ["auto", "break", "case", "char", "const", "continue", "default", "do", 
+                        "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", 
+                        "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
+                        "static", "struct", "switch", "typedef", "union", "unsigned", "void", 
+                        "volatile", "while"]
     }
   
   lexer = T.makeTokenParser ponyCDef
