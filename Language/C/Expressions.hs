@@ -8,38 +8,17 @@ module Language.C.Expressions
   import Text.Parsec.Expr
   import qualified Language.C.Lexer as L
   
-  -- As you can see, the code for the expression parsers is pretty rote.
-  -- What I'd really like to see is something like this:
-  -- expression :: Parser [CExpr]
-  -- expression = commaSep1 $ 
-  --  buildChainedParserFromTables [logicTable, compTable, arithTable, unaryTable, postfixTable] primaryExpression
-  
-  commaSeparatedExpressions = L.commaSep1 expression
+  buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
+  buildChainedParser ((t,msg):ts) p = buildChainedParser ts $ (buildExpressionParser t p <?> msg)
+  buildChainedParser [] p = p
   
   expression :: Parser CExpr
-  expression = assignmentExpression
-  
-  assignmentExpression :: Parser CExpr
-  assignmentExpression = buildExpressionParser assignTable logicalExpression
-  
-  logicalExpression :: Parser CExpr
-  logicalExpression = buildExpressionParser logicTable comparativeExpression
-  
-  comparativeExpression :: Parser CExpr
-  comparativeExpression = buildExpressionParser compTable arithmeticExpression
-  
-  arithmeticExpression :: Parser CExpr
-  arithmeticExpression = buildExpressionParser arithTable castExpression
-  
-  -- HOLY CRAP IS THIS A BUG: casting doesn't work. at all.
-  castExpression :: Parser CExpr
-  castExpression = unaryExpression
-  
-  unaryExpression :: Parser CExpr
-  unaryExpression = buildExpressionParser unaryTable postfixExpression
-  
-  postfixExpression :: Parser CExpr
-  postfixExpression = buildExpressionParser postfixTable primaryExpression
+  expression = buildChainedParser [ (postfixTable, "postfix expression")
+                                  , (unaryTable, "unary expression")
+                                  , (arithTable, "arithmetic expression")
+                                  , (compTable, "comparative expression")
+                                  , (assignTable, "assignment expression")
+                                  ] primaryExpression <?> "C expression"
   
   primaryExpression :: Parser CExpr
   primaryExpression = choice
