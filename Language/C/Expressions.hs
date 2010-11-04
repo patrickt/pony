@@ -17,7 +17,10 @@ module Language.C.Expressions
   commaSeparatedExpressions = L.commaSep1 expression
   
   expression :: Parser CExpr
-  expression = logicalExpression
+  expression = assignmentExpression
+  
+  assignmentExpression :: Parser CExpr
+  assignmentExpression = buildExpressionParser assignTable logicalExpression
   
   logicalExpression :: Parser CExpr
   logicalExpression = buildExpressionParser logicTable comparativeExpression
@@ -46,14 +49,16 @@ module Language.C.Expressions
     , L.parens expression
     ]
   
+  assignTable = 
+    [ [mkInfixL "=", mkInfixL "*=", mkInfixL "/=", mkInfixL "%=", mkInfixL "+=", mkInfixL "-=", 
+       mkInfixL "<<=", mkInfixL ">>=", mkInfixL "&=", mkInfixL "&=", mkInfixL "^=", mkInfixL "|="] ]
+  
   logicTable = 
     [ [mkInfixL "&"], [mkInfixL "^"], [mkInfixL "|"], [Postfix ternaryOp] ]
     where
       ternaryOp = do
-        L.reservedOp "?"
-        then' <- expression
-        L.reservedOp ":"
-        else' <- expression
+        then' <- L.reservedOp "?" >> expression
+        else' <- L.reservedOp ":" >> expression
         return $ \it -> TernaryOp it then' else'
   
   compTable = 
