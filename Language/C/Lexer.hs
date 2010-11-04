@@ -1,4 +1,28 @@
-module Language.C.Lexer where
+module Language.C.Lexer 
+  ( identifier
+  , reserved
+  , operator
+  , reservedOp
+  , charLiteral
+  , stringLiteral
+  , integer
+  , float
+  , symbol
+  , lexeme
+  , braces
+  , brackets
+  , parens
+  , semi
+  , comma
+  , dot
+  , arrow
+  , semiSep
+  , semiSep1
+  , commaSep
+  , commaSep1
+  ) 
+  
+  where
   
   import Text.Parsec
   import Text.Parsec.Language
@@ -9,7 +33,7 @@ module Language.C.Lexer where
     { T.reservedOpNames = ["->", "++", "--", "&", "*", "+", "-", "~", "!", "/", "%", "<<", ">>", 
                           "/", "%", "<<", ">>", "<", ">", "<=", ">=", "==", "!=", "^", "|", "&&", 
                           "?", ":", ";", "...", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", 
-                          "&=", "^=", "|=", ",", "#", "##"]    
+                          "&=", "^=", "|=", ",", "#", "##", "[", "]"]    
     , T.reservedNames = ["auto", "break", "case", "char", "const", "continue", "default", "do", 
                         "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", 
                         "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
@@ -41,6 +65,7 @@ module Language.C.Lexer where
   semi = T.semi lexer
   comma = T.comma lexer
   dot = T.dot lexer
+  arrow = reservedOp "->" >> return "->"
   semiSep = T.semiSep lexer
   semiSep1 = T.semiSep1 lexer
   commaSep = T.commaSep lexer
