@@ -78,4 +78,12 @@ module Language.C.AST where
    | TEnumeration String
    | TTypedef String
    deriving (Eq, Show)
+  
+ data CDeclarator
+   = Named String [DerivedDeclarator]
+   | Abstract [DerivedDeclarator]
 
+ data DerivedDeclarator
+   = Pointer [TypeQualifier]
+   | Array [TypeQualfiier] CExpr
+   | FunctionPointer [CDeclarator]
