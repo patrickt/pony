@@ -1,5 +1,6 @@
 module Language.C.Expressions  
-  where
+  (expression, identifier, constant)
+  where 
   
   import Text.Parsec hiding (string)
   import Text.Parsec.String
@@ -12,33 +13,47 @@ module Language.C.Expressions
   buildChainedParser ((t,msg):ts) p = buildChainedParser ts $ (buildExpressionParser t p <?> msg)
   buildChainedParser [] p = p
   
+  -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
   expression :: Parser CExpr
   expression = buildChainedParser [ (postfixTable, "postfix expression")
                                   , (unaryTable, "unary expression")
                                   , (arithTable, "arithmetic expression")
                                   , (compTable, "comparative expression")
+                                  , (bitwiseTable, "bitwise operation")
+                                  , (logicTable, "logical operation")
                                   , (assignTable, "assignment expression")
                                   ] primaryExpression <?> "C expression"
   
   primaryExpression :: Parser CExpr
   primaryExpression = choice
-    [ identifier
-    , constant
-    , stringLiteral `into` Constant
-    , L.parens expression
-    ]
+    [ identifier, constant, stringLiteral `into` Constant, L.parens expression ]
   
   assignTable = 
-    [ [mkInfixL "=", mkInfixL "*=", mkInfixL "/=", mkInfixL "%=", mkInfixL "+=", mkInfixL "-=", 
-       mkInfixL "<<=", mkInfixL ">>=", mkInfixL "&=", mkInfixL "&=", mkInfixL "^=", mkInfixL "|="] ]
+    [ [ mkInfixL "="
+      , mkInfixL "*=" 
+      , mkInfixL "/="
+      , mkInfixL "%="
+      , mkInfixL "+="
+      , mkInfixL "-=" 
+      , mkInfixL "<<="
+      , mkInfixL ">>="
+      , mkInfixL "&="
+      , mkInfixL "&="
+      , mkInfixL "^="
+      , mkInfixL "|=" ] ]
   
-  logicTable = 
-    [ [mkInfixL "&"], [mkInfixL "^"], [mkInfixL "|"], [Postfix ternaryOp] ]
+  -- POSSIBLE BUG: L.reservedOp may be too greedy. 
+  -- see http://www.mega-nerd.com/erikd/Blog/CodeHacking/Haskell/index.html for more information
+  logicTable =
+    [ [mkInfixL "&&"], [mkInfixL "||"], [Postfix ternaryOp] ]
     where
       ternaryOp = do
         then' <- L.reservedOp "?" >> expression
         else' <- L.reservedOp ":" >> expression
         return $ \it -> TernaryOp it then' else'
+  
+  bitwiseTable = 
+    [[mkInfixL "&"], [mkInfixL "^"], [mkInfixL "|"]]
   
   compTable = 
     [ [mkInfixL "<", mkInfixL ">", mkInfixL "<=", mkInfixL ">=" ]
@@ -56,7 +71,12 @@ module Language.C.Expressions
   unaryTable = 
     [ [mkPrefix "++"]
     , [mkPrefix "--"]
-    , [mkPrefix "&", mkPrefix "*", mkPrefix "+", mkPrefix "-", mkPrefix "~", mkPrefix "!"]
+    , [ mkPrefix "&"
+      , mkPrefix "*"
+      , mkPrefix "+"
+      , mkPrefix "-"
+      , mkPrefix "~"
+      , mkPrefix "!"]
     , [Prefix sizeof]
     ] where
       mkPrefix name = Prefix $ do
@@ -67,7 +87,7 @@ module Language.C.Expressions
         return $ UnaryOp "sizeof"
   
   
-  -- BUG: a[1][2] doesn't work correctly
+  -- BUG: a[1][2] doesn't work correctly, however, (a[1])[2] does.
   postfixTable = 
     [ [Postfix index ]
     , [Postfix call ]
@@ -88,13 +108,12 @@ module Language.C.Expressions
       arrowAccess = do
         i <- L.arrow >> identifier
         return $ flip (BinaryOp "->") i
-      increment = L.reservedOp "++" >> return (UnaryOp "++")
-      decrement = L.reservedOp "--" >> return (UnaryOp "--")
+      increment = L.reservedOp "++" >> return (UnaryOp "post ++")
+      decrement = L.reservedOp "--" >> return (UnaryOp "post --")
   
   identifier :: Parser CExpr
   identifier = L.identifier `into` Identifier
   
-  -- BUG: this accepts "1.5.0" as "1.5"
   constant :: Parser CExpr
   constant = choice [try float, integer, charLiteral] `into` Constant
   
