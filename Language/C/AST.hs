@@ -47,12 +47,14 @@ module Language.C.AST where
     | SStatic
     | SExtern
     | STypedef
+    deriving (Eq, Show)
   -- TODO: __attribute__(()) should go in here, too
     
   data TypeQualifier
     = QConst
     | QRestrict
     | QVolatile
+    deriving (Eq)
   
   instance Show TypeQualifier where
     show QConst = "const"
@@ -63,6 +65,13 @@ module Language.C.AST where
   
   data FunctionSpecifier 
     = FInline
+    deriving (Eq, Show)
+  
+  data Specifier 
+    = TSpec TypeSpecifier
+    | TQual TypeQualifier
+    | SSpec StorageSpecifier
+    deriving (Eq, Show)
   
   data TypeSpecifier
    = TVoid
@@ -78,12 +87,19 @@ module Language.C.AST where
    | TEnumeration String
    | TTypedef String
    deriving (Eq, Show)
+   
+  data CDeclaration 
+    = TopLevel [Specifier] CDeclarator (Maybe CExpr)
+    deriving (Eq, Show)
+    
   
- data CDeclarator
+  data CDeclarator
    = Named String [DerivedDeclarator]
    | Abstract [DerivedDeclarator]
-
- data DerivedDeclarator
+   deriving (Eq, Show)
+  
+  data DerivedDeclarator
    = Pointer [TypeQualifier]
-   | Array [TypeQualfiier] CExpr
+   | Array [TypeQualifier] CExpr
    | FunctionPointer [CDeclarator]
+   deriving (Eq, Show)
