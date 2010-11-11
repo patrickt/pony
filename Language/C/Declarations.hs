@@ -7,7 +7,7 @@ module Language.C.Declarations where
   import Language.C.Expressions
   import Language.C.Lexer as L
   import Text.Parsec hiding (string)
-  import Text.Parsec.String
+  import Language.C.Parser
   
   into = flip fmap
   

@@ -2,15 +2,14 @@ module Language.C.Expressions
   (expression, identifier, constant)
   where 
   
-  import Text.Parsec hiding (string)
-  import Text.Parsec.String
+  import Language.C.Parser
   import Language.C.AST
   import qualified Text.Parsec.Token as Token
   import Text.Parsec.Expr
   import qualified Language.C.Lexer as L
   
   buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
-  buildChainedParser ((t,msg):ts) p = buildChainedParser ts $ (buildExpressionParser t p <?> msg)
+  buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
   buildChainedParser [] p = p
   
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages

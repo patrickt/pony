@@ -7,7 +7,7 @@ module Language.C.Declarators
 where
   
   import Text.Parsec
-  import Text.Parsec.String
+  import Language.C.Parser
   import Language.C.Lexer as L
   import Language.C.AST
   
