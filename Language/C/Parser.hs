@@ -20,7 +20,7 @@ module Language.C.Parser
   
   type Parser = GenParser Char Internals 
   
-  parseTest p s = do
+  parseTest p s = 
     case (runParser p mkInternals "" s) of
       (Left error) -> print error
       (Right a) -> print a

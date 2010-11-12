@@ -2,6 +2,7 @@ module Language.C.AST where
   
   import Data.Tree
   import Data.Either
+  import Text.Printf
   
   -- TODO: make everything derive Typeable and Data
   
@@ -15,18 +16,16 @@ module Language.C.AST where
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr
     deriving (Eq)
-    
-  inParens x = "(" ++ x ++ ")"
   
   instance Show CExpr where
     show (Constant l) = show l
     show (Identifier s) = s
-    show (Index lhs rhs) = inParens $ (show lhs) ++ "[" ++ (show rhs) ++ "]"
-    show (Call func args) = inParens $ (show func) ++ "(" ++ (show args) ++ ")"
-    show (Cast typ expr) = "(" ++ show typ ++ ")" ++ show expr
-    show (UnaryOp str expr) = inParens $ str ++ show expr
-    show (BinaryOp str lhs rhs) = inParens $ show lhs ++ " " ++ str ++ " " ++ show rhs
-    show (TernaryOp a b c) = inParens $ show a ++ " ? " ++ show b ++ show " : " ++ show c 
+    show (Index lhs rhs) = printf "( %s[%s] )" (show lhs) (show rhs)
+    show (Call func args) = printf "( %s(%s) )" (show func) (show args)
+    show (Cast typ expr) = printf "(%s)%s" (show typ) (show expr)
+    show (UnaryOp str expr) = printf "(%s %s)" str (show expr)
+    show (BinaryOp str lhs rhs) = printf "(%s %s %s)" (show lhs) str (show rhs)
+    show (TernaryOp a b c) = printf "(%s ? %s : %s)" (show a) (show b) (show c)
   
   data CLiteral
     = CInteger Integer

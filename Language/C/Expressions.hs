@@ -88,12 +88,12 @@ module Language.C.Expressions
   
   -- BUG: a[1][2] doesn't work correctly, however, (a[1])[2] does.
   postfixTable = 
-    [ [Postfix index ]
-    , [Postfix call ]
-    , [Postfix dotAccess ]
-    , [Postfix arrowAccess ]
-    , [Postfix increment ]
-    , [Postfix decrement ]
+    [ [ Postfix index ]
+    , [ Postfix call ]
+    , [ Postfix dotAccess ]
+    , [ Postfix arrowAccess ]
+    , [ Postfix increment ]
+    , [ Postfix decrement ]
     ] where
       index = do
         expr <- L.brackets expression
