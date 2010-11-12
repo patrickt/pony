@@ -16,7 +16,7 @@ module Language.C.Parser
   }
   
   mkInternals :: Internals
-  mkInternals = Internals { typedefs = [] }
+  mkInternals = Internals { typedefs = [("uint64_t", TLong)] }
   
   type Parser = GenParser Char Internals 
   

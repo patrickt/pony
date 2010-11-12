@@ -84,7 +84,7 @@ module Language.C.AST where
    | TUnsigned
    | TStructOrUnion String
    | TEnumeration String
-   | TTypedef String
+   | TTypedef String TypeSpecifier
    deriving (Eq, Show)
    
   data CDeclaration 

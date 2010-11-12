@@ -32,7 +32,15 @@ where
     , "double" `into` TDouble
     , "signed" `into` TSigned
     , "unsigned" `into` TUnsigned
+    , try lookupTypedef
     ] <?> "type specifier"
+    where
+      lookupTypedef = do
+        defs <- getState
+        ident <- identifier
+        case (lookup ident (typedefs defs)) of
+          (Just spec) -> return (TTypedef ident spec)
+          Nothing -> fail "typedef not found"
   
   storageSpecifier :: Parser StorageSpecifier
   storageSpecifier = choice
