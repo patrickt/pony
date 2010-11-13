@@ -1,3 +1,5 @@
+{-# LANGUAGE GADTs #-}
+
 module Language.C.AST where
   
   import Data.Tree
@@ -5,6 +7,12 @@ module Language.C.AST where
   import Text.Printf
   
   -- TODO: make everything derive Typeable and Data
+  
+  data CStatement where
+    ExpressionStmt :: CExpr -> CStatement
+    EmptyStmt :: CStatement
+    -- CompoundStmt :: (BlockItem a) => [a] -> CStatement
+    deriving (Show, Eq)
   
   data CExpr
     = Constant CLiteral
