@@ -1,4 +1,8 @@
-module Language.C.Declarations where
+module Language.C.Declarations
+  ( declaration
+  , declarationInit
+  )
+where
   
   import Data.Maybe
   import Debug.Trace
@@ -33,14 +37,24 @@ module Language.C.Declarations where
     c <- L.brackets constant
     trace "Array" $ (return $ Array [] c)
   
+
+  -- TODO: enforce that the binary operator has to be an assignment
+  -- BUG: array declarations are broken again
+  declaration :: Parser CDeclaration
   declaration = do
     typs <- many1 specifier
     -- TODO: nothing here requires that you actually have a type here
     -- e.g. "const static x;" parses correctly
     -- there should be a parsing failure if you don't specify a type qualifier
     ptrs <- many derived
-    ident <- L.identifier
-    arr <- optionMaybe array
-    let dervs = if (arr == Nothing) then ptrs else ((fromJust arr): ptrs)
-    L.semi
-    return $ TopLevel typs (Named ident dervs) Nothing
+    expr <- expression
+    case expr of
+      (Identifier ident) -> do
+        arr <- optionMaybe array
+        let dervs = if (arr == Nothing) then ptrs else ((fromJust arr): ptrs)
+        L.semi
+        return $ TopLevel typs (Named ident dervs) Nothing
+      (BinaryOp eq (Identifier lhs) rhs) -> do
+        L.semi
+        return $ TopLevel typs (Named lhs []) (Just rhs)
+      otherwise -> fail "whoops"
