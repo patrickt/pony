@@ -1,5 +1,6 @@
 module Language.C.Lexer 
   ( identifier
+  , whiteSpace
   , reserved
   , operator
   , reservedOp
@@ -42,7 +43,8 @@ module Language.C.Lexer
     }
   
   lexer = T.makeTokenParser ponyCDef
-  
+
+  whiteSpace = T.whiteSpace lexer
   identifier = T.identifier lexer
   reserved = T.reserved lexer
   operator = T.operator lexer

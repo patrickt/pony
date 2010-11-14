@@ -23,7 +23,8 @@ module Language.C.Declarations where
     
   pointer :: Parser DerivedDeclarator
   pointer = do
-    L.reservedOp "*"
+    char '*'
+    L.whiteSpace
     quals <- many typeQualifier
     return $ Pointer quals
   

@@ -8,11 +8,19 @@ module Language.C.AST where
   
   -- TODO: make everything derive Typeable and Data
   
+  class (Show m) => BlockItem m
+  
+  instance BlockItem CStatement 
+  
   data CStatement where
     ExpressionStmt :: CExpr -> CStatement
     EmptyStmt :: CStatement
-    -- CompoundStmt :: (BlockItem a) => [a] -> CStatement
-    deriving (Show, Eq)
+    CompoundStmt :: (BlockItem a) => [a] -> CStatement
+  
+  instance Show CStatement where
+    show (ExpressionStmt e) = show e
+    show EmptyStmt = "()"
+    show (CompoundStmt a) = "{" ++ show a ++ "}"
   
   data CExpr
     = Constant CLiteral
