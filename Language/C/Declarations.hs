@@ -1,6 +1,5 @@
 module Language.C.Declarations
   ( declaration
-  , declarationInit
   )
 where
   
@@ -10,7 +9,6 @@ where
   import Language.C.Declarators
   import Language.C.Expressions
   import Language.C.Lexer as L
-  import Text.Parsec hiding (string)
   import Language.C.Parser
   
   into = flip fmap
@@ -35,7 +33,7 @@ where
   array :: Parser DerivedDeclarator
   array = do 
     c <- L.brackets constant
-    trace "Array" $ (return $ Array [] c)
+    return $ Array [] c
   
 
   -- TODO: enforce that the binary operator has to be an assignment
@@ -51,7 +49,7 @@ where
     case expr of
       (Identifier ident) -> do
         arr <- optionMaybe array
-        let dervs = if (arr == Nothing) then ptrs else ((fromJust arr): ptrs)
+        let dervs = if arr == Nothing then ptrs else fromJust arr : ptrs
         L.semi
         return $ TopLevel typs (Named ident dervs) Nothing
       (BinaryOp eq (Identifier lhs) rhs) -> do

@@ -6,32 +6,31 @@ module Language.C.Declarators
 
 where
   
-  import Text.Parsec
   import Language.C.Parser
   import Language.C.Lexer as L
   import Language.C.AST
   
-  into name qual = L.reserved name >> return qual
+  as name qual = L.reserved name >> return qual
   
   typeQualifier :: Parser TypeQualifier
   typeQualifier = choice 
-    [ "const" `into` QConst
-    , "restrict" `into` QRestrict
-    , "volatile" `into` QVolatile 
+    [ "const" `as` QConst
+    , "restrict" `as` QRestrict
+    , "volatile" `as` QVolatile 
     ] <?> "type qualifier"
   
   -- I need to put something into the parser state so that it can handle typedefs
   typeSpecifier :: Parser TypeSpecifier
   typeSpecifier = choice 
-    [ "void" `into` TVoid 
-    , "char" `into` TChar
-    , "short" `into` TShort
-    , "int" `into` TInt
-    , "long" `into` TLong
-    , "float" `into` TFloat
-    , "double" `into` TDouble
-    , "signed" `into` TSigned
-    , "unsigned" `into` TUnsigned
+    [ "void" `as` TVoid 
+    , "char" `as` TChar
+    , "short" `as` TShort
+    , "int" `as` TInt
+    , "long" `as` TLong
+    , "float" `as` TFloat
+    , "double" `as` TDouble
+    , "signed" `as` TSigned
+    , "unsigned" `as` TUnsigned
     , try lookupTypedef
     ] <?> "type specifier"
     where
@@ -44,13 +43,13 @@ where
   
   storageSpecifier :: Parser StorageSpecifier
   storageSpecifier = choice
-    [ "typedef" `into` STypedef
-    , "extern" `into` SExtern
-    , "static" `into` SStatic
-    , "auto" `into` SAuto
-    , "register" `into` SRegister
+    [ "typedef" `as` STypedef
+    , "extern" `as` SExtern
+    , "static" `as` SStatic
+    , "auto" `as` SAuto
+    , "register" `as` SRegister
     ]
   
   functionSpecifier :: Parser FunctionSpecifier
-  functionSpecifier = "inline" `into` FInline
+  functionSpecifier = "inline" `as` FInline
   

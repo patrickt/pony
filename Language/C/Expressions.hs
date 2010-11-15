@@ -1,12 +1,13 @@
 module Language.C.Expressions  
-  (expression, identifier, constant)
+  ( expression
+  , identifier
+  , constant )
   where 
   
   import Language.C.Parser
   import Language.C.AST
-  import qualified Text.Parsec.Token as Token
-  import Text.Parsec.Expr
   import qualified Language.C.Lexer as L
+  import Text.Parsec.Expr
   
   buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
   buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
@@ -25,7 +26,10 @@ module Language.C.Expressions
   
   primaryExpression :: Parser CExpr
   primaryExpression = choice
-    [ identifier, constant, stringLiteral `into` Constant, L.parens expression ]
+    [ identifier
+    , constant
+    , stringLiteral `into` Constant
+    , L.parens expression ]
   
   assignTable = 
     [ [ mkInfixL "="
@@ -44,7 +48,9 @@ module Language.C.Expressions
   -- POSSIBLE BUG: L.reservedOp may be too greedy. 
   -- see http://www.mega-nerd.com/erikd/Blog/CodeHacking/Haskell/index.html for more information
   logicTable =
-    [ [mkInfixL "&&"], [mkInfixL "||"], [Postfix ternaryOp] ]
+    [ [mkInfixL "&&"]
+    , [mkInfixL "||"]
+    , [Postfix ternaryOp] ]
     where
       ternaryOp = do
         then' <- L.reservedOp "?" >> expression
@@ -52,31 +58,41 @@ module Language.C.Expressions
         return $ \it -> TernaryOp it then' else'
   
   bitwiseTable = 
-    [[mkInfixL "&"], [mkInfixL "^"], [mkInfixL "|"]]
+    [ [mkInfixL "&"]
+    , [mkInfixL "^"]
+    , [mkInfixL "|"] ]
   
   compTable = 
-    [ [mkInfixL "<", mkInfixL ">", mkInfixL "<=", mkInfixL ">=" ]
-    , [mkInfixL "==", mkInfixL "!="]]
+    [ [ mkInfixL "<"
+      , mkInfixL ">"
+      , mkInfixL "<="
+      , mkInfixL ">=" ]
+    , [ mkInfixL "=="
+      , mkInfixL "!=" ] ]
   
   arithTable = 
-    [ [mkInfixL "*", mkInfixL "/", mkInfixL "%"]
-    , [mkInfixL "+", mkInfixL "-"]
-    , [mkInfixL "<<", mkInfixL ">>"] ]
+    [ [ mkInfixL "*"
+      , mkInfixL "/"
+      , mkInfixL "%" ]
+    , [ mkInfixL "+"
+      , mkInfixL "-" ]
+    , [ mkInfixL "<<"
+      , mkInfixL ">>" ] ]
   
   mkInfixL name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocLeft
   
   -- BUG: sizeof(typename) doesn't work
   -- BUG: the unary operators are applied on cast-expressions, not other unary expressions
   unaryTable = 
-    [ [mkPrefix "++"]
-    , [mkPrefix "--"]
+    [ [ mkPrefix "++" ]
+    , [ mkPrefix "--" ]
     , [ mkPrefix "&"
       , mkPrefix "*"
       , mkPrefix "+"
       , mkPrefix "-"
       , mkPrefix "~"
-      , mkPrefix "!"]
-    , [Prefix sizeof]
+      , mkPrefix "!" ]
+    , [ Prefix sizeof ]
     ] where
       mkPrefix name = Prefix $ do
         L.reservedOp name
@@ -114,7 +130,9 @@ module Language.C.Expressions
   identifier = L.identifier `into` Identifier
   
   constant :: Parser CExpr
-  constant = choice [try float, integer, charLiteral] `into` Constant
+  constant = choice [ try float
+                    , integer
+                    , charLiteral ] `into` Constant
   
   integer, charLiteral, float, stringLiteral :: Parser CLiteral
   integer       = L.integer `into` CInteger
