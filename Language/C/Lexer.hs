@@ -39,7 +39,7 @@ module Language.C.Lexer
                         "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", 
                         "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
                         "static", "struct", "switch", "typedef", "union", "unsigned", "void", 
-                        "volatile", "while"]
+                        "volatile", "while", "..." ]
     }
   
   lexer = T.makeTokenParser ponyCDef

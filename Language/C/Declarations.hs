@@ -28,6 +28,7 @@ where
     char '*'
     L.whiteSpace
     quals <- many typeQualifier
+    
     return $ Pointer quals
   
   array :: Parser DerivedDeclarator
@@ -55,4 +56,7 @@ where
       (BinaryOp eq (Identifier lhs) rhs) -> do
         L.semi
         return $ TopLevel typs (Named lhs []) (Just rhs)
+      (Call (Identifier name) rhs) -> do
+        L.semi
+        return $ TopLevel typs (Named name [Function]) Nothing
       otherwise -> fail "whoops"

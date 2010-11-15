@@ -116,5 +116,6 @@ module Language.C.AST where
   data DerivedDeclarator
    = Pointer [TypeQualifier]
    | Array [TypeQualifier] CExpr
+   | Function
    | FunctionPointer [CDeclarator]
    deriving (Eq, Show)
