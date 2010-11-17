@@ -8,19 +8,20 @@ module Language.C.AST where
   
   -- TODO: make everything derive Typeable and Data
   
-  class (Show m) => BlockItem m
-  
-  instance BlockItem CStatement 
-  
   data CStatement where
+    DeclarationStmt :: CDeclaration -> CStatement
     ExpressionStmt :: CExpr -> CStatement
     EmptyStmt :: CStatement
-    CompoundStmt :: (BlockItem a) => [a] -> CStatement
+    CompoundStmt :: [CStatement] -> CStatement
   
   instance Show CStatement where
     show (ExpressionStmt e) = show e
     show EmptyStmt = "()"
     show (CompoundStmt a) = "{" ++ show a ++ "}"
+    
+  class (Show m) => BlockItem m
+  
+  instance BlockItem CStatement
   
   data CExpr
     = Constant CLiteral
@@ -69,18 +70,14 @@ module Language.C.AST where
     = QConst
     | QRestrict
     | QVolatile
+    | FInline
     deriving (Eq)
   
   instance Show TypeQualifier where
     show QConst = "const"
     show QRestrict = "restrict"
     show QVolatile = "volatile"
-  
-  -- Language.C lumps 'inline' in with the type qualifiers. I disapprove.
-  
-  data FunctionSpecifier 
-    = FInline
-    deriving (Eq, Show)
+    show FInline = "inline"
   
   data Specifier 
     = TSpec TypeSpecifier
@@ -105,8 +102,12 @@ module Language.C.AST where
    
   data CDeclaration 
     = TopLevel [Specifier] CDeclarator (Maybe CExpr)
+    | Multiple [CDeclaration]
+    | Structure [Specifier] [CDeclaration]
+    | Sized CDeclarator CExpr
+    | Parametric CDeclarator
+    | TypeName CDeclarator
     deriving (Eq, Show)
-    
   
   data CDeclarator
    = Named String [DerivedDeclarator]
@@ -116,6 +117,6 @@ module Language.C.AST where
   data DerivedDeclarator
    = Pointer [TypeQualifier]
    | Array [TypeQualifier] CExpr
-   | Function
+   | Function [CDeclarator]
    | FunctionPointer [CDeclarator]
    deriving (Eq, Show)

@@ -6,13 +6,15 @@ module Language.C.Statements where
   import qualified Language.C.Lexer as L
   
   statement :: Parser CStatement
-  statement = undefined
+  statement = expressionStmt
   
   labeledStmt :: Parser CStatement
   labeledStmt = undefined
   
   compoundStmt :: Parser CStatement
-  compoundStmt = undefined
+  compoundStmt = L.braces $ do
+    args <- many expressionStmt
+    return $ CompoundStmt args
   
   expressionStmt :: Parser CStatement
   expressionStmt = do
