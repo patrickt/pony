@@ -3,7 +3,6 @@ module Language.C.Specifiers
   , typeSpecifier
   , storageSpecifier
   , specifier
-  , specifierList
   )
 
 where
@@ -60,5 +59,3 @@ where
     , storageSpecifier `into` SSpec
     ]
   
-  specifierList :: Parser [Specifier]
-  specifierList = many1 specifier

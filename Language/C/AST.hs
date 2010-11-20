@@ -18,10 +18,6 @@ module Language.C.AST where
     show (ExpressionStmt e) = show e
     show EmptyStmt = "()"
     show (CompoundStmt a) = "{" ++ show a ++ "}"
-    
-  class (Show m) => BlockItem m
-  
-  instance BlockItem CStatement
   
   data CExpr
     = Constant CLiteral
@@ -99,14 +95,12 @@ module Language.C.AST where
    | TEnumeration String
    | TTypedef String TypeSpecifier
    deriving (Eq, Show)
-   
+  
   data CDeclaration 
-    = TopLevel [Specifier] CDeclarator (Maybe CExpr)
-    | Multiple [CDeclaration]
-    | Structure [Specifier] [CDeclaration]
-    | Sized CDeclarator CExpr
-    | Parametric CDeclarator
-    | TypeName CDeclarator
+    = TopLevel [Specifier] CDeclarator Initializer
+    | Multiple [Specifier] [(CDeclarator, Initializer)]
+    | Sized CDeclaration CExpr
+    | TypeName [Specifier] (Maybe CDeclarator)
     deriving (Eq, Show)
   
   data CDeclarator
@@ -114,9 +108,14 @@ module Language.C.AST where
    | Abstract [DerivedDeclarator]
    deriving (Eq, Show)
   
+  data Initializer 
+    = InitExpression CExpr
+    | InitList 
+    | Uninitialized
+    deriving (Eq, Show)
+  
   data DerivedDeclarator
    = Pointer [TypeQualifier]
-   | Array [TypeQualifier] CExpr
-   | Function [CDeclarator]
-   | FunctionPointer [CDeclarator]
+   | Array [TypeQualifier] (Maybe CExpr)
+   | Function [CDeclaration] Bool
    deriving (Eq, Show)
