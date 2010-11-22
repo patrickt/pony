@@ -1,6 +1,7 @@
 module Language.C.Expressions  
   ( expression
   , identifier
+  , constantExpression
   , constant )
   where 
   
@@ -16,14 +17,16 @@ module Language.C.Expressions
   
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
   expression :: Parser CExpr
-  expression = buildChainedParser [ (postfixTable, "postfix expression")
-                                  , (unaryTable, "unary expression")
-                                  , (arithTable, "arithmetic expression")
-                                  , (compTable, "comparative expression")
-                                  , (bitwiseTable, "bitwise operation")
-                                  , (logicTable, "logical operation")
-                                  , (assignTable, "assignment expression")
-                                  ] primaryExpression <?> "C expression"
+  expression = buildChainedParser [ (assignTable, "assignment expression") ] primaryExpression <?> "C expression"
+  
+  constantExpression :: Parser CExpr
+  constantExpression = buildChainedParser [ (postfixTable, "postfix expression")
+                                          , (unaryTable, "unary expression")
+                                          , (arithTable, "arithmetic expression")
+                                          , (compTable, "comparative expression")
+                                          , (bitwiseTable, "bitwise operation")
+                                          , (logicTable, "logical operation")
+                                          ] primaryExpression <?> "constant expression"
   
   primaryExpression :: Parser CExpr
   primaryExpression = choice
