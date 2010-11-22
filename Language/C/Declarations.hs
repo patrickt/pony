@@ -7,7 +7,7 @@ where
   import Debug.Trace
   import Language.C.AST
   import Language.C.Expressions
-  import Language.C.Lexer as L hiding (identifier)
+  import Language.C.Lexer as L
   import Language.C.Parser
   import Language.C.Specifiers
   
@@ -71,12 +71,25 @@ where
   initializer :: Parser Initializer
   initializer = expression >>= return . InitExpression
 
+  -- hack hack hack
+  data DirectDeclarator 
+    = Parenthesized CDeclarator
+    | Single String
+  
+  direct :: Parser DirectDeclarator
+  direct = parens <|> ident where
+    parens = (L.parens declarator) >>= return . Parenthesized
+    ident = L.identifier >>= return . Single
+
   declarator :: Parser CDeclarator
   declarator = do
     ptrs <- many pointer
-    name <- optionMaybe identifier
+    direct' <- optionMaybe direct
     arrayOrFunction <- many (try array <|> func)
     let derived = ptrs ++ arrayOrFunction
-    case name of
-      (Just (Identifier s)) -> return $ Named s derived
+    case direct' of
+      (Just (Single s)) -> return $ Named s derived
+      (Just (Parenthesized (Named s decls))) -> return $ Named s (decls ++ derived)
+      -- is this even possible?
+      (Just (Parenthesized (Abstract decls))) -> return $ Abstract (decls ++ derived)
       Nothing -> return $ Abstract derived
