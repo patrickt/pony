@@ -6,10 +6,23 @@ module Language.C.Statements where
   import qualified Language.C.Lexer as L
   
   statement :: Parser CStatement
-  statement = expressionStmt
+  statement = try labeledStmt <|> expressionStmt
   
   labeledStmt :: Parser CStatement
-  labeledStmt = undefined
+  labeledStmt = choice [ caseStmt, defaultStmt, labelStmt ] where
+    caseStmt = do 
+      L.reserved "case"
+      e <- expression
+      L.colon
+      s <- statement
+      return $ CaseStmt e s
+    defaultStmt = do
+      L.reserved "default" >> L.colon
+      statement >>= return . DefaultStmt
+    labelStmt = do
+      i <- L.identifier
+      L.colon
+      statement >>= return . LabeledStmt i
   
   compoundStmt :: Parser CStatement
   compoundStmt = L.braces $ do
@@ -32,3 +45,4 @@ module Language.C.Statements where
   
   jumpStmt :: Parser CStatement
   jumpStmt = undefined
+    

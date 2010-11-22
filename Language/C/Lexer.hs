@@ -15,6 +15,7 @@ module Language.C.Lexer
   , parens
   , semi
   , comma
+  , colon
   , dot
   , arrow
   , semiSep
@@ -66,6 +67,7 @@ module Language.C.Lexer
   brackets = T.brackets lexer
   semi = T.semi lexer
   comma = T.comma lexer
+  colon = T.colon lexer
   dot = T.dot lexer
   arrow = reservedOp "->" >> return "->"
   semiSep = T.semiSep lexer

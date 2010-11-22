@@ -9,15 +9,32 @@ module Language.C.AST where
   -- TODO: make everything derive Typeable and Data
   
   data CStatement where
-    DeclarationStmt :: CDeclaration -> CStatement
+    DeclarationStmt :: CDeclaration -> CStatement -- declarations aren't statements, this is a hack
     ExpressionStmt :: CExpr -> CStatement
     EmptyStmt :: CStatement
+    CaseStmt :: CExpr -> CStatement -> CStatement
     CompoundStmt :: [CStatement] -> CStatement
+    DefaultStmt :: CStatement -> CStatement
+    LabeledStmt :: String -> CStatement -> CStatement
+    ContinueStmt :: CStatement
+    BreakStmt :: CStatement
+    GotoStmt :: String -> CStatement
+    ReturnStmt :: (Maybe CExpr) -> CStatement
   
+  -- this could all be a lot prettier if CStatement were an instance of PrintfArg
   instance Show CStatement where
-    show (ExpressionStmt e) = show e
+    show (ExpressionStmt e) = show e ++ ";"
     show EmptyStmt = "()"
     show (CompoundStmt a) = "{" ++ show a ++ "}"
+    show (CaseStmt expr s) = printf "case %s: %s;" (show expr) (show s)
+    show (DefaultStmt expr) = "default: " ++ show expr ++ ";"
+    show (LabeledStmt l s) = printf "%s: %s;" l (show s)
+    show ContinueStmt = "continue;"
+    show BreakStmt = "break;"
+    show (GotoStmt s) = printf "goto %s;" s
+    show (ReturnStmt opt) = case opt of
+      (Just e) -> printf "return %s;" (show e)
+      Nothing -> "return;"
   
   data CExpr
     = Constant CLiteral
