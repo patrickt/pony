@@ -1,6 +1,8 @@
 module Language.C.Declarations
   ( declaration
-  , typeName )
+  , typeName
+  , declarator
+  , parameter )
 where
   
   import Data.Maybe
@@ -28,10 +30,9 @@ where
     -- declaration-specifiers
     specs <- many1 specifier
     -- init-declarator-list
-    decls <- L.commaSep initDeclarator
-    case decls of
-      [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
-      more -> return $ Multiple specs more
+    decl <- declarator
+    return $ TopLevel specs decl Uninitialized
+      
   
   
   typeName :: Parser CDeclaration

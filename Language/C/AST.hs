@@ -36,6 +36,9 @@ module Language.C.AST where
       (Just e) -> printf "return %s;" (show e)
       Nothing -> "return;"
   
+  data CFunction = CFunction [Specifier] CDeclarator [CDeclaration] CStatement
+    deriving (Show)
+  
   data CExpr
     = Constant CLiteral
     | Identifier String

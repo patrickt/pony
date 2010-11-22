@@ -6,7 +6,7 @@ module Language.C.Statements where
   import qualified Language.C.Lexer as L
   
   statement :: Parser CStatement
-  statement = try labeledStmt <|> expressionStmt
+  statement = try labeledStmt <|> expressionStmt <|> jumpStmt
   
   labeledStmt :: Parser CStatement
   labeledStmt = choice [ caseStmt, defaultStmt, labelStmt ] where
@@ -22,16 +22,14 @@ module Language.C.Statements where
   
   compoundStmt :: Parser CStatement
   compoundStmt = L.braces $ do
-    args <- many expressionStmt
+    args <- many statement
     return $ CompoundStmt args
   
   expressionStmt :: Parser CStatement
   expressionStmt = do
     expr <- optionMaybe expression
     L.semi
-    return $ case expr of
-      (Just e) -> ExpressionStmt e
-      Nothing -> EmptyStmt
+    return $ maybe EmptyStmt ExpressionStmt expr
   
   selectionStmt :: Parser CStatement
   selectionStmt = undefined
@@ -40,5 +38,9 @@ module Language.C.Statements where
   iterationStmt = undefined
   
   jumpStmt :: Parser CStatement
-  jumpStmt = undefined
+  jumpStmt = choice [ goto, continue, break', return' ] where
+    goto = L.reserved "goto" >> L.identifier >>= return . GotoStmt
+    continue = L.reserved "continue" >> return ContinueStmt
+    break' = L.reserved "break" >> return BreakStmt
+    return' = L.reserved "return" >> (optionMaybe expression) >>= return . ReturnStmt
     
