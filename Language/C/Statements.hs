@@ -18,11 +18,11 @@ module Language.C.Statements where
       return $ CaseStmt e s
     defaultStmt = do
       L.reserved "default" >> L.colon
-      statement >>= return . DefaultStmt
+      DefaultStmt <$> statement
     labelStmt = do
       i <- L.identifier
       L.colon
-      statement >>= return . LabeledStmt i
+      LabeledStmt i <$> statement
   
   compoundStmt :: Parser CStatement
   compoundStmt = L.braces $ do

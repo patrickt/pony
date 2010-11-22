@@ -1,5 +1,6 @@
 module Language.C.Parser 
   ( module Text.Parsec
+  , module Control.Applicative
   , Parser
   , Internals
   , typedefs
@@ -7,6 +8,7 @@ module Language.C.Parser
   )
   where
   
+  import Control.Applicative ((<$>))
   import Text.Parsec hiding (parseTest)
   import Text.Parsec.String hiding (Parser)
   import Language.C.AST

@@ -19,7 +19,7 @@ module Language.C.AST where
     ContinueStmt :: CStatement
     BreakStmt :: CStatement
     GotoStmt :: String -> CStatement
-    ReturnStmt :: (Maybe CExpr) -> CStatement
+    ReturnStmt :: Maybe CExpr -> CStatement
   
   -- this could all be a lot prettier if CStatement were an instance of PrintfArg
   instance Show CStatement where

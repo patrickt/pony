@@ -59,7 +59,7 @@ where
   -- 6.7.5.
   -- this is gorgeous.
   pointer :: Parser DerivedDeclarator
-  pointer = char '*' >> L.whiteSpace >> many typeQualifier >>= return . Pointer
+  pointer = Pointer <$> (char '*' >> L.whiteSpace >> many typeQualifier)
 
   initDeclarator :: Parser (CDeclarator, Initializer)
   initDeclarator = do
@@ -69,7 +69,7 @@ where
     where assignment = L.reservedOp "=" >> initializer
   
   initializer :: Parser Initializer
-  initializer = expression >>= return . InitExpression
+  initializer = InitExpression <$> expression
 
   -- hack hack hack
   data DirectDeclarator 
@@ -78,8 +78,8 @@ where
   
   direct :: Parser DirectDeclarator
   direct = parens <|> ident where
-    parens = (L.parens declarator) >>= return . Parenthesized
-    ident = L.identifier >>= return . Single
+    parens = Parenthesized <$> L.parens declarator
+    ident = Single <$> L.identifier
 
   declarator :: Parser CDeclarator
   declarator = do
