@@ -41,7 +41,7 @@ module Language.C.AST where
     | Identifier String
     | Index CExpr CExpr
     | Call CExpr [CExpr]
-    | Cast CExpr CExpr
+    | Cast CDeclaration CExpr
     | UnaryOp String CExpr
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr

@@ -6,6 +6,7 @@ module Language.C.Expressions
   
   import Language.C.Parser
   import Language.C.AST
+  import {-# SOURCE #-} Language.C.Declarations 
   import qualified Language.C.Lexer as L
   import Text.Parsec.Expr
   
@@ -84,25 +85,27 @@ module Language.C.Expressions
   -- BUG: sizeof(typename) doesn't work
   -- BUG: the unary operators are applied on cast-expressions, not other unary expressions
   unaryTable = 
-    [ [ mkPrefix "++" ]
+    [ [ Prefix cast   ]
+    , [ mkPrefix "++" ]
     , [ mkPrefix "--" ]
     , [ mkPrefix "&"
       , mkPrefix "*"
       , mkPrefix "+"
       , mkPrefix "-"
       , mkPrefix "~"
-      , mkPrefix "!" ]
+      , mkPrefix "!"  ]
     , [ Prefix sizeof ]
     ] where
       mkPrefix name = Prefix $ do
         L.reservedOp name
         return $ UnaryOp name
+      cast = do
+        tn <- L.parens typeName
+        return $ Cast tn
       sizeof = do
         L.reserved "sizeof"
         return $ UnaryOp "sizeof"
   
-  
-  -- BUG: a[1][2] doesn't work correctly, however, (a[1])[2] does.
   postfixTable = 
     [ [ Postfix index ]
     , [ Postfix call ]

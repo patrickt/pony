@@ -11,14 +11,10 @@ module Language.C.Statements where
   labeledStmt :: Parser CStatement
   labeledStmt = choice [ caseStmt, defaultStmt, labelStmt ] where
     caseStmt = do 
-      L.reserved "case"
-      e <- expression
-      L.colon
-      s <- statement
+      e <- L.reserved "case" >> expression
+      s <- L.colon >> statement
       return $ CaseStmt e s
-    defaultStmt = do
-      L.reserved "default" >> L.colon
-      DefaultStmt <$> statement
+    defaultStmt = DefaultStmt <$> (L.reserved "default" >> L.colon >> statement)
     labelStmt = do
       i <- L.identifier
       L.colon
