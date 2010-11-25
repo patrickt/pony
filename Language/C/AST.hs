@@ -111,8 +111,8 @@ module Language.C.AST where
    | TDouble
    | TSigned
    | TUnsigned
-   | TStructOrUnion String
-   | TEnumeration String
+   | TStructOrUnion (Maybe String) Bool [CDeclaration]
+   | TEnumeration (Maybe String) [String]
    | TTypedef String TypeSpecifier
    deriving (Eq, Show)
   

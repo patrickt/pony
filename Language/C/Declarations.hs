@@ -32,8 +32,6 @@ where
     -- init-declarator-list
     decl <- declarator
     return $ TopLevel specs decl Uninitialized
-      
-  
   
   typeName :: Parser CDeclaration
   typeName = do
@@ -57,8 +55,7 @@ where
         e <- optionMaybe expression
         return (q, e)
 
-  -- 6.7.5.
-  -- this is gorgeous.
+  -- ISO C99 standard, section 6.7.5.
   pointer :: Parser DerivedDeclarator
   pointer = Pointer <$> (char '*' >> L.whiteSpace >> many typeQualifier)
 

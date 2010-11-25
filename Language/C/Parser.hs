@@ -8,7 +8,7 @@ module Language.C.Parser
   )
   where
   
-  import Control.Applicative ((<$>))
+  import Control.Applicative ((<$>), pure)
   import Text.Parsec hiding (parseTest)
   import Text.Parsec.String hiding (Parser)
   import Language.C.AST
