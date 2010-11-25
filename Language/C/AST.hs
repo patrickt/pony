@@ -9,17 +9,24 @@ module Language.C.AST where
   -- TODO: make everything derive Typeable and Data
   
   data CStatement where
-    DeclarationStmt :: CDeclaration -> CStatement -- declarations aren't statements, this is a hack
-    ExpressionStmt :: CExpr -> CStatement
-    EmptyStmt :: CStatement
+    BreakStmt :: CStatement
     CaseStmt :: CExpr -> CStatement -> CStatement
     CompoundStmt :: [CStatement] -> CStatement
-    DefaultStmt :: CStatement -> CStatement
-    LabeledStmt :: String -> CStatement -> CStatement
     ContinueStmt :: CStatement
-    BreakStmt :: CStatement
+    DeclarationStmt :: CDeclaration -> CStatement -- declarations aren't statements, this is a hack
+    DefaultStmt :: CStatement -> CStatement
+    DoWhileStmt :: CStatement -> CExpr -> CStatement
+    EmptyStmt :: CStatement
+    ExpressionStmt :: CExpr -> CStatement
+    ForStmt :: Maybe CExpr -> Maybe CExpr -> Maybe CExpr -> CStatement -> CStatement
+    ForDeclStmt :: CDeclaration -> Maybe CExpr -> Maybe CExpr -> CStatement -> CStatement
     GotoStmt :: String -> CStatement
+    IfStmt :: CExpr -> CStatement -> Maybe CStatement -> CStatement
+    LabeledStmt :: String -> CStatement -> CStatement
     ReturnStmt :: Maybe CExpr -> CStatement
+    SwitchStmt :: CExpr -> CStatement -> CStatement
+    WhileStmt :: CExpr -> CStatement -> CStatement
+
   
   -- this could all be a lot prettier if CStatement were an instance of PrintfArg
   instance Show CStatement where
@@ -32,9 +39,11 @@ module Language.C.AST where
     show ContinueStmt = "continue;"
     show BreakStmt = "break;"
     show (GotoStmt s) = printf "goto %s;" s
+    show (IfStmt a b c) = printf "IfStmt %s %s %s" (show a) (show b) (show c)
     show (ReturnStmt opt) = case opt of
       (Just e) -> printf "return %s;" (show e)
       Nothing -> "return;"
+    show _ = "(show instance not defined yet)"
   
   data CFunction = CFunction [Specifier] CDeclarator [CDeclaration] CStatement
     deriving (Show)

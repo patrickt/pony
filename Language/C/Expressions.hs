@@ -17,7 +17,7 @@ module Language.C.Expressions
   
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
   expression :: Parser CExpr
-  expression = buildChainedParser [ (assignTable, "assignment expression") ] primaryExpression <?> "C expression"
+  expression = buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
   
   constantExpression :: Parser CExpr
   constantExpression = buildChainedParser [ (postfixTable, "postfix expression")
