@@ -17,3 +17,6 @@ module Language.C.Functions where
         return $ CFunction specs decl args body
       _ -> fail "something bad has happened"
   
+  preprocessedC :: Parser [CExternal]
+  preprocessedC = many1 extern where
+    extern = (try (FunctionDecl <$> functionDefinition)) <|> (ExternDecl <$> declaration)

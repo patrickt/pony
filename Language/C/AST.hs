@@ -46,6 +46,11 @@ module Language.C.AST where
   
   data CFunction = CFunction [Specifier] CDeclarator [CDeclaration] CStatement
     deriving (Show)
+    
+  data CExternal 
+    = FunctionDecl CFunction
+    | ExternDecl CDeclaration
+    deriving (Show)
   
   data CExpr
     = Constant CLiteral
