@@ -11,9 +11,8 @@ module Language.C.AST where
   data CStatement where
     BreakStmt :: CStatement
     CaseStmt :: CExpr -> CStatement -> CStatement
-    CompoundStmt :: [CStatement] -> CStatement
+    CompoundStmt :: [BlockItem] -> CStatement
     ContinueStmt :: CStatement
-    DeclarationStmt :: CDeclaration -> CStatement -- declarations aren't statements, this is a hack
     DefaultStmt :: CStatement -> CStatement
     DoWhileStmt :: CStatement -> CExpr -> CStatement
     EmptyStmt :: CStatement
@@ -148,3 +147,8 @@ module Language.C.AST where
    | Array [TypeQualifier] (Maybe CExpr)
    | Function [CDeclaration] Bool
    deriving (Eq, Show)
+
+  data BlockItem 
+    = BlockDecl CDeclaration
+    | BlockStmt CStatement
+    deriving (Show)

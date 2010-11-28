@@ -42,8 +42,11 @@ whether it can consume input before failing.
   
   compoundStmt :: Parser CStatement
   compoundStmt = L.braces $ do
-    args <- many statement
+    args <- many blockItem
     return $ CompoundStmt args
+  
+  blockItem :: Parser BlockItem
+  blockItem = try (BlockDecl <$> declaration) <|> (BlockStmt <$> statement)
   
   expressionStmt :: Parser CStatement
   expressionStmt = do
