@@ -3,6 +3,7 @@ module Language.C.Parser
   , module Control.Applicative
   , Parser
   , Internals
+  , mkInternals
   , typedefs
   , parseTest
   )
@@ -26,3 +27,5 @@ module Language.C.Parser
     case (runParser p mkInternals "" s) of
       (Left error) -> print error
       (Right a) -> print a
+  
+  
