@@ -21,6 +21,14 @@ where
     -- init-declarator-list
     decls <- L.commaSep initDeclarator
     L.semi
+    if (head specs == SSpec STypedef)
+      then do
+        state <- getState
+        let td = typedefs state
+        case (fst (head decls)) of
+          Named name _ -> do
+            putState $ addTypeDef name (specs !! 1) state
+      else return ()
     case decls of
       [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
       more -> return $ Multiple specs more
