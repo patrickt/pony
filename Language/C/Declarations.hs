@@ -5,6 +5,7 @@ module Language.C.Declarations
   , parameter )
 where
   
+  import Control.Monad (when)
   import Data.Maybe
   import Debug.Trace
   import Language.C.AST
@@ -21,14 +22,11 @@ where
     -- init-declarator-list
     decls <- L.commaSep initDeclarator
     L.semi
-    if (head specs == SSpec STypedef)
-      then do
-        state <- getState
-        let td = typedefs state
-        case (fst (head decls)) of
-          Named name _ -> do
-            putState $ addTypeDef name (specs !! 1) state
-      else return ()
+    when (head specs == SSpec STypedef) $ do
+      state <- getState
+      let td = typedefs state
+      case (fst (head decls)) of
+        Named name _ -> putState $ addTypeDef name (specs !! 1) state
     case decls of
       [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
       more -> return $ Multiple specs more

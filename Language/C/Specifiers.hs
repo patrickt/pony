@@ -70,7 +70,7 @@ where
     , "static" `as` SStatic
     , "auto" `as` SAuto
     , "register" `as` SRegister 
-    ]
+    ] <?> "storage specifier"
   
   specifier :: Parser Specifier
   specifier = choice 
