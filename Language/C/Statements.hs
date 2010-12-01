@@ -70,7 +70,7 @@ whether it can consume input before failing.
   
   -- This, my friends, is a hideous monstrosity. I am sorry.
   iterationStmt :: Parser CStatement
-  iterationStmt = choice [ while, doWhile, oldFor, newFor ] where
+  iterationStmt = choice [ while, doWhile, (try newFor), oldFor ] where
     while = do 
       L.reserved "while"
       e <- L.parens expression
