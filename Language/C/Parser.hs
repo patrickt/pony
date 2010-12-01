@@ -24,7 +24,7 @@ module Language.C.Parser
   mkInternals = Internals { typedefs = [("uint64_t", TLong)] }
   
   addTypeDef :: String -> Specifier -> Internals -> Internals
-  addTypeDef name (TSpec typ) record = record { typedefs = (typedefs record) ++ [(name, typ)]}
+  addTypeDef name (TSpec typ) record = record { typedefs = typedefs record ++ [(name, typ)]}
   
   type Parser = GenParser Char Internals 
   

@@ -43,18 +43,18 @@ where
       enum = do
         L.reserved "enum"
         name <- optionMaybe identifier
-        idents <- try (L.braces (L.commaSep1 identifier)) <|> (return [])
+        idents <- try (L.braces (L.commaSep1 identifier)) <|> return []
         -- TODO: if name is Nothing and idents is empty, fail
         return $ TEnumeration name idents
       struct = do
         L.reserved "struct"
         name <- optionMaybe identifier
-        decls <- try (L.braces (many1 declaration)) <|> (return [])
+        decls <- try (L.braces (many1 declaration)) <|> return []
         return $ TStructOrUnion name True decls
       union = do
         L.reserved "union"
         name <- optionMaybe identifier
-        decls <- try (L.braces (many1 declaration)) <|> (return [])
+        decls <- try (L.braces (many1 declaration)) <|> return []
         return $ TStructOrUnion name False decls
       lookupTypedef = do
         defs <- getState

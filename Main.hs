@@ -31,7 +31,7 @@ module Main where
   parsePony PonyOptions { output, input } = do
     result <- parseFromFile preprocessedC input
     case result of
-      Left parseError -> writeFile output (show parseError)
+      (Left parseError) -> writeFile output (show parseError)
       Right externs -> writeFile output (show externs)
     
   main :: IO ()

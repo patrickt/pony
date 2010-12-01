@@ -41,6 +41,7 @@ module Language.C.AST where
     | UnaryOp String CExpr
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr
+    | SizeOfType CDeclaration
     deriving (Eq)
   
   instance Show CExpr where
@@ -52,6 +53,7 @@ module Language.C.AST where
     show (UnaryOp str expr) = printf "(%s %s)" str (show expr)
     show (BinaryOp str lhs rhs) = printf "(%s %s %s)" (show lhs) str (show rhs)
     show (TernaryOp a b c) = printf "(%s ? %s : %s)" (show a) (show b) (show c)
+    show (SizeOfType t) = printf "sizeof(%s)" (show t)
   
   data CLiteral
     = CInteger Integer

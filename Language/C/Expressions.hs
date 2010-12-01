@@ -17,7 +17,8 @@ module Language.C.Expressions
   
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
   expression :: Parser CExpr
-  expression = buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
+  expression = sizeOfType <|> buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
+    where sizeOfType = L.reserved "sizeof" >> ((L.parens typeName) <|> typeName) >>= return . SizeOfType
   
   constantExpression :: Parser CExpr
   constantExpression = buildChainedParser [ (postfixTable, "postfix expression")
@@ -33,7 +34,8 @@ module Language.C.Expressions
     [ identifier
     , constant
     , stringLiteral `into` Constant
-    , L.parens expression ]
+    , L.parens expression 
+    ]
   
   assignTable = 
     [ [ mkInfixL "="
@@ -85,7 +87,6 @@ module Language.C.Expressions
   
   mkInfixL name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocLeft
   
-  -- BUG: sizeof(typename) doesn't work
   -- BUG: the unary operators are applied on cast-expressions, not other unary expressions
   unaryTable = 
     [ [ Prefix cast   ]

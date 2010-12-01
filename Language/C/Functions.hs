@@ -19,4 +19,5 @@ module Language.C.Functions where
   
   preprocessedC :: Parser [CExternal]
   preprocessedC = many1 extern where
-    extern = (try (ExternDecl <$> declaration)) <|> (FunctionDecl <$> functionDefinition)
+    extern  = try (ExternDecl <$> declaration) 
+           <|> (FunctionDecl <$> functionDefinition)
