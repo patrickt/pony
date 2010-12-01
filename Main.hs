@@ -1,8 +1,8 @@
 module Main where
   
   import Data.Generics
-  import Language.C
-  import Language.Pony.Transformations
+  import Language.C.Parser
+  import Language.C.Functions
   import System.Console.CmdArgs
   import System.Environment
   
@@ -29,14 +29,10 @@ module Main where
   
   parsePony :: PonyOptions -> IO ()
   parsePony PonyOptions { output, input } = do
-    result <- parseCFilePre input
+    result <- parseFromFile preprocessedC input
     case result of
-      Left parseError -> print "error!"
-      Right translUnit -> do
-        let firstStage = everywhere helloTransform translUnit
-        let nextStage = everywhere mallocTransform firstStage
-        let cCode = pretty nextStage  
-        writeFile output (show cCode)
+      Left parseError -> writeFile output (show parseError)
+      Right externs -> writeFile output (show externs)
     
   main :: IO ()
   main = cmdArgs options >>= parsePony

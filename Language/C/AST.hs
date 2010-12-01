@@ -1,6 +1,5 @@
 module Language.C.AST where
   
-  import Data.Tree
   import Data.Either
   import Text.Printf
   

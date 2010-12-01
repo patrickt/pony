@@ -35,8 +35,6 @@ module Language.C.Parser
   
   parseFromFile p loc = do
     str <- readFile loc
-    case (runParser p mkInternals loc str) of
-      (Left error) -> print error
-      (Right a) -> print a
+    return $ runParser p mkInternals loc str
   
   
