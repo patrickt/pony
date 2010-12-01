@@ -73,7 +73,7 @@ where
     where assignment = L.reservedOp "=" >> initializer
   
   initializer :: Parser Initializer
-  initializer = InitExpression <$> expression
+  initializer = (InitList <$> (L.braces (L.commaSep1 initializer))) <|> (InitExpression <$> expression)
 
   -- hack hack hack
   data DirectDeclarator 

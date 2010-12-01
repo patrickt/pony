@@ -143,7 +143,7 @@ module Language.C.AST where
   
   data Initializer 
     = InitExpression CExpr
-    | InitList 
+    | InitList [Initializer]
     | Uninitialized
     deriving (Eq, Show)
   
