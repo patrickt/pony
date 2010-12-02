@@ -13,7 +13,6 @@ where
   import {-# SOURCE #-} Language.C.Declarations
   
   as name qual = L.reserved name >> return qual
-  into = flip fmap
   
   typeQualifier :: Parser TypeQualifier
   typeQualifier = choice 
@@ -49,19 +48,19 @@ where
       struct = do
         L.reserved "struct"
         name <- optionMaybe identifier
-        decls <- try (L.braces (many1 declaration)) <|> return []
+        decls <- try (L.braces (some declaration)) <|> return []
         return $ TStructOrUnion name True decls
       union = do
         L.reserved "union"
         name <- optionMaybe identifier
-        decls <- try (L.braces (many1 declaration)) <|> return []
+        decls <- try (L.braces (some declaration)) <|> return []
         return $ TStructOrUnion name False decls
       lookupTypedef = do
         defs <- getState
         ident <- identifier
         case (lookup ident (typedefs defs)) of
           (Just spec) -> return (TTypedef ident spec)
-          Nothing -> fail "typedef not found"
+          Nothing -> empty
   
   storageSpecifier :: Parser StorageSpecifier
   storageSpecifier = choice
@@ -74,8 +73,8 @@ where
   
   specifier :: Parser Specifier
   specifier = choice 
-    [ typeQualifier `into` TQual
-    , typeSpecifier `into` TSpec
-    , storageSpecifier `into` SSpec
+    [ TQual <$> typeQualifier
+    , TSpec <$> typeSpecifier
+    , SSpec <$> storageSpecifier
     ]
   

@@ -18,6 +18,6 @@ module Language.C.Functions where
       _ -> fail "something bad has happened"
   
   preprocessedC :: Parser [CExternal]
-  preprocessedC = many1 extern where
+  preprocessedC = many extern where
     extern  = try (ExternDecl <$> declaration) 
            <|> (FunctionDecl <$> functionDefinition)

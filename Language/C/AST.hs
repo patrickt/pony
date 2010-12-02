@@ -5,6 +5,8 @@ module Language.C.AST where
   
   -- TODO: make everything derive Typeable and Data
   
+  type BlockItem = Either CDeclaration CStatement
+  
   data CStatement 
     = BreakStmt 
     | CaseStmt CExpr CStatement
@@ -134,8 +136,4 @@ module Language.C.AST where
    | Array [TypeQualifier] (Maybe CExpr)
    | Function [CDeclaration] Bool
    deriving (Eq, Show)
-
-  data BlockItem 
-    = BlockDecl CDeclaration
-    | BlockStmt CStatement
-    deriving (Show)
+   

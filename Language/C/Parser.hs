@@ -11,8 +11,8 @@ module Language.C.Parser
   )
   where
   
-  import Control.Applicative ((<$>), pure)
-  import Text.Parsec hiding (parseTest)
+  import Control.Applicative
+  import Text.Parsec hiding (parseTest, (<|>), many, optional)
   import Text.Parsec.String hiding (Parser, parseFromFile)
   import Language.C.AST
   

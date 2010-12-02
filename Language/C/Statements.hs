@@ -29,24 +29,19 @@ whether it can consume input before failing.
             <|> expressionStmt
   
   labeledStmt :: Parser CStatement
-  labeledStmt = choice [ caseStmt, defaultStmt, labelStmt ] where
-    caseStmt = do 
-      e <- L.reserved "case" >> expression
-      s <- L.colon >> statement
-      return $ CaseStmt e s
+  labeledStmt = choice [ caseStmt
+                       , defaultStmt
+                       , labelStmt
+                       ] where
+    caseStmt    = pure CaseStmt <*> (L.reserved "case" *> expression) <*> (L.colon *> statement)
     defaultStmt = DefaultStmt <$> (L.reserved "default" >> L.colon >> statement)
-    labelStmt = do
-      i <- L.identifier
-      L.colon
-      LabeledStmt i <$> statement
+    labelStmt   = pure LabeledStmt <*> (L.identifier <* L.colon) <*> statement 
   
   compoundStmt :: Parser CStatement
-  compoundStmt = L.braces $ do
-    args <- many blockItem
-    return $ CompoundStmt args
+  compoundStmt = L.braces $ pure CompoundStmt <*> many blockItem
   
   blockItem :: Parser BlockItem
-  blockItem = try (BlockDecl <$> declaration) <|> (BlockStmt <$> statement)
+  blockItem = try (Left <$> declaration) <|> (Right <$> statement)
   
   expressionStmt :: Parser CStatement
   expressionStmt = do
@@ -71,41 +66,25 @@ whether it can consume input before failing.
   -- This, my friends, is a hideous monstrosity. I am sorry.
   iterationStmt :: Parser CStatement
   iterationStmt = choice [ while, doWhile, try newFor, oldFor ] where
-    while = do 
-      L.reserved "while"
-      e <- L.parens expression
-      s <- statement
-      return $ WhileStmt e s
-    doWhile = do 
-      L.reserved "do"
-      s <- statement
-      L.reserved "while"
-      e <- L.parens expression
-      L.semi
-      return $ DoWhileStmt s e
+    while = pure WhileStmt <*> (L.reserved "while" *> L.parens expression) <*> statement
+    doWhile = pure DoWhileStmt <*> (L.reserved "do" *> statement)
+                               <*> (L.reserved "while" *> (L.parens expression <* L.semi))
     oldFor = do
       L.reserved "for"
       (a, b, c) <- L.parens oldForExprs
       s <- statement
       return $ ForStmt a b c s
-    oldForExprs = do
-      a <- optionMaybe expression
-      L.semi
-      b <- optionMaybe expression
-      L.semi
-      c <- optionMaybe expression
-      return (a, b, c)
+    oldForExprs = pure (,,) <*> optional expression <* L.semi
+                            <*> optional expression <* L.semi
+                            <*> optional expression
     newFor = do
       L.reserved "for"
       (a, b, c) <- L.parens newForExprs
       s <- statement
       return $ ForDeclStmt a b c s
-    newForExprs = do
-      d <- declaration
-      e <- optionMaybe expression
-      L.semi
-      f <- optionMaybe expression
-      return (d, e, f)
+    newForExprs = pure (,,) <*> declaration 
+                            <*> (optional expression <* L.semi)
+                            <*> optional expression
   
   jumpStmt :: Parser CStatement
   jumpStmt = choice [ goto, continue, break', return' ] where

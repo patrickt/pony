@@ -50,8 +50,6 @@ module Language.C.Expressions
       , mkInfixL "^="
       , mkInfixL "|=" ] ]
   
-  -- POSSIBLE BUG: L.reservedOp may be too greedy. 
-  -- see http://www.mega-nerd.com/erikd/Blog/CodeHacking/Haskell/index.html for more information
   logicTable =
     [ [mkInfixL "&&"]
     , [mkInfixL "||"]
@@ -102,9 +100,7 @@ module Language.C.Expressions
       mkPrefix name = Prefix $ do
         L.reservedOp name
         return $ UnaryOp name
-      cast = do
-        tn <- L.parens typeName
-        return $ Cast tn
+      cast = pure Cast <*> L.parens typeName
       sizeof = do
         L.reserved "sizeof"
         return $ UnaryOp "sizeof"
@@ -143,8 +139,8 @@ module Language.C.Expressions
   
   -- remember, kids, <$> is an infix synonym for fmap.
   integer, charLiteral, float, stringLiteral :: Parser CLiteral
-  integer = CInteger <$> L.integer
-  charLiteral = CChar <$> L.charLiteral
-  float = CFloat <$> L.float
-  stringLiteral = CString <$> L.stringLiteral
+  integer       = CInteger <$> L.integer
+  charLiteral   = CChar    <$> L.charLiteral
+  float         = CFloat   <$> L.float
+  stringLiteral = CString  <$> L.stringLiteral
   
