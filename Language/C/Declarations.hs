@@ -18,7 +18,7 @@ where
   declaration :: Parser CDeclaration
   declaration = do
     -- declaration-specifiers
-    specs <- many1 specifier
+    specs <- some specifier
     -- init-declarator-list
     decls <- L.commaSep initDeclarator
     L.semi
@@ -32,44 +32,26 @@ where
       more -> return $ Multiple specs more
       
   parameter :: Parser CDeclaration
-  parameter = do
-    -- declaration-specifiers
-    specs <- many1 specifier
-    -- init-declarator-list
-    decl <- declarator
-    return $ TopLevel specs decl Uninitialized
+  parameter = pure TopLevel <*> some specifier <*> declarator <*> pure Uninitialized
   
   typeName :: Parser CDeclaration
-  typeName = do
-    specs <- many1 specifier
-    decl <- optionMaybe declarator
-    return $ TypeName specs decl
+  typeName = pure TypeName <*> some specifier <*> optional declarator
   
   func :: Parser DerivedDeclarator
-  func = L.parens $ do
-    params <- L.commaSep parameter
-    isVariadic <- option False (L.reserved "..." >> return True)
-    return $ Function params isVariadic
+  func = L.parens $ pure Function <*> L.commaSep parameter <*> option False (L.reserved "..." >> return True)
 
   array :: Parser DerivedDeclarator
   array = do
     (quals, expr) <- L.brackets lunacy
     return $ Array quals expr
-    where
-      lunacy = do
-        q <- many typeQualifier
-        e <- optionMaybe expression
-        return (q, e)
+    where lunacy = pure (,) <*> many typeQualifier <*> optional expression
 
   -- ISO C99 standard, section 6.7.5.
   pointer :: Parser DerivedDeclarator
   pointer = Pointer <$> (char '*' >> L.whiteSpace >> many typeQualifier)
 
   initDeclarator :: Parser (CDeclarator, Initializer)
-  initDeclarator = do
-    decl <- declarator
-    init <- option Uninitialized assignment
-    return (decl, init)
+  initDeclarator = pure (,) <*> declarator <*> option Uninitialized assignment
     where assignment = L.reservedOp "=" >> initializer
   
   initializer :: Parser Initializer
