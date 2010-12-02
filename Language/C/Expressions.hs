@@ -17,8 +17,7 @@ module Language.C.Expressions
   
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
   expression :: Parser CExpr
-  expression = sizeOfType <|> buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
-    where sizeOfType = L.reserved "sizeof" >> ((L.parens typeName) <|> typeName) >>= return . SizeOfType
+  expression = buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
   
   constantExpression :: Parser CExpr
   constantExpression = buildChainedParser [ (postfixTable, "postfix expression")
@@ -33,7 +32,7 @@ module Language.C.Expressions
   primaryExpression = choice
     [ identifier
     , constant
-    , stringLiteral `into` Constant
+    , Constant <$> stringLiteral
     , L.parens expression 
     ]
   
@@ -134,18 +133,18 @@ module Language.C.Expressions
       decrement = L.reservedOp "--" >> return (UnaryOp "post --")
   
   identifier :: Parser CExpr
-  identifier = L.identifier `into` Identifier
+  identifier = Identifier <$> L.identifier 
   
   constant :: Parser CExpr
-  constant = choice [ try float
-                    , integer
-                    , charLiteral ] `into` Constant
+  constant = Constant <$> choice [ try float
+                                 , integer
+                                 , charLiteral 
+                                 ]
   
+  -- remember, kids, <$> is an infix synonym for fmap.
   integer, charLiteral, float, stringLiteral :: Parser CLiteral
-  integer       = L.integer `into` CInteger
-  charLiteral   = L.charLiteral `into` CChar
-  float         = L.float `into` CFloat
-  stringLiteral = L.stringLiteral `into` CString
-  
-  into = flip fmap
+  integer = CInteger <$> L.integer
+  charLiteral = CChar <$> L.charLiteral
+  float = CFloat <$> L.float
+  stringLiteral = CString <$> L.stringLiteral
   
