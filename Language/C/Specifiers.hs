@@ -33,28 +33,21 @@ where
     , "double" `as` TDouble
     , "signed" `as` TSigned
     , "unsigned" `as` TUnsigned
-    , try enum
-    , try struct
-    , try union
+    , enum
+    , struct
+    , union
     , try lookupTypedef
     ] <?> "type specifier"
     where
-      enum = do
-        L.reserved "enum"
-        name <- optionMaybe identifier
-        idents <- try (L.braces (L.commaSep1 identifier)) <|> return []
-        -- TODO: if name is Nothing and idents is empty, fail
-        return $ TEnumeration name idents
-      struct = do
-        L.reserved "struct"
-        name <- optionMaybe identifier
-        decls <- try (L.braces (some declaration)) <|> return []
-        return $ TStructOrUnion name True decls
-      union = do
-        L.reserved "union"
-        name <- optionMaybe identifier
-        decls <- try (L.braces (some declaration)) <|> return []
-        return $ TStructOrUnion name False decls
+      -- TODO: if name is Nothing and idents is empty, fail
+      enum = pure TEnumeration <*> (L.reserved "enum" *> optional identifier)
+                               <*> option [] (L.braces (L.commaSep1 identifier))
+      struct = pure TStructOrUnion <*> (L.reserved "struct" *> optional identifier)
+                                   <*> pure True
+                                   <*> option [] (L.braces (some declaration))
+      union = pure TStructOrUnion <*> (L.reserved "union" *> optional identifier)
+                                  <*> pure False
+                                  <*> option [] (L.braces (some declaration))
       lookupTypedef = do
         defs <- getState
         ident <- identifier

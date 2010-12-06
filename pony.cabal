@@ -32,7 +32,8 @@ Executable pony
   Build-depends:       base >= 4.2 && < 5,
                        cmdargs == 0.6.1, 
                        parsec == 3.1.0, 
-                       mtl == 1.1.0.2, 
+                       mtl == 1.1.0.2,
+                       ConfigFile == 1.0.6, 
                        language-c == 0.3.2, 
                        syb >= 0.1,
                        syz >= 0.2        

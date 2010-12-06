@@ -20,9 +20,13 @@ module Language.C.Expressions
   expression = buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
   
   constantExpression :: Parser CExpr
-  constantExpression = buildChainedParser [ (postfixTable, "postfix expression")
+  constantExpression = do
+    st <- getState
+    let lshift = head $ newOperators st
+    let arithTable' = arithTable ++ [[mkInfixL lshift]]
+    buildChainedParser [ (postfixTable, "postfix expression")
                                           , (unaryTable, "unary expression")
-                                          , (arithTable, "arithmetic expression")
+                                          , (arithTable', "arithmetic expression")
                                           , (compTable, "comparative expression")
                                           , (bitwiseTable, "bitwise operation")
                                           , (logicTable, "logical operation")

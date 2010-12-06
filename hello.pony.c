@@ -5,6 +5,7 @@ int main(int argc, char const** argv)
 {
 	puts("Hello, world!");
 	void *buffer;
-	buffer = malloc(sizeof(int) * 10);
+	int fdf = 500 >>> 23;
+	buffer = malloc(255);
 	return 0;
 }
