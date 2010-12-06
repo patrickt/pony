@@ -22,8 +22,8 @@ module Language.C.Expressions
   constantExpression :: Parser CExpr
   constantExpression = do
     st <- getState
-    let lshift = head $ newOperators st
-    let arithTable' = arithTable ++ [[mkInfixL lshift]]
+    let ops = newOperators st
+    let arithTable' = if (not $ null ops) then arithTable ++ [[mkInfixL (head ops)]] else arithTable
     buildChainedParser [ (postfixTable, "postfix expression")
                                           , (unaryTable, "unary expression")
                                           , (arithTable', "arithmetic expression")

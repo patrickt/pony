@@ -49,7 +49,7 @@ module Main where
        return (val :: String)
     let inrnls = Internals {
       typedefs = [],
-      newOperators = [forceRight rv]
+      newOperators = (either (const []) (: []) rv)
     }
     result <- parseFromFileCustom preprocessedC input inrnls
     case result of
