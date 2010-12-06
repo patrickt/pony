@@ -51,21 +51,17 @@ whether it can consume input before failing.
   
   selectionStmt :: Parser CStatement
   selectionStmt = ifStmt <|> switch where
-    ifStmt = do
-      L.reserved "if"
-      cond <- L.parens expression
-      stmt <- statement
-      elseBranch <- optionMaybe (L.reserved "if" >> statement)
-      return $ IfStmt cond stmt elseBranch
-    switch = do
-      L.reserved "switch"
-      expr <- L.parens expression
-      stmt <- statement
-      return $ SwitchStmt expr stmt
+    ifStmt = pure IfStmt <*> L.reserved "if" *> (L.parens expression)
+                         <*> statement
+                         <*> optional (L.reserved "else" *> statement)
+    switch = pure SwitchStmt <*> L.parens expression <*> statement
   
-  -- This, my friends, is a hideous monstrosity. I am sorry.
   iterationStmt :: Parser CStatement
-  iterationStmt = choice [ while, doWhile, try newFor, oldFor ] where
+  iterationStmt = choice [ while
+                         , doWhile
+                         , try newFor
+                         , oldFor 
+                         ] where
     while = pure WhileStmt <*> (L.reserved "while" *> L.parens expression) <*> statement
     doWhile = pure DoWhileStmt <*> (L.reserved "do" *> statement)
                                <*> (L.reserved "while" *> (L.parens expression <* L.semi))
@@ -74,8 +70,8 @@ whether it can consume input before failing.
       (a, b, c) <- L.parens oldForExprs
       s <- statement
       return $ ForStmt a b c s
-    oldForExprs = pure (,,) <*> optional expression <* L.semi
-                            <*> optional expression <* L.semi
+    oldForExprs = pure (,,) <*> (optional expression <* L.semi)
+                            <*> (optional expression <* L.semi)
                             <*> optional expression
     newFor = do
       L.reserved "for"
