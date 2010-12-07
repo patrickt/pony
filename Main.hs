@@ -13,6 +13,14 @@ module Main where
   forceRight (Right r) = r
   forceLeft (Left _) = error "forceRight"
   
+  split :: String -> Char -> [String]
+  split [] delim = [""]
+  split (c:cs) delim
+     | c == delim = "" : rest
+     | otherwise = (c : head rest) : tail rest
+     where
+         rest = split cs delim
+  
   -- TODO: allow for multiple inputs (input :: [FilePath])
   data PonyOptions = PonyOptions {
     output :: FilePath,
@@ -46,10 +54,11 @@ module Main where
      do
        cp <- join $ liftIO $ readfile emptyCP ponyproj
        val <- get cp "operators" "arithmetic"
-       return (val :: String)
+       let v = val :: String
+       return $ split v ','
     let inrnls = Internals {
       typedefs = [],
-      newOperators = (either (const []) (: []) rv)
+      newOperators = (either (const []) id rv)
     }
     result <- parseFromFileCustom preprocessedC input inrnls
     case result of

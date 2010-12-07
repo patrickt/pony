@@ -39,7 +39,7 @@ where
   
   func :: Parser DerivedDeclarator
   func = L.parens $ pure Function <*> L.commaSep parameter <*> option False (L.reserved "..." >> return True)
-
+  
   array :: Parser DerivedDeclarator
   array = do
     (quals, expr) <- L.brackets lunacy

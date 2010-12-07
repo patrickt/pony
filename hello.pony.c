@@ -6,6 +6,7 @@ int main(int argc, char const** argv)
 	puts("Hello, world!");
 	void *buffer;
 	int fdf = 500 >>> 23;
+	int foo = 'c' <&> 'd';
 	buffer = malloc(255);
 	return 0;
 }
