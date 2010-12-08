@@ -23,7 +23,7 @@ module Language.C.Expressions
   constantExpression = do
     st <- getState
     let ops = newOperators st
-    let arithTable' = if (not $ null ops) then arithTable ++ [map mkInfixL ops] else arithTable
+    let arithTable' = arithTable ++ [map mkInfixL ops]
     buildChainedParser [ (postfixTable, "postfix expression")
                                           , (unaryTable, "unary expression")
                                           , (arithTable', "arithmetic expression")

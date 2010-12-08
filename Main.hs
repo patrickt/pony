@@ -5,6 +5,7 @@ module Main where
   import Data.Generics
   import Language.C.Parser
   import Language.C.Expressions
+  import Language.C.AST
   import Language.C.Functions
   import System.Console.CmdArgs
   import System.Environment
@@ -57,8 +58,9 @@ module Main where
        let v = val :: String
        return $ split v ','
     let inrnls = Internals {
-      typedefs = [],
-      newOperators = (either (const []) id rv)
+      typedefs = [ ("__builtin_va_list", TVoid) 
+                 ]
+    , newOperators = (either (const []) id rv)
     }
     result <- parseFromFileCustom preprocessedC input inrnls
     case result of

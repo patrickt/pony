@@ -41,6 +41,7 @@ module Language.C.Lexer
                         "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
                         "static", "struct", "switch", "typedef", "union", "unsigned", "void", 
                         "volatile", "while", "..." ]
+    , T.identStart = letter <|> char '_'
     }
   
   lexer = T.makeTokenParser ponyCDef

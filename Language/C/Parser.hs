@@ -5,7 +5,6 @@ module Language.C.Parser
   , Internals(..)
   , mkInternals
   , addTypeDef
-  , typedefs
   , parseTest
   , parseTestCustom
   , parseFromFile
@@ -24,7 +23,11 @@ module Language.C.Parser
     }
   
   mkInternals :: Internals
-  mkInternals = Internals { typedefs = [("uint64_t", TLong)], newOperators = [] }
+  mkInternals = Internals { typedefs = [ ("uint64_t", TLong)
+                                       , ("__builtin_va_list", TVoid)
+                                       ]
+                          , newOperators = [] 
+                          }
   
   addTypeDef :: String -> Specifier -> Internals -> Internals
   addTypeDef name (TSpec typ) record = record { typedefs = typedefs record ++ [(name, typ)]}

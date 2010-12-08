@@ -26,7 +26,7 @@ where
       state <- getState
       let td = typedefs state
       case (fst (head decls)) of
-        Named name _ -> putState $ addTypeDef name (specs !! 1) state
+        Named name _ _ -> putState $ addTypeDef name (specs !! 1) state
     case decls of
       [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
       more -> return $ Multiple specs more
@@ -60,22 +60,27 @@ where
   -- hack hack hack
   data DirectDeclarator 
     = Parenthesized CDeclarator
-    | Single String
+    | Single String 
   
   direct :: Parser DirectDeclarator
   direct = parens <|> ident where
     parens = Parenthesized <$> L.parens declarator
     ident = Single <$> L.identifier
+    
+  asmName :: Parser String
+  asmName = (L.symbol "__asm") >> (L.parens $ some $ noneOf ")")
+    
 
   declarator :: Parser CDeclarator
   declarator = do
     ptrs <- many pointer
     direct' <- optionMaybe direct
     arrayOrFunction <- many (try array <|> func)
+    asm <- optional asmName
     let derived = ptrs ++ arrayOrFunction
     case direct' of
-      (Just (Single s)) -> return $ Named s derived
-      (Just (Parenthesized (Named s decls))) -> return $ Named s (decls ++ derived)
+      (Just (Single s)) -> return $ Named s derived asm
+      (Just (Parenthesized (Named s decls _))) -> return $ Named s (decls ++ derived) asm
       -- is this even possible?
       (Just (Parenthesized (Abstract decls))) -> return $ Abstract (decls ++ derived)
       Nothing -> return $ Abstract derived

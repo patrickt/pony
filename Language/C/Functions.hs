@@ -1,5 +1,6 @@
 module Language.C.Functions where
   
+  import Control.Monad
   import Language.C.Parser
   import Language.C.Lexer as L
   import Language.C.AST
@@ -12,12 +13,12 @@ module Language.C.Functions where
     specs <- many specifier
     decl <- declarator
     case decl of
-      (Named _ [Function args isVariadic]) -> do
+      (Named _ [Function args isVariadic] _) -> do
         body <- compoundStmt
         return $ CFunction specs decl args body
-      _ -> fail "something bad has happened"
+      _ -> mzero
   
   preprocessedC :: Parser [CExternal]
-  preprocessedC = many extern where
+  preprocessedC = ((L.whiteSpace *> many extern) <* eof) where
     extern  = try (ExternDecl <$> declaration) 
            <|> (FunctionDecl <$> functionDefinition)

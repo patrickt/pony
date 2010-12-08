@@ -53,7 +53,7 @@ where
         ident <- identifier
         case (lookup ident (typedefs defs)) of
           (Just spec) -> return (TTypedef ident spec)
-          Nothing -> empty
+          Nothing -> fail "could not find typedef"
   
   storageSpecifier :: Parser StorageSpecifier
   storageSpecifier = choice
