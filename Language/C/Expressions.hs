@@ -13,7 +13,7 @@ module Language.C.Expressions
   import Text.Parsec.Expr
   
   buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
-  buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> (trace msg msg))
+  buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
   buildChainedParser [] p = p
   
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
@@ -26,12 +26,12 @@ module Language.C.Expressions
     let ops = newOperators st
     let arithTable' = arithTable ++ [map mkInfixL ops]
     buildChainedParser [ (postfixTable, "postfix expression")
-                                          , (unaryTable, "unary expression")
-                                          , (arithTable', "arithmetic expression")
-                                          , (compTable, "comparative expression")
-                                          , (bitwiseTable, "bitwise operation")
-                                          , (logicTable, "logical operation")
-                                          ] primaryExpression <?> "constant expression"
+                       , (unaryTable, "unary expression")
+                       , (arithTable', "arithmetic expression")
+                       , (compTable, "comparative expression")
+                       , (bitwiseTable, "bitwise operation")
+                       , (logicTable, "logical operation")
+                       ] primaryExpression <?> "constant expression"
   
   primaryExpression :: Parser CExpr
   primaryExpression = choice
@@ -105,7 +105,7 @@ module Language.C.Expressions
       mkPrefix name = Prefix $ do
         L.reservedOp name
         return $ UnaryOp name
-      cast = pure Cast <*> L.parens typeName
+      cast = pure Cast <*> (try $ L.parens typeName)
       sizeof = do
         L.reserved "sizeof"
         return $ UnaryOp "sizeof"

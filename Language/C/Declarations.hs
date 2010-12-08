@@ -85,7 +85,7 @@ where
     direct' <- optionMaybe direct
     arrayOrFunction <- many (try array <|> func)
     asm <- optional (try asmName)
-    attrs <- optional attributes
+    attrs <- many attributes
     let derived = ptrs ++ arrayOrFunction
     case direct' of
       (Just (Single s)) -> return $ Named s derived asm

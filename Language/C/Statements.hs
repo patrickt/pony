@@ -24,9 +24,9 @@ whether it can consume input before failing.
   statement  = try labeledStmt 
             <|> compoundStmt 
             <|> jumpStmt 
+            <|> expressionStmt
             <|> selectionStmt
             <|> iterationStmt
-            <|> expressionStmt
   
   labeledStmt :: Parser CStatement
   labeledStmt = choice [ caseStmt
@@ -87,5 +87,5 @@ whether it can consume input before failing.
     goto = GotoStmt <$> (L.reserved "goto" >> L.identifier)
     continue = L.reserved "continue" >> return ContinueStmt
     break' = L.reserved "break" >> return BreakStmt
-    return' = ReturnStmt <$> (L.reserved "return" >> optionMaybe expression)
+    return' = ReturnStmt <$> (L.reserved "return" >> (optionMaybe expression <* L.semi))
     

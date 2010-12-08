@@ -23,10 +23,7 @@ module Language.C.Parser
     }
   
   mkInternals :: Internals
-  mkInternals = Internals { typedefs = [ ("uint64_t", TLong)
-                                       , ("va_list", TVoid)
-                                       , ("__builtin_va_list", TVoid)
-                                       ]
+  mkInternals = Internals { typedefs = []
                           , newOperators = [] 
                           }
   
