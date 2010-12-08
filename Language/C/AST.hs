@@ -121,7 +121,7 @@ module Language.C.AST where
     deriving (Eq, Show)
   
   data CDeclarator
-   = Named String [DerivedDeclarator] (Maybe String)
+   = Named String [DerivedDeclarator] (Maybe String) 
    | Abstract [DerivedDeclarator]
    deriving (Eq, Show)
   

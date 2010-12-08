@@ -6,6 +6,7 @@ module Language.C.Declarations
 where
   
   import Control.Monad (when)
+  import Data.Either
   import Data.Maybe
   import Debug.Trace
   import Language.C.AST
@@ -27,6 +28,7 @@ where
       let td = typedefs state
       case (fst (head decls)) of
         Named name _ _ -> putState $ addTypeDef name (specs !! 1) state
+        _ -> return ()
     case decls of
       [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
       more -> return $ Multiple specs more
@@ -37,8 +39,12 @@ where
   typeName :: Parser CDeclaration
   typeName = pure TypeName <*> some specifier <*> optional declarator
   
+  -- BUGGY HACK: this could allow ... anywhere in the parameters.
   func :: Parser DerivedDeclarator
-  func = L.parens $ pure Function <*> L.commaSep parameter <*> option False (L.reserved "..." >> return True)
+  func = L.parens $ do
+    items <- L.commaSep (Left <$> parameter <|> Right <$> L.reservedOp "...")
+    let isVariadic = either (const False) (const True) (last items)
+    return $ Function (lefts items) isVariadic
   
   array :: Parser DerivedDeclarator
   array = do
@@ -70,13 +76,16 @@ where
   asmName :: Parser String
   asmName = (L.symbol "__asm") >> (L.parens $ some $ noneOf ")")
     
+  attributes :: Parser [CExpr]
+  attributes = (L.symbol "__attribute__") *> (L.parens $ L.parens $ many expression)
 
   declarator :: Parser CDeclarator
   declarator = do
     ptrs <- many pointer
     direct' <- optionMaybe direct
     arrayOrFunction <- many (try array <|> func)
-    asm <- optional asmName
+    asm <- optional (try asmName)
+    attrs <- optional attributes
     let derived = ptrs ++ arrayOrFunction
     case direct' of
       (Just (Single s)) -> return $ Named s derived asm

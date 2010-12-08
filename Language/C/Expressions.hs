@@ -5,6 +5,7 @@ module Language.C.Expressions
   , constant )
   where 
   
+  import Debug.Trace
   import Language.C.Parser
   import Language.C.AST
   import {-# SOURCE #-} Language.C.Declarations 
@@ -12,7 +13,7 @@ module Language.C.Expressions
   import Text.Parsec.Expr
   
   buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
-  buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
+  buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> (trace msg msg))
   buildChainedParser [] p = p
   
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages

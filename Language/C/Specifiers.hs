@@ -20,6 +20,7 @@ where
     , "restrict" `as` QRestrict
     , "volatile" `as` QVolatile 
     , "inline" `as` FInline -- TODO: ensure that this only goes on functions.
+    , "__inline" `as` FInline
     ] <?> "type qualifier"
   
   typeSpecifier :: Parser TypeSpecifier

@@ -59,6 +59,7 @@ module Main where
        return $ split v ','
     let inrnls = Internals {
       typedefs = [ ("__builtin_va_list", TVoid) 
+                 , ("va_list", TVoid)
                  ]
     , newOperators = (either (const []) id rv)
     }
