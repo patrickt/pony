@@ -9,9 +9,12 @@ module Language.C.Parser
   , parseTestCustom
   , parseFromFile
   , parseFromFileCustom
+  , preprocessAndParse
   )
   where
   
+  import System.Cmd
+  import Text.Printf
   import Control.Applicative
   import Text.Parsec hiding (parseTest, (<|>), many, optional)
   import Text.Parsec.String hiding (Parser, parseFromFile)
@@ -31,6 +34,11 @@ module Language.C.Parser
   addTypeDef name (TSpec typ) record = record { typedefs = typedefs record ++ [(name, typ)]}
   
   type Parser = GenParser Char Internals
+  
+  preprocessAndParse p loc i = do
+    let preCmd = printf "/usr/bin/clang -E %s | grep \"^[^#]\" > ./ponytmp" loc :: String 
+    system preCmd
+    parseFromFileCustom p "./ponytmp" i
   
   parseTest p s = 
     case (runParser p mkInternals "" s) of

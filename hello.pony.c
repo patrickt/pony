@@ -1,5 +1,4 @@
-int puts(const char *);
-void* malloc(void *, unsigned int);
+#include <stdio.h>
 
 int main(int argc, char const** argv)
 {

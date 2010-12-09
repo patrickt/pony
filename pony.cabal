@@ -36,5 +36,6 @@ Executable pony
                        ConfigFile == 1.0.6, 
                        language-c == 0.3.2, 
                        syb >= 0.1,
-                       syz >= 0.2        
+                       syz >= 0.2,
+                       process > 1.0        
 

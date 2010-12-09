@@ -63,7 +63,7 @@ module Main where
                  ]
     , newOperators = (either (const []) id rv)
     }
-    result <- parseFromFileCustom preprocessedC input inrnls
+    result <- preprocessAndParse preprocessedC input inrnls
     case result of
       (Left parseError) -> writeFile output (show parseError)
       Right externs -> writeFile output (show externs)
