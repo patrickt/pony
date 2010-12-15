@@ -105,7 +105,7 @@ module Language.C.Expressions
       mkPrefix name = Prefix $ do
         L.reservedOp name
         return $ UnaryOp name
-      cast = pure Cast <*> try $ L.parens typeName
+      cast = pure Cast <*> (try $ L.parens typeName)
       sizeof = do
         L.reserved "sizeof"
         return $ UnaryOp "sizeof"
