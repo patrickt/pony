@@ -141,11 +141,20 @@ module Language.C.Expressions
                                  , integer
                                  , charLiteral 
                                  ]
+                                 
+  spaceSeparatedStrings :: Parser CLiteral
+  spaceSeparatedStrings = do
+    str <- L.stringLiteral
+    rest <- optional $ (L.whiteSpace >> spaceSeparatedStrings)
+    case rest of
+      (Just (CString s)) -> return $ CString (str ++ s)
+      Nothing -> return $ CString str
+    
   
   -- remember, kids, <$> is an infix synonym for fmap.
   integer, charLiteral, float, stringLiteral :: Parser CLiteral
   integer       = CInteger <$> L.integer
   charLiteral   = CChar    <$> L.charLiteral
   float         = CFloat   <$> L.float
-  stringLiteral = CString  <$> L.stringLiteral
+  stringLiteral = spaceSeparatedStrings
   

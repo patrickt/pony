@@ -10,10 +10,6 @@ module Main where
   import System.Console.CmdArgs
   import System.Environment
   
-  forceRight :: Either a b -> b
-  forceRight (Right r) = r
-  forceLeft (Left _) = error "forceRight"
-  
   split :: String -> Char -> [String]
   split [] delim = [""]
   split (c:cs) delim
