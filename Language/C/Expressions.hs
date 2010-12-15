@@ -118,20 +118,12 @@ module Language.C.Expressions
     , [ Postfix increment ]
     , [ Postfix decrement ]
     ] where
-      index = do
-        expr <- L.brackets expression
-        return $ flip Index expr
-      call = do
-        exprs <- L.parens $ L.commaSep expression
-        return $ flip Call exprs
-      dotAccess = do
-        i <- L.dot >> identifier
-        return $ flip (BinaryOp ".") i
-      arrowAccess = do
-        i <- L.arrow >> identifier
-        return $ flip (BinaryOp "->") i
-      increment = L.reservedOp "++" >> return (UnaryOp "post ++")
-      decrement = L.reservedOp "--" >> return (UnaryOp "post --")
+      index       = pure (flip Index) <*> L.brackets expression
+      call        = pure (flip Call) <*> (L.parens $ L.commaSep expression)
+      dotAccess   = pure (flip $ BinaryOp ".") <*> (L.dot *> identifier)
+      arrowAccess = pure (flip $ BinaryOp "->") <*> (L.arrow *> identifier)
+      increment   = L.reservedOp "++" >> return (UnaryOp "post ++")
+      decrement   = L.reservedOp "--" >> return (UnaryOp "post --")
   
   identifier :: Parser CExpr
   identifier = Identifier <$> L.identifier 

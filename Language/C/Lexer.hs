@@ -40,7 +40,7 @@ module Language.C.Lexer
                         "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", 
                         "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
                         "static", "struct", "switch", "typedef", "union", "unsigned", "void", 
-                        "volatile", "while", "..." ]
+                        "volatile", "while", "...", "__asm", "__attribute__" ]
     , T.identStart = letter <|> char '_'
     }
   

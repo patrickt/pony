@@ -74,10 +74,10 @@ where
     ident = Single <$> L.identifier
     
   asmName :: Parser String
-  asmName = L.symbol "__asm" *> L.parens (some $ noneOf ")")
+  asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
     
   attributes :: Parser [CExpr]
-  attributes = L.symbol "__attribute__" *> L.parens (L.parens $ many expression)
+  attributes = L.reserved "__attribute__" *> L.parens (L.parens $ many expression)
 
   declarator :: Parser CDeclarator
   declarator = do
