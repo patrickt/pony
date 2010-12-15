@@ -105,7 +105,7 @@ module Language.C.Expressions
       mkPrefix name = Prefix $ do
         L.reservedOp name
         return $ UnaryOp name
-      cast = pure Cast <*> (try $ L.parens typeName)
+      cast = pure Cast <*> try $ L.parens typeName
       sizeof = do
         L.reserved "sizeof"
         return $ UnaryOp "sizeof"
@@ -145,7 +145,7 @@ module Language.C.Expressions
   spaceSeparatedStrings :: Parser CLiteral
   spaceSeparatedStrings = do
     str <- L.stringLiteral
-    rest <- optional $ (L.whiteSpace >> spaceSeparatedStrings)
+    rest <- optional $ L.whiteSpace >> spaceSeparatedStrings
     case rest of
       (Just (CString s)) -> return $ CString (str ++ s)
       Nothing -> return $ CString str

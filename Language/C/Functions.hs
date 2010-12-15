@@ -19,6 +19,6 @@ module Language.C.Functions where
       _ -> mzero
   
   preprocessedC :: Parser [CExternal]
-  preprocessedC = ((L.whiteSpace *> many extern) <* eof) where
+  preprocessedC = (L.whiteSpace *> many extern) <* eof where
     extern  = try (ExternDecl <$> declaration) 
            <|> (FunctionDecl <$> functionDefinition)
