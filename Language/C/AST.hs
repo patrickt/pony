@@ -26,7 +26,7 @@ module Language.C.AST where
     | WhileStmt CExpr CStatement
     deriving (Show)
   
-  data CFunction = CFunction [Specifier] CDeclarator [CDeclaration] CStatement
+  data CFunction = CFunction [Specifier] CDeclarator CStatement
     deriving (Show)
     
   data CExternal 

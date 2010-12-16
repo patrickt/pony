@@ -68,7 +68,8 @@ where
   func :: Parser DerivedDeclarator
   func = L.parens $ do
     items <- L.commaSep (Left <$> parameter <|> Right <$> L.reservedOp "...")
-    let isVariadic = either (const False) (const True) (last items)
+    let isVariadic = if (null items) then False else either (const False) (const True) (last items);
+    
     return $ Function (lefts items) isVariadic
   
   array :: Parser DerivedDeclarator

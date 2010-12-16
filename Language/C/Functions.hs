@@ -9,15 +9,9 @@ module Language.C.Functions where
   import Language.C.Statements
   
   functionDefinition :: Parser CFunction
-  functionDefinition = do
-    specs <- many specifier
-    decl <- declarator
-    case decl of
-      (Named _ [Function args isVariadic] _) -> do
-        body <- compoundStmt
-        return $ CFunction specs decl args body
-      _ -> mzero
-  
+  functionDefinition = pure CFunction <*> some specifier
+                                      <*> declarator
+                                      <*> compoundStmt
   preprocessedC :: Parser [CExternal]
   preprocessedC = (L.whiteSpace *> many extern) <* eof where
     extern  = try (ExternDecl <$> declaration) 
