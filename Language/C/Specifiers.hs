@@ -45,10 +45,10 @@ where
                                <*> option [] (L.braces (L.commaSep1 identifier))
       struct = pure TStructOrUnion <*> (L.reserved "struct" *> optional identifier)
                                    <*> pure True
-                                   <*> option [] (L.braces (some declaration))
+                                   <*> option [] (L.braces (some sizedDeclaration))
       union = pure TStructOrUnion <*> (L.reserved "union" *> optional identifier)
                                   <*> pure False
-                                  <*> option [] (L.braces (some declaration))
+                                  <*> option [] (L.braces (some sizedDeclaration))
       lookupTypedef = do
         defs <- getState
         ident <- identifier

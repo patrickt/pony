@@ -1,5 +1,6 @@
 module Language.C.Declarations
   ( declaration
+  , sizedDeclaration
   , typeName
   , declarator
   , parameter )
@@ -32,7 +33,31 @@ where
     case decls of
       [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
       more -> return $ Multiple specs more
-      
+
+  -- hack
+  declarationNoSemi :: Parser CDeclaration
+  declarationNoSemi = do
+    -- declaration-specifiers
+    specs <- some specifier
+    -- init-declarator-list
+    decls <- L.commaSep initDeclarator
+    when (head specs == SSpec STypedef) $ do
+      state <- getState
+      let td = typedefs state
+      case (fst (head decls)) of
+        Named name _ _ -> putState $ addTypeDef name (specs !! 1) state
+        _ -> return ()
+    case decls of
+      [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
+      more -> return $ Multiple specs more
+  
+  sizedDeclaration :: Parser CDeclaration
+  sizedDeclaration = do
+    decl <- declarationNoSemi
+    size <- optional (L.colon >> constantExpression)
+    L.semi
+    return $ maybe decl (Sized decl) size
+
   parameter :: Parser CDeclaration
   parameter = pure TopLevel <*> some specifier <*> declarator <*> pure Uninitialized
   
