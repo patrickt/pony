@@ -19,10 +19,11 @@ where
   -- | C99 6.7
   declaration :: Parser CDeclaration
   declaration = pure TopLevel <*> some specifier
-                              <*> L.commaSep1 initDeclarator
+                              <*> ((L.commaSep initDeclarator) <* L.semi)
   
   sizedDeclaration :: Parser CDeclaration
-  sizedDeclaration = undefined
+  sizedDeclaration = pure TopLevel <*> some specifier
+                                   <*> ((L.commaSep1 sizedDeclarator) <* L.semi)
   
   parameter :: Parser CDeclaration
   parameter = pure Parameter <*> some specifier 
@@ -32,13 +33,21 @@ where
   typeName = pure TypeName <*> some specifier 
                            <*> optional declarator
   
-  -- BUGGY HACK: this could allow ... anywhere in the parameters.
   func :: Parser DerivedDeclarator
   func = L.parens $ do
-    items <- L.commaSep (Left <$> parameter <|> Right <$> L.reservedOp "...")
-    let isVariadic = if (null items) then False else either (const False) (const True) (last items);
-    
-    return $ Function (lefts items) isVariadic
+    -- Since I can't figure out an elegant way of ensuring that only the last parameter
+    -- is (optionally) an ellipsis, we parse instances of Either CDeclaration ()
+    -- and do some compile-time sanity checking to ensure that nobody puts ellipses in the wrong place.
+    given <- L.commaSep ((Left <$> parameter) <|> (Right <$> L.reservedOp "..."))
+    let params = lefts given
+    let dots = rights given
+    let notNull = not . null
+    -- there must be only one ..., and it must be the last element of the function
+    when ((length dots > 2) || 
+          ((null params) && (notNull dots)) ||
+         ((not $ null params) && (length dots == 1) && ((last given) /= (Right ()))))
+      (unexpected "ellipsis")
+    return $ Function params (not $ null dots)
   
   array :: Parser DerivedDeclarator
   array = do
@@ -55,6 +64,11 @@ where
                              <*> option Uninitialized assignment 
                              <*> pure Unsized
     where assignment = L.reservedOp "=" >> initializer
+    
+  sizedDeclarator :: Parser (CDeclarator, Initializer, CSize)
+  sizedDeclarator = pure (,,) <*> declarator
+                              <*> pure Uninitialized
+                              <*> option Unsized (Sized <$> (L.colon *> expression))
   
   initializer :: Parser Initializer
   initializer = (InitList <$> L.braces (L.commaSep1 initializer)) <|> (InitExpression <$> expression)
