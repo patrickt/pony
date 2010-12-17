@@ -21,7 +21,7 @@ module Language.C.Parser
   import Language.C.AST
   
   data Internals = Internals 
-    { typedefs :: [(String, TypeSpecifier)]
+    { typedefs :: [(String, CDeclaration)]
     , newOperators :: [String]
     }
   
@@ -30,8 +30,8 @@ module Language.C.Parser
                           , newOperators = [] 
                           }
   
-  addTypeDef :: String -> Specifier -> Internals -> Internals
-  addTypeDef name (TSpec typ) record = record { typedefs = typedefs record ++ [(name, typ)]}
+  addTypeDef :: String -> CDeclaration -> Internals -> Internals
+  addTypeDef name decl record = record { typedefs = (typedefs record) ++ [(name, decl)]}
   
   type Parser = GenParser Char Internals
   

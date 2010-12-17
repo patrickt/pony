@@ -19,11 +19,11 @@ where
   -- | C99 6.7
   declaration :: Parser CDeclaration
   declaration = pure TopLevel <*> some specifier
-                              <*> ((L.commaSep initDeclarator) <* L.semi)
+                              <*> (L.commaSep initDeclarator) <* L.semi
   
   sizedDeclaration :: Parser CDeclaration
   sizedDeclaration = pure TopLevel <*> some specifier
-                                   <*> ((L.commaSep1 sizedDeclarator) <* L.semi)
+                                   <*> (L.commaSep sizedDeclarator) <* L.semi
   
   parameter :: Parser CDeclaration
   parameter = pure Parameter <*> some specifier 
@@ -31,23 +31,26 @@ where
   
   typeName :: Parser CDeclaration
   typeName = pure TypeName <*> some specifier 
-                           <*> optional declarator
+                           <*> optional abstractDeclarator
   
   func :: Parser DerivedDeclarator
   func = L.parens $ do
-    -- Since I can't figure out an elegant way of ensuring that only the last parameter
-    -- is (optionally) an ellipsis, we parse instances of Either CDeclaration ()
-    -- and do some compile-time sanity checking to ensure that nobody puts ellipses in the wrong place.
+    -- Since I can't figure out an elegant way of ensuring that only the last 
+    -- parameter is (optionally) an ellipsis, we parse instances of 
+    -- `Either CDeclaration ()` and do some compile-time sanity checking 
+    -- to ensure that nobody puts ellipses in the wrong place.
     given <- L.commaSep ((Left <$> parameter) <|> (Right <$> L.reservedOp "..."))
     let params = lefts given
     let dots = rights given
     let notNull = not . null
+    let singleton x = length x == 1
     -- there must be only one ..., and it must be the last element of the function
-    when ((length dots > 2) || 
-          ((null params) && (notNull dots)) ||
-         ((not $ null params) && (length dots == 1) && ((last given) /= (Right ()))))
-      (unexpected "ellipsis")
-    return $ Function params (not $ null dots)
+    when (notNull dots
+     && (not (singleton dots) 
+         || (null params && notNull dots)
+         || (singleton dots && last given /= Right ())))
+     (unexpected "ellipsis")
+    return $ Function params $ notNull dots
   
   array :: Parser DerivedDeclarator
   array = do
@@ -88,7 +91,14 @@ where
     
   attributes :: Parser [CExpr]
   attributes = L.reserved "__attribute__" *> L.parens (L.parens $ many expression)
-
+  
+  abstractDeclarator :: Parser CDeclarator
+  abstractDeclarator = do
+    ptrs <- many pointer
+    arrayOrFunction <- many (try array <|> func)
+    let derived = ptrs ++ arrayOrFunction
+    return $ Abstract derived
+  
   declarator :: Parser CDeclarator
   declarator = do
     ptrs <- many pointer

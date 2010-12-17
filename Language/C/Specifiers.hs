@@ -53,17 +53,25 @@ where
         defs <- getState
         ident <- identifier
         case (lookup ident (typedefs defs)) of
-          (Just spec) -> return (TTypedef ident spec)
+          (Just specs) -> return (TTypedef ident specs)
           Nothing -> fail "could not find typedef"
   
   storageSpecifier :: Parser StorageSpecifier
   storageSpecifier = choice
-    [ "typedef" `as` STypedef
+    [ typedef
     , "extern" `as` SExtern
     , "static" `as` SStatic
     , "auto" `as` SAuto
     , "register" `as` SRegister 
     ] <?> "storage specifier"
+    where 
+      typedef = do 
+        L.reserved "typedef"
+        tn <- typeName
+        ident <- L.identifier
+        updateState $ addTypeDef ident tn
+        return STypedef
+        
   
   specifier :: Parser Specifier
   specifier = choice 

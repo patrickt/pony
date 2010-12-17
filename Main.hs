@@ -55,8 +55,7 @@ module Main where
        let v = val :: String
        return $ split v ','
     let inrnls = Internals {
-      typedefs = [ ("__builtin_va_list", TVoid) 
-                 , ("va_list", TVoid)
+      typedefs = [ ("__builtin_va_list", TypeName [TSpec TVoid] (Just (Abstract []))) 
                  ]
     , newOperators = (either (const []) id rv)
     }

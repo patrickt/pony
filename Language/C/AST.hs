@@ -110,7 +110,7 @@ module Language.C.AST where
      | TUnsigned
      | TStructOrUnion (Maybe String) Bool [CDeclaration]
      | TEnumeration (Maybe String) [String]
-     | TTypedef String TypeSpecifier
+     | TTypedef String CDeclaration
      deriving (Eq, Show)
   
   data CSize 
