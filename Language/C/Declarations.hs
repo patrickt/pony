@@ -1,5 +1,6 @@
 module Language.C.Declarations
   ( declaration
+  , abstractDeclarator
   , sizedDeclaration
   , typeName
   , declarator
@@ -16,10 +17,20 @@ where
   import Language.C.Parser
   import Language.C.Specifiers
   
+  fst3 :: (a, b, c) -> a
+  fst3 (a, _, _) = a
+  
   -- | C99 6.7
   declaration :: Parser CDeclaration
-  declaration = pure TopLevel <*> some specifier
-                              <*> (L.commaSep initDeclarator) <* L.semi
+  declaration = do
+    specs <- some specifier
+    decls <- (L.commaSep initDeclarator <* L.semi)
+    let ret = TopLevel specs decls
+    when (head specs == SSpec STypedef) $ do
+      case (fst3 (head decls)) of
+        (Named name _ _) -> updateState $ addTypeDef name (TopLevel (tail specs) decls)
+        x -> fail "what?"
+    return $ ret
   
   sizedDeclaration :: Parser CDeclaration
   sizedDeclaration = pure TopLevel <*> some specifier
@@ -31,7 +42,7 @@ where
   
   typeName :: Parser CDeclaration
   typeName = pure TypeName <*> some specifier 
-                           <*> optional abstractDeclarator
+                           <*> optional declarator
   
   func :: Parser DerivedDeclarator
   func = L.parens $ do
@@ -90,7 +101,7 @@ where
   asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
     
   attributes :: Parser [CExpr]
-  attributes = L.reserved "__attribute__" *> L.parens (L.parens $ many expression)
+  attributes = L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression)
   
   abstractDeclarator :: Parser CDeclarator
   abstractDeclarator = do

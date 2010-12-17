@@ -139,5 +139,6 @@ module Language.C.AST where
    = Pointer [TypeQualifier]
    | Array [TypeQualifier] (Maybe CExpr)
    | Function [CDeclaration] Bool
+   | Block [CDeclaration]
    deriving (Eq, Show)
    

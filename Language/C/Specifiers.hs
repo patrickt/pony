@@ -21,6 +21,7 @@ where
     , "volatile" `as` QVolatile 
     , "inline" `as` FInline -- TODO: ensure that this only goes on functions.
     , "__inline" `as` FInline
+    , "__inline__" `as` FInline
     ] <?> "type qualifier"
   
   typeSpecifier :: Parser TypeSpecifier
@@ -55,24 +56,17 @@ where
         case (lookup ident (typedefs defs)) of
           (Just specs) -> return (TTypedef ident specs)
           Nothing -> fail "could not find typedef"
-  
+
   storageSpecifier :: Parser StorageSpecifier
   storageSpecifier = choice
-    [ typedef
-    , "extern" `as` SExtern
-    , "static" `as` SStatic
-    , "auto" `as` SAuto
-    , "register" `as` SRegister 
-    ] <?> "storage specifier"
-    where 
-      typedef = do 
-        L.reserved "typedef"
-        tn <- typeName
-        ident <- L.identifier
-        updateState $ addTypeDef ident tn
-        return STypedef
-        
-  
+   [ "typedef" `as` STypedef
+   , "extern" `as` SExtern
+   , "static" `as` SStatic
+   , "auto" `as` SAuto
+   , "register" `as` SRegister 
+   ] <?> "storage specifier"
+    
+
   specifier :: Parser Specifier
   specifier = choice 
     [ TQual <$> typeQualifier
