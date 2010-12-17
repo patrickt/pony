@@ -56,11 +56,11 @@ where
     let notNull = not . null
     let singleton x = length x == 1
     -- there must be only one ..., and it must be the last element of the function
-    when (notNull dots
-     && (not (singleton dots) 
-         || (null params && notNull dots)
-         || (singleton dots && last given /= Right ())))
-     (unexpected "ellipsis")
+    when ((notNull dots)
+      && (not (singleton dots) 
+          || (null params && notNull dots)
+          || (singleton dots && last given /= Right ())))
+      (unexpected "ellipsis")
     return $ Function params $ notNull dots
   
   array :: Parser DerivedDeclarator
