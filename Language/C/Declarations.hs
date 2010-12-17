@@ -16,53 +16,21 @@ where
   import Language.C.Parser
   import Language.C.Specifiers
   
-  -- 6.7
+  -- | C99 6.7
   declaration :: Parser CDeclaration
-  declaration = do
-    -- declaration-specifiers
-    specs <- some specifier
-    -- init-declarator-list
-    decls <- L.commaSep initDeclarator
-    L.semi
-    when (head specs == SSpec STypedef) $ do
-      state <- getState
-      let td = typedefs state
-      case (fst (head decls)) of
-        Named name _ _ -> putState $ addTypeDef name (specs !! 1) state
-        _ -> return ()
-    case decls of
-      [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
-      more -> return $ Multiple specs more
-
-  -- hack
-  declarationNoSemi :: Parser CDeclaration
-  declarationNoSemi = do
-    -- declaration-specifiers
-    specs <- some specifier
-    -- init-declarator-list
-    decls <- L.commaSep initDeclarator
-    when (head specs == SSpec STypedef) $ do
-      state <- getState
-      let td = typedefs state
-      case (fst (head decls)) of
-        Named name _ _ -> putState $ addTypeDef name (specs !! 1) state
-        _ -> return ()
-    case decls of
-      [(decl, maybeExpr)] -> return $ TopLevel specs decl maybeExpr
-      more -> return $ Multiple specs more
+  declaration = pure TopLevel <*> some specifier
+                              <*> L.commaSep1 initDeclarator
   
   sizedDeclaration :: Parser CDeclaration
-  sizedDeclaration = do
-    decl <- declarationNoSemi
-    size <- optional (L.colon >> constantExpression)
-    L.semi
-    return $ maybe decl (Sized decl) size
-
+  sizedDeclaration = undefined
+  
   parameter :: Parser CDeclaration
-  parameter = pure TopLevel <*> some specifier <*> declarator <*> pure Uninitialized
+  parameter = pure Parameter <*> some specifier 
+                             <*> declarator
   
   typeName :: Parser CDeclaration
-  typeName = pure TypeName <*> some specifier <*> optional declarator
+  typeName = pure TypeName <*> some specifier 
+                           <*> optional declarator
   
   -- BUGGY HACK: this could allow ... anywhere in the parameters.
   func :: Parser DerivedDeclarator
@@ -82,8 +50,10 @@ where
   pointer :: Parser DerivedDeclarator
   pointer = Pointer <$> (char '*' >> L.whiteSpace >> many typeQualifier)
 
-  initDeclarator :: Parser (CDeclarator, Initializer)
-  initDeclarator = pure (,) <*> declarator <*> option Uninitialized assignment
+  initDeclarator :: Parser (CDeclarator, Initializer, CSize)
+  initDeclarator = pure (,,) <*> declarator 
+                             <*> option Uninitialized assignment 
+                             <*> pure Unsized
     where assignment = L.reservedOp "=" >> initializer
   
   initializer :: Parser Initializer

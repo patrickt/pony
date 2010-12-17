@@ -7,6 +7,7 @@ module Main where
   import Language.C.Expressions
   import Language.C.AST
   import Language.C.Functions
+  import Language.C.TopLevel
   import System.Console.CmdArgs
   import System.Environment
   

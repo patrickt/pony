@@ -99,24 +99,28 @@ module Language.C.AST where
     deriving (Eq, Show)
   
   data TypeSpecifier
-   = TVoid
-   | TChar
-   | TShort
-   | TInt
-   | TLong
-   | TFloat
-   | TDouble
-   | TSigned
-   | TUnsigned
-   | TStructOrUnion (Maybe String) Bool [CDeclaration]
-   | TEnumeration (Maybe String) [String]
-   | TTypedef String TypeSpecifier
-   deriving (Eq, Show)
+     = TVoid
+     | TChar
+     | TShort
+     | TInt
+     | TLong
+     | TFloat
+     | TDouble
+     | TSigned
+     | TUnsigned
+     | TStructOrUnion (Maybe String) Bool [CDeclaration]
+     | TEnumeration (Maybe String) [String]
+     | TTypedef String TypeSpecifier
+     deriving (Eq, Show)
+  
+  data CSize 
+    = Sized CExpr
+    | Unsized
+    deriving (Eq, Show)
   
   data CDeclaration 
-    = TopLevel [Specifier] CDeclarator Initializer
-    | Multiple [Specifier] [(CDeclarator, Initializer)]
-    | Sized CDeclaration CExpr
+    = TopLevel [Specifier] [(CDeclarator, Initializer, CSize)]
+    | Parameter [Specifier] CDeclarator
     | TypeName [Specifier] (Maybe CDeclarator)
     deriving (Eq, Show)
   

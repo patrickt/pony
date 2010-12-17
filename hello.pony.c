@@ -1,12 +1,17 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char const** argv)
 {
 	puts("Hello, world!");
+	
 	void *buffer;
-	int fdf = 500 >>> 23;
-	int foo = 'c' <&> 'd';
-	int blah = 5 <****> 5;
 	buffer = malloc(255);
+	free(buffer);
+	
+	int logicalshift = 500 >>> 23;
+	
+	char *something = "foo" <***> "bar";
+	
 	return 0;
 }

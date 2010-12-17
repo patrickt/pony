@@ -12,7 +12,3 @@ module Language.C.Functions where
   functionDefinition = pure CFunction <*> some specifier
                                       <*> declarator
                                       <*> compoundStmt
-  preprocessedC :: Parser [CExternal]
-  preprocessedC = (L.whiteSpace *> many extern) <* eof where
-    extern  = try (ExternDecl <$> declaration) 
-           <|> (FunctionDecl <$> functionDefinition)
