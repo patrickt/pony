@@ -36,6 +36,7 @@ module Language.C.AST where
   
   data CExpr
     = Constant CLiteral
+    | Comma [CExpr]
     | Identifier String
     | Index CExpr CExpr
     | Call CExpr [CExpr]
@@ -48,6 +49,7 @@ module Language.C.AST where
   
   instance Show CExpr where
     show (Constant l) = show l
+    show (Comma exprs) = show exprs
     show (Identifier s) = s
     show (Index lhs rhs) = printf "( %s[%s] )" (show lhs) (show rhs)
     show (Call func args) = printf "( %s(%s) )" (show func) (show args)
