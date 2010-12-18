@@ -110,14 +110,18 @@ where
     let derived = ptrs ++ arrayOrFunction
     return $ Abstract derived
   
+  block :: Parser DerivedDeclarator
+  block = (char '^') *> (pure Block)
+  
   declarator :: Parser CDeclarator
   declarator = do
+    blk <- optional block
     ptrs <- many pointer
     direct' <- optionMaybe direct
     arrayOrFunction <- many (try array <|> func)
     asm <- optional (try asmName)
     attrs <- many attributes
-    let derived = ptrs ++ arrayOrFunction
+    let derived = (maybeToList blk) ++ ptrs ++ arrayOrFunction
     case direct' of
       (Just (Single s)) -> return $ Named s derived asm
       (Just (Parenthesized (Named s decls _))) -> return $ Named s (decls ++ derived) asm
