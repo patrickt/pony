@@ -58,8 +58,8 @@ where
     -- there must be only one ..., and it must be the last element of the function
     when ((notNull dots)
       && (not (singleton dots) 
-          || (null params && notNull dots)
-          || (singleton dots && last given /= Right ())))
+          || null params
+          || last given /= Right ()))
       (unexpected "ellipsis")
     return $ Function params $ notNull dots
   
@@ -111,7 +111,7 @@ where
     return $ Abstract derived
   
   block :: Parser DerivedDeclarator
-  block = (char '^') *> (pure Block)
+  block = char '^' *> pure Block
   
   declarator :: Parser CDeclarator
   declarator = do

@@ -31,7 +31,7 @@ module Language.C.Parser
                           }
   
   addTypeDef :: String -> CDeclaration -> Internals -> Internals
-  addTypeDef name decl record = record { typedefs = (typedefs record) ++ [(name, decl)]}
+  addTypeDef name decl record = record { typedefs = typedefs record ++ [(name, decl)]}
   
   type Parser = GenParser Char Internals
   
