@@ -11,7 +11,7 @@ where
   import Language.C.Lexer as L
   import Language.C.AST
   import {-# SOURCE #-} Language.C.Declarations
-  import Language.C.Expressions (expression)
+  import Language.C.Expressions (expression, constantExpression)
   
   as name qual = L.reserved name >> return qual
   
@@ -24,6 +24,12 @@ where
     , "__inline" `as` FInline
     , "__inline__" `as` FInline
     ] <?> "type qualifier"
+    
+  enumerator :: Parser Enumerator
+  enumerator = do
+    ident <- L.identifier
+    value <- optional $ (L.reservedOp "=" *> constantExpression)
+    return $ maybe (EnumIdent ident) (EnumAssign ident) value
   
   typeSpecifier :: Parser TypeSpecifier
   typeSpecifier = choice 
@@ -47,7 +53,7 @@ where
       typeof = pure TTypeOfExpr <*> ((L.reserved "typeof" <|> L.reserved "__typeof__") *> expression)
       -- TODO: if name is Nothing and idents is empty, fail
       enum = pure TEnumeration <*> (L.reserved "enum" *> optional identifier)
-                               <*> option [] (L.braces (L.commaSep1 identifier))
+                               <*> option [] (L.braces (L.commaSep1 enumerator))
       struct = pure TStructOrUnion <*> (L.reserved "struct" *> optional identifier)
                                    <*> pure True
                                    <*> option [] (L.braces (some sizedDeclaration))

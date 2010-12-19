@@ -101,6 +101,11 @@ module Language.C.AST where
     | TQual TypeQualifier
     | SSpec StorageSpecifier
     deriving (Eq, Show, Typeable, Data)
+    
+  data Enumerator 
+    = EnumIdent String
+    | EnumAssign String CExpr
+    deriving (Eq, Show, Typeable, Data)
   
   data TypeSpecifier
      = TVoid
@@ -114,7 +119,7 @@ module Language.C.AST where
      | TUnsigned
      | TBool
      | TStructOrUnion (Maybe String) Bool [CDeclaration]
-     | TEnumeration (Maybe String) [String]
+     | TEnumeration (Maybe String) [Enumerator]
      | TTypedef String CDeclaration
      | TTypeOfExpr CExpr
      deriving (Eq, Show, Typeable, Data)
