@@ -1,10 +1,7 @@
-module Language.C.Expressions  
-  ( expression
-  , identifier
-  , constantExpression
-  , constant )
+module Language.C.Expressions
   where 
   
+  import Control.Monad
   import Debug.Trace
   import Language.C.Parser
   import Language.C.AST
@@ -25,22 +22,13 @@ module Language.C.Expressions
     st <- getState
     let ops = newOperators st
     let arithTable' = arithTable ++ [map mkInfixL ops]
-    buildChainedParser [ (postfixTable, "postfix expression")
-                       , (unaryTable, "unary expression")
+    buildChainedParser [ (unaryTable, "unary expression")
                        , (arithTable', "arithmetic expression")
                        , (compTable, "comparative expression")
                        , (bitwiseTable, "bitwise operation")
                        , (logicTable, "logical operation")
-                       ] primaryExpression <?> "constant expression"
-  
-  primaryExpression :: Parser CExpr
-  primaryExpression = choice
-    [ identifier
-    , constant
-    , Constant <$> stringLiteral
-    , L.parens expression 
-    ]
-  
+                       ] postfixExpression <?> "constant expression"
+
   assignTable = 
     [ [ mkInfixL "="
       , mkInfixL "*=" 
@@ -121,9 +109,24 @@ module Language.C.Expressions
       index       = pure (flip Index) <*> L.brackets expression
       call        = pure (flip Call) <*> (L.parens $ L.commaSep expression)
       dotAccess   = pure (flip $ BinaryOp ".") <*> (L.dot *> expression)
-      arrowAccess = pure (flip $ BinaryOp "->") <*> (L.arrow *> identifier)
+      arrowAccess = pure (flip $ BinaryOp "->") <*> (L.arrow *> expression)
       increment   = L.reservedOp "++" >> return (UnaryOp "post ++")
       decrement   = L.reservedOp "--" >> return (UnaryOp "post --")
+  
+  postfixExpression :: Parser CExpr
+  postfixExpression = buildExpressionParser postfixTable (sizeOfType <|> primaryExpression) <?> "postfix expression"
+  
+  -- sizeOfType cannot fit into the operator table, since type names are not expressions.
+  sizeOfType :: Parser CExpr
+  sizeOfType = pure SizeOfType <*> (L.reserved "sizeof" *> L.parens typeName)
+  
+  primaryExpression :: Parser CExpr
+  primaryExpression = choice
+    [ identifier
+    , constant
+    , stringLiteral
+    , L.parens expression 
+    ]
   
   identifier :: Parser CExpr
   identifier = Identifier <$> L.identifier 
@@ -134,19 +137,13 @@ module Language.C.Expressions
                                  , charLiteral 
                                  ]
                                  
-  spaceSeparatedStrings :: Parser CLiteral
-  spaceSeparatedStrings = do
-    str <- L.stringLiteral
-    rest <- optional $ L.whiteSpace >> spaceSeparatedStrings
-    case rest of
-      (Just (CString s)) -> return $ CString (str ++ s)
-      Nothing -> return $ CString str
-    
-  
+  stringLiteral :: Parser CExpr
+  stringLiteral = Constant <$> CString <$> concat `liftM` (L.stringLiteral `sepBy` L.whiteSpace)
+
   -- remember, kids, <$> is an infix synonym for fmap.
-  integer, charLiteral, float, stringLiteral :: Parser CLiteral
+  integer, charLiteral, float :: Parser CLiteral
   integer       = CInteger <$> (L.integer <* (optional (char 'L')))
   charLiteral   = CChar    <$> L.charLiteral
-  float         = CFloat   <$> L.float <* (optional (oneOf "LF"))
-  stringLiteral = spaceSeparatedStrings
+  float         = CFloat   <$> L.float <* (optional (oneOf "flFL"))
+  
   
