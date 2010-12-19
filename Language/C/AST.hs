@@ -79,6 +79,7 @@ module Language.C.AST where
     | SStatic
     | SExtern
     | STypedef
+    | SAttribute [CExpr]
     deriving (Eq, Show, Typeable, Data)
   -- TODO: __attribute__(()) should go in here, too
     
@@ -111,9 +112,11 @@ module Language.C.AST where
      | TDouble
      | TSigned
      | TUnsigned
+     | TBool
      | TStructOrUnion (Maybe String) Bool [CDeclaration]
      | TEnumeration (Maybe String) [String]
      | TTypedef String CDeclaration
+     | TTypeOfExpr CExpr
      deriving (Eq, Show, Typeable, Data)
   
   data CSize 

@@ -11,6 +11,7 @@ where
   import Language.C.Lexer as L
   import Language.C.AST
   import {-# SOURCE #-} Language.C.Declarations
+  import Language.C.Expressions (expression)
   
   as name qual = L.reserved name >> return qual
   
@@ -35,12 +36,15 @@ where
     , "double" `as` TDouble
     , "signed" `as` TSigned
     , "unsigned" `as` TUnsigned
+    , "_Bool" `as` TBool
+    , typeof
     , enum
     , struct
     , union
     , try lookupTypedef
     ] <?> "type specifier"
     where
+      typeof = pure TTypeOfExpr <*> ((L.reserved "typeof" <|> L.reserved "__typeof__") *> expression)
       -- TODO: if name is Nothing and idents is empty, fail
       enum = pure TEnumeration <*> (L.reserved "enum" *> optional identifier)
                                <*> option [] (L.braces (L.commaSep1 identifier))
@@ -63,8 +67,11 @@ where
    , "extern" `as` SExtern
    , "static" `as` SStatic
    , "auto" `as` SAuto
-   , "register" `as` SRegister 
+   , "register" `as` SRegister
+   , attributes 
    ] <?> "storage specifier"
+   where
+     attributes = pure SAttribute <*> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression))
     
 
   specifier :: Parser Specifier
