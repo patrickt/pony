@@ -16,17 +16,9 @@ module Language.C.Expressions
   buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
   buildChainedParser [] p = p
   
-  expression :: Parser CExpr
-  expression = do
-    exprs <- L.commaSep1 expression'
-    let singleton x = length x == 1
-    return $ if singleton exprs
-      then head exprs
-      else Comma exprs
-  
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
-  expression' :: Parser CExpr
-  expression' = buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
+  expression :: Parser CExpr
+  expression = buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
   
   constantExpression :: Parser CExpr
   constantExpression = do
