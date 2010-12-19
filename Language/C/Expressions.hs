@@ -128,7 +128,7 @@ module Language.C.Expressions
     ] where
       index       = pure (flip Index) <*> L.brackets expression
       call        = pure (flip Call) <*> (L.parens $ L.commaSep expression)
-      dotAccess   = pure (flip $ BinaryOp ".") <*> (L.dot *> identifier)
+      dotAccess   = pure (flip $ BinaryOp ".") <*> (L.dot *> expression)
       arrowAccess = pure (flip $ BinaryOp "->") <*> (L.arrow *> identifier)
       increment   = L.reservedOp "++" >> return (UnaryOp "post ++")
       decrement   = L.reservedOp "--" >> return (UnaryOp "post --")
@@ -153,8 +153,8 @@ module Language.C.Expressions
   
   -- remember, kids, <$> is an infix synonym for fmap.
   integer, charLiteral, float, stringLiteral :: Parser CLiteral
-  integer       = CInteger <$> L.integer
+  integer       = CInteger <$> (L.integer <* (optional (char 'L')))
   charLiteral   = CChar    <$> L.charLiteral
-  float         = CFloat   <$> L.float
+  float         = CFloat   <$> L.float <* (optional (oneOf "LF"))
   stringLiteral = spaceSeparatedStrings
   

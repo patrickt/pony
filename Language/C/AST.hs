@@ -1,9 +1,10 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Language.C.AST where
   
   import Data.Either
   import Text.Printf
-  
-  -- TODO: make everything derive Typeable and Data
+  import Data.Generics
   
   type BlockItem = Either CDeclaration CStatement
   
@@ -24,15 +25,15 @@ module Language.C.AST where
     | ReturnStmt (Maybe CExpr)
     | SwitchStmt CExpr CStatement
     | WhileStmt CExpr CStatement
-    deriving (Show)
+    deriving (Eq, Show, Typeable, Data)
   
   data CFunction = CFunction [Specifier] CDeclarator CStatement
-    deriving (Show)
+    deriving (Eq, Show, Typeable, Data)
     
   data CExternal 
     = FunctionDecl CFunction
     | ExternDecl CDeclaration
-    deriving (Show)
+    deriving (Eq, Show, Typeable, Data)
   
   data CExpr
     = Constant CLiteral
@@ -45,7 +46,7 @@ module Language.C.AST where
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr
     | SizeOfType CDeclaration
-    deriving (Eq)
+    deriving (Eq, Typeable, Data)
   
   instance Show CExpr where
     show (Constant l) = show l
@@ -64,7 +65,7 @@ module Language.C.AST where
     | CChar Char
     | CFloat Double
     | CString String
-    deriving (Eq)
+    deriving (Eq, Typeable, Data)
     
   instance Show CLiteral where
     show (CInteger i) = show i
@@ -78,7 +79,7 @@ module Language.C.AST where
     | SStatic
     | SExtern
     | STypedef
-    deriving (Eq, Show)
+    deriving (Eq, Show, Typeable, Data)
   -- TODO: __attribute__(()) should go in here, too
     
   data TypeQualifier
@@ -86,7 +87,7 @@ module Language.C.AST where
     | QRestrict
     | QVolatile
     | FInline
-    deriving (Eq)
+    deriving (Eq, Typeable, Data)
   
   instance Show TypeQualifier where
     show QConst = "const"
@@ -98,7 +99,7 @@ module Language.C.AST where
     = TSpec TypeSpecifier
     | TQual TypeQualifier
     | SSpec StorageSpecifier
-    deriving (Eq, Show)
+    deriving (Eq, Show, Typeable, Data)
   
   data TypeSpecifier
      = TVoid
@@ -113,34 +114,34 @@ module Language.C.AST where
      | TStructOrUnion (Maybe String) Bool [CDeclaration]
      | TEnumeration (Maybe String) [String]
      | TTypedef String CDeclaration
-     deriving (Eq, Show)
+     deriving (Eq, Show, Typeable, Data)
   
   data CSize 
     = Sized CExpr
     | Unsized
-    deriving (Eq, Show)
+    deriving (Eq, Show, Typeable, Data)
   
   data CDeclaration 
     = TopLevel [Specifier] [(CDeclarator, Initializer, CSize)]
     | Parameter [Specifier] CDeclarator
     | TypeName [Specifier] (Maybe CDeclarator)
-    deriving (Eq, Show)
+    deriving (Eq, Show, Typeable, Data)
   
   data CDeclarator
    = Named String [DerivedDeclarator] (Maybe String) 
    | Abstract [DerivedDeclarator]
-   deriving (Eq, Show)
+   deriving (Eq, Show, Typeable, Data)
   
   data Initializer 
     = InitExpression CExpr
     | InitList [Initializer]
     | Uninitialized
-    deriving (Eq, Show)
+    deriving (Eq, Show, Typeable, Data)
   
   data DerivedDeclarator
    = Pointer [TypeQualifier]
    | Array [TypeQualifier] (Maybe CExpr)
    | Function [CDeclaration] Bool
    | Block
-   deriving (Eq, Show)
+   deriving (Eq, Show, Typeable, Data)
    

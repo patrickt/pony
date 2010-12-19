@@ -13,12 +13,14 @@ module Language.C.Parser
   )
   where
   
-  import System.Cmd
-  import Text.Printf
   import Control.Applicative
+  import Data.Generics
+  import Language.C.AST
+  import System.Cmd
   import Text.Parsec hiding (parseTest, (<|>), many, optional)
   import Text.Parsec.String hiding (Parser, parseFromFile)
-  import Language.C.AST
+  import Text.Printf
+
   
   data Internals = Internals 
     { typedefs :: [(String, CDeclaration)]
