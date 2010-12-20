@@ -53,7 +53,7 @@ where
       typeof = pure TTypeOfExpr <*> ((L.reserved "typeof" <|> L.reserved "__typeof__") *> expression)
       -- TODO: if name is Nothing and idents is empty, fail
       enum = pure TEnumeration <*> (L.reserved "enum" *> optional identifier)
-                               <*> option [] (L.braces (L.commaSep1 enumerator))
+                               <*> option [] (L.braces (enumerator `sepEndBy1` L.symbol ","))
       struct = pure TStructOrUnion <*> (L.reserved "struct" *> optional identifier)
                                    <*> pure True
                                    <*> option [] (L.braces (some sizedDeclaration))
