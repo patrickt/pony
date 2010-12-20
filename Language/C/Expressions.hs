@@ -23,6 +23,7 @@ module Language.C.Expressions
     let ops = newOperators st
     let arithTable' = arithTable ++ [map mkInfixL ops]
     buildChainedParser [ (unaryTable, "unary expression")
+                       , (castTable, "cast expression")
                        , (arithTable', "arithmetic expression")
                        , (compTable, "comparative expression")
                        , (bitwiseTable, "bitwise operation")
@@ -77,10 +78,13 @@ module Language.C.Expressions
   
   mkInfixL name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocLeft
   
+  castTable = 
+    [ [ Prefix cast ]]
+    where cast = pure Cast <*> (try $ L.parens typeName)
+  
   -- BUG: the unary operators are applied on cast-expressions, not other unary expressions
   unaryTable = 
-    [ [ Prefix cast   ]
-    , [ mkPrefix "++" ]
+    [ [ mkPrefix "++" ]
     , [ mkPrefix "--" ]
     , [ mkPrefix "&"
       , mkPrefix "*"
@@ -93,7 +97,6 @@ module Language.C.Expressions
       mkPrefix name = Prefix $ do
         L.reservedOp name
         return $ UnaryOp name
-      cast = pure Cast <*> (try $ L.parens typeName)
       sizeof = do
         L.reserved "sizeof"
         return $ UnaryOp "sizeof"
@@ -139,10 +142,10 @@ module Language.C.Expressions
                                  
   stringLiteral :: Parser CExpr
   stringLiteral = Constant <$> CString <$> concat `liftM` (L.stringLiteral `sepBy` L.whiteSpace)
-
+  
   -- remember, kids, <$> is an infix synonym for fmap.
   integer, charLiteral, float :: Parser CLiteral
-  integer       = CInteger <$> (L.integer <* (optional (char 'L')))
+  integer       = CInteger <$> L.integer <* many (oneOf "uUlL") <* L.whiteSpace
   charLiteral   = CChar    <$> L.charLiteral
   float         = CFloat   <$> L.float <* (optional (oneOf "flFL"))
   

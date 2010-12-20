@@ -2,3 +2,5 @@ dist/
 .DS_Store
 Language/Pony/MachineSizes.hs
 report.html
+Testing.hs
+ponytmp
