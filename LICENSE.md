@@ -1,7 +1,7 @@
-Copyright © 2010, Patrick Thomson. 
+Copyright © 2010, George Washington University. 
 All rights reserved. 
 
-Pony is open-source software released under the 3-clause BSD license, the text of which follows:
+Pony is open-source software released under the Simplified BSD License, the text of which follows:
 
 > Redistribution and use in source and binary forms, with or without
 > modification, are permitted provided that the following conditions are met:
@@ -19,6 +19,10 @@ Pony is open-source software released under the 3-clause BSD license, the text o
 > ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 > (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 > SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+>
+>The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of George Washington University.
+
+Pony is written by Patrick Thomson.
 
 Pony depends heavily on [Filet-O-Fish][filet], © 2007-2009 ETH Zurich and Microsoft Corporation and made available as part of the [Barrelfish][barrelfish] project. Because there is no Cabal package for Filet-O-Fish, a version is distributed along with the Pony source code. A copy of the license is included in `Language/FiletOFish/LICENSE`. Pony has a number of additional build dependencies, specified in the `pony.cabal` file. 
 
