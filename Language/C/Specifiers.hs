@@ -28,7 +28,7 @@ where
   enumerator :: Parser Enumerator
   enumerator = do
     ident <- L.identifier
-    value <- optional $ (L.reservedOp "=" *> constantExpression)
+    value <- optional (L.reservedOp "=" *> constantExpression)
     return $ maybe (EnumIdent ident) (EnumAssign ident) value
   
   typeSpecifier :: Parser TypeSpecifier

@@ -80,7 +80,7 @@ module Language.C.Expressions
   
   castTable = 
     [ [ Prefix cast ]]
-    where cast = pure Cast <*> (try $ L.parens typeName)
+    where cast = pure Cast <*> try (L.parens typeName)
   
   -- BUG: the unary operators are applied on cast-expressions, not other unary expressions
   unaryTable = 
@@ -110,7 +110,7 @@ module Language.C.Expressions
     , [ Postfix decrement ]
     ] where
       index       = pure (flip Index) <*> L.brackets expression
-      call        = pure (flip Call) <*> (L.parens $ L.commaSep expression)
+      call        = pure (flip Call) <*> L.parens (L.commaSep expression)
       dotAccess   = pure (flip $ BinaryOp ".") <*> (L.dot *> expression)
       arrowAccess = pure (flip $ BinaryOp "->") <*> (L.arrow *> expression)
       increment   = L.reservedOp "++" >> return (UnaryOp "post ++")
@@ -147,6 +147,6 @@ module Language.C.Expressions
   integer, charLiteral, float :: Parser CLiteral
   integer       = CInteger <$> L.integer <* many (oneOf "uUlL") <* L.whiteSpace
   charLiteral   = CChar    <$> L.charLiteral
-  float         = CFloat   <$> L.float <* (optional (oneOf "flFL"))
+  float         = CFloat   <$> L.float <* optional (oneOf "flFL")
   
   

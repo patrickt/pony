@@ -26,15 +26,15 @@ where
     specs <- some specifier
     decls <- (L.commaSep initDeclarator <* L.semi)
     let ret = TopLevel specs decls
-    when (head specs == SSpec STypedef) $ do
+    when (head specs == SSpec STypedef) $
       case (fst3 (head decls)) of
         (Named name _ _) -> updateState $ addTypeDef name (TopLevel (tail specs) decls)
         x -> fail "what?"
-    return $ ret
+    return ret
   
   sizedDeclaration :: Parser CDeclaration
   sizedDeclaration = pure TopLevel <*> some specifier
-                                   <*> (L.commaSep sizedDeclarator) <* L.semi
+                                   <*> L.commaSep sizedDeclarator <* L.semi
   
   parameter :: Parser CDeclaration
   parameter = pure Parameter <*> some specifier 
@@ -56,11 +56,7 @@ where
     let notNull = not . null
     let singleton x = length x == 1
     -- there must be only one ..., and it must be the last element of the function
-    when ((notNull dots)
-      && (not (singleton dots) 
-          || null params
-          || last given /= Right ()))
-      (unexpected "ellipsis")
+    when (notNull dots && (not (singleton dots) || null params || last given /= Right ())) (unexpected "ellipsis")
     return $ Function params $ notNull dots
   
   array :: Parser DerivedDeclarator
@@ -121,7 +117,7 @@ where
     arrayOrFunction <- many (try array <|> func)
     asm <- optional (try asmName)
     attrs <- many attributes
-    let derived = (maybeToList blk) ++ ptrs ++ arrayOrFunction
+    let derived = maybeToList blk ++ ptrs ++ arrayOrFunction
     case direct' of
       (Just (Single s)) -> return $ Named s derived asm
       (Just (Parenthesized (Named s decls _))) -> return $ Named s (decls ++ derived) asm
