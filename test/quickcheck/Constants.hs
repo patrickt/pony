@@ -1,3 +1,4 @@
+import Data.List (intersperse)
 import Test.Framework (Test, defaultMain)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Language.C.Parser
@@ -8,9 +9,11 @@ import Test.QuickCheck
 parseConstant = runParser constantExpression mkInternals "test data"
 
 tests :: [Test]
-tests = [ testProperty "decimalIntegers" prop_decimalIntegers
+tests = [ testProperty "decimal integers" prop_decimalIntegers
         , testProperty "characters" prop_characters
-        , testProperty "floatingPoint" prop_floatingPoint
+        , testProperty "floating-point literals" prop_floatingPoint
+        , testProperty "string literals" prop_strings
+        , testProperty "space-separated string literals" prop_spaceSeparatedStrings
         ]
 
 prop_decimalIntegers :: Integer -> Bool
@@ -29,6 +32,17 @@ prop_characters :: Char -> Bool
 prop_characters c = case (parseConstant (show c)) of
   (Right (Constant (CChar c'))) -> (c == c')
   (Left _) -> False    
+
+prop_strings :: String -> Bool
+prop_strings s = case (parseConstant (show s)) of
+  (Right (Constant (CString s'))) -> (s == s')
+  (Left _) -> False
+  
+prop_spaceSeparatedStrings :: [String] -> Bool
+prop_spaceSeparatedStrings s = case (parseConstant separated) of
+  (Right (Constant (CString s'))) -> (concat s == s')
+  (Left _) -> False
+  where separated = concat $ intersperse " " $ map show s
 
 main = defaultMain tests
   
