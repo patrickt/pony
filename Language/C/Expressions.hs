@@ -82,7 +82,11 @@ module Language.C.Expressions
     [ [ Prefix cast ]]
     where cast = pure Cast <*> try (L.parens typeName)
   
-  -- BUG: the unary operators are applied on cast-expressions, not other unary expressions
+  -- sizeOfType cannot fit into the operator table, since type names are not expressions.
+  sizeOfType :: Parser CExpr
+  sizeOfType = pure SizeOfType <*> (L.reserved "sizeof" *> L.parens typeName)
+  
+    -- BUG: the unary operators are applied on cast-expressions, not other unary expressions
   unaryTable = 
     [ [ mkPrefix "++" ]
     , [ mkPrefix "--" ]
@@ -101,28 +105,37 @@ module Language.C.Expressions
         L.reserved "sizeof"
         return $ UnaryOp "sizeof"
   
-  postfixTable = 
-    [ [ Postfix index ]
-    , [ Postfix call ]
-    , [ Postfix dotAccess ]
-    , [ Postfix arrowAccess ]
-    , [ Postfix increment ]
-    , [ Postfix decrement ]
-    ] where
-      index       = pure (flip Index) <*> L.brackets expression
-      call        = pure (flip Call) <*> L.parens (L.commaSep expression)
-      dotAccess   = pure (flip $ BinaryOp ".") <*> (L.dot *> expression)
-      arrowAccess = pure (flip $ BinaryOp "->") <*> (L.arrow *> expression)
-      increment   = L.reservedOp "++" >> return (UnaryOp "post ++")
-      decrement   = L.reservedOp "--" >> return (UnaryOp "post --")
+  -- TODO: This – this is just awful. Seriously, there has to be a better way.
+  data PostfixOp 
+    = Brackets CExpr
+    | Parens [CExpr]
+    | Dot CExpr
+    | Arrow CExpr
+    | Increment
+    | Decrement
+    deriving (Show, Eq)
   
   postfixExpression :: Parser CExpr
-  postfixExpression = buildExpressionParser postfixTable (sizeOfType <|> primaryExpression) <?> "postfix expression"
+  postfixExpression = do
+    e <- primaryExpression
+    r <- many $ choice [ Brackets <$> L.brackets expression
+                       , Parens <$> L.parens (many expression) 
+                       , Dot <$> (L.dot >> identifier)
+                       , Arrow <$> (L.arrow >> identifier)
+                       , (L.reservedOp "++" >> return Increment)
+                       , (L.reservedOp "--" >> return Decrement)]
+    return $ foldl translate e r
+    where
+      translate :: CExpr -> PostfixOp -> CExpr
+      translate a (Brackets b) = Index a b
+      translate a (Parens es) = Call a es
+      translate a (Dot ident) = BinaryOp "." a ident
+      translate a (Arrow ident) = BinaryOp "->" a ident
+      translate a Increment = UnaryOp "post++" a
+      translate a Decrement = UnaryOp "post--" a
   
-  -- sizeOfType cannot fit into the operator table, since type names are not expressions.
-  sizeOfType :: Parser CExpr
-  sizeOfType = pure SizeOfType <*> (L.reserved "sizeof" *> L.parens typeName)
   
+
   primaryExpression :: Parser CExpr
   primaryExpression = choice
     [ identifier
@@ -135,18 +148,16 @@ module Language.C.Expressions
   identifier = Identifier <$> L.identifier 
   
   constant :: Parser CExpr
-  constant = Constant <$> choice [ try float
-                                 , integer
-                                 , charLiteral 
-                                 ]
+  constant = Constant <$> choice [ try float, integer , charLiteral ]
                                  
   stringLiteral :: Parser CExpr
   stringLiteral = Constant <$> CString <$> concat `liftM` (L.stringLiteral `sepBy` L.whiteSpace)
   
   -- remember, kids, <$> is an infix synonym for fmap.
+  -- TODO: The definition for integer suffixes is pretty gauche
   integer, charLiteral, float :: Parser CLiteral
   integer       = CInteger <$> L.integer <* many (oneOf "uUlL") <* L.whiteSpace
   charLiteral   = CChar    <$> L.charLiteral
-  float         = CFloat   <$> L.float <* optional (oneOf "flFL")
+  float         = CFloat   <$> L.float <* optional (oneOf "flFL") <* L.whiteSpace
   
   
