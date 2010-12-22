@@ -15,20 +15,18 @@ module Language.C.Expressions
   
   -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
   expression :: Parser CExpr
-  expression = buildChainedParser [ (assignTable, "assignment expression") ] constantExpression <?> "C expression"
+  expression = buildExpressionParser assignTable constantExpression <?> "C expression"
   
   constantExpression :: Parser CExpr
   constantExpression = do
     st <- getState
     let ops = newOperators st
     let arithTable' = arithTable ++ [map mkInfixL ops]
-    buildChainedParser [ (unaryTable, "unary expression")
-                       , (castTable, "cast expression")
-                       , (arithTable', "arithmetic expression")
+    buildChainedParser [ (arithTable', "arithmetic expression")
                        , (compTable, "comparative expression")
                        , (bitwiseTable, "bitwise operation")
                        , (logicTable, "logical operation")
-                       ] postfixExpression <?> "constant expression"
+                       ] castExpression <?> "constant expression"
 
   assignTable = 
     [ [ mkInfixL "="
@@ -78,34 +76,15 @@ module Language.C.Expressions
   
   mkInfixL name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocLeft
   
-  castTable = 
-    [ [ Prefix cast ]]
-    where cast = pure Cast <*> try (L.parens typeName)
+  castExpression :: Parser CExpr
+  castExpression = do
+    types <- many $ L.parens typeName
+    expr <- unaryExpression
+    return $ foldl (flip Cast) expr types
+
+  unaryExpression = undefined
   
-  -- sizeOfType cannot fit into the operator table, since type names are not expressions.
-  sizeOfType :: Parser CExpr
-  sizeOfType = pure SizeOfType <*> (L.reserved "sizeof" *> L.parens typeName)
-  
-    -- BUG: the unary operators are applied on cast-expressions, not other unary expressions
-  unaryTable = 
-    [ [ mkPrefix "++" ]
-    , [ mkPrefix "--" ]
-    , [ mkPrefix "&"
-      , mkPrefix "*"
-      , mkPrefix "+"
-      , mkPrefix "-"
-      , mkPrefix "~"
-      , mkPrefix "!"  ]
-    , [ Prefix sizeof ]
-    ] where
-      mkPrefix name = Prefix $ do
-        L.reservedOp name
-        return $ UnaryOp name
-      sizeof = do
-        L.reserved "sizeof"
-        return $ UnaryOp "sizeof"
-  
-  -- TODO: This – this is just awful. Seriously, there has to be a better way.
+  -- TODO: This is terrible, and I should be ashamed of myself.
   data PostfixOp 
     = Brackets CExpr
     | Parens [CExpr]
@@ -122,9 +101,9 @@ module Language.C.Expressions
                        , Parens <$> L.parens (many expression) 
                        , Dot <$> (L.dot >> identifier)
                        , Arrow <$> (L.arrow >> identifier)
-                       , (L.reservedOp "++" >> return Increment)
-                       , (L.reservedOp "--" >> return Decrement)]
-    return $ foldl translate e r
+                       , (L.reservedOp "++" >> L.whiteSpace >> return Increment)
+                       , (L.reservedOp "--" >> L.whiteSpace >> return Decrement)]
+    (return $ foldl translate e r) <?> "postfix expression"
     where
       translate :: CExpr -> PostfixOp -> CExpr
       translate a (Brackets b) = Index a b
