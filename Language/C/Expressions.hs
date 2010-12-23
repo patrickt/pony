@@ -13,9 +13,9 @@ module Language.C.Expressions
   buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
   buildChainedParser [] p = p
   
-  -- instead of taking tuples, there should be an ADT that has a precedence table, a unique id, and a name for error messages
   expression :: Parser CExpr
   expression = buildExpressionParser assignTable constantExpression <?> "C expression"
+  
   
   constantExpression :: Parser CExpr
   constantExpression = do
@@ -41,7 +41,7 @@ module Language.C.Expressions
       , mkInfixL "&="
       , mkInfixL "^="
       , mkInfixL "|=" ] ]
-  
+
   logicTable =
     [ [mkInfixL "&&"]
     , [mkInfixL "||"]
@@ -51,12 +51,12 @@ module Language.C.Expressions
         then' <- L.reservedOp "?" >> expression
         else' <- L.reservedOp ":" >> expression
         return $ \it -> TernaryOp it then' else'
-  
+
   bitwiseTable = 
     [ [mkInfixL "&"]
     , [mkInfixL "^"]
     , [mkInfixL "|"] ]
-  
+
   compTable = 
     [ [ mkInfixL "<"
       , mkInfixL ">"
@@ -64,7 +64,7 @@ module Language.C.Expressions
       , mkInfixL ">=" ]
     , [ mkInfixL "=="
       , mkInfixL "!=" ] ]
-  
+
   arithTable = 
     [ [ mkInfixL "*"
       , mkInfixL "/"
@@ -76,29 +76,43 @@ module Language.C.Expressions
   
   mkInfixL name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocLeft
   
-  castExpression :: Parser CExpr
-  castExpression = do
-    types <- many $ L.parens typeName
-    expr <- unaryExpression
-    return $ foldl (flip Cast) expr types
-
-  unaryExpression = undefined
-  
-  -- TODO: This is terrible, and I should be ashamed of myself.
-  data PostfixOp 
+  data PostfixOp
     = Brackets CExpr
     | Parens [CExpr]
     | Dot CExpr
     | Arrow CExpr
     | Increment
     | Decrement
-    deriving (Show, Eq)
+  
+  castExpression :: Parser CExpr
+  castExpression = do
+	  types <- many $ try (L.parens typeName)
+	  expr <- unaryExpression
+	  return $ foldl (flip Cast) expr types
+  
+  sizeofExpr = pure UnaryOp <*> pure "sizeof" <*> (L.reservedOp "sizeof" *> unaryExpression)
+  sizeofType = pure SizeOfType <*> (L.reservedOp "sizeof" *> (L.parens typeName))
+  
+  prefixInc = pure UnaryOp <*> pure "++" <*> (L.reservedOp "++" *> unaryExpression)
+  prefixDec = pure UnaryOp <*> pure "--" <*> (L.reservedOp "--" *> unaryExpression)
+  
+  unaryExpression = (try sizeofExpr) <|> sizeofType <|> prefixInc <|> prefixDec <|> unaryOperator
+  
+  unaryOperator :: Parser CExpr
+  unaryOperator = do
+    c <- many $ oneOf "&!*+-~!"
+    -- FIXME: this is technically wrong, it should be `e <- castExpression`, but that's left-recursive if no casts are found.
+    -- there are ways around this - `chainl` and such - but until this actually shows up in code as being a problem, 
+    -- I'm going to leave it as is.
+    e <- postfixExpression
+    let c' = [ [a] | a <- c]
+    return $ foldr UnaryOp e c'
   
   postfixExpression :: Parser CExpr
   postfixExpression = do
     e <- primaryExpression
     r <- many $ choice [ Brackets <$> L.brackets expression
-                       , Parens <$> L.parens (many expression) 
+                       , Parens <$> L.parens (L.commaSep expression) 
                        , Dot <$> (L.dot >> identifier)
                        , Arrow <$> (L.arrow >> identifier)
                        , (L.reservedOp "++" >> L.whiteSpace >> return Increment)
@@ -112,8 +126,6 @@ module Language.C.Expressions
       translate a (Arrow ident) = BinaryOp "->" a ident
       translate a Increment = UnaryOp "post++" a
       translate a Decrement = UnaryOp "post--" a
-  
-  
 
   primaryExpression :: Parser CExpr
   primaryExpression = choice
@@ -135,7 +147,7 @@ module Language.C.Expressions
   -- remember, kids, <$> is an infix synonym for fmap.
   -- TODO: The definition for integer suffixes is pretty gauche
   integer, charLiteral, float :: Parser CLiteral
-  integer       = CInteger <$> L.integer <* many (oneOf "uUlL") <* L.whiteSpace
+  integer       = CInteger <$> L.natural <* many (oneOf "uUlL") <* L.whiteSpace
   charLiteral   = CChar    <$> L.charLiteral
   float         = CFloat   <$> L.float <* optional (oneOf "flFL") <* L.whiteSpace
   

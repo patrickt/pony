@@ -6,6 +6,7 @@ module Language.C.Lexer
   , reservedOp
   , charLiteral
   , stringLiteral
+  , natural
   , integer
   , float
   , symbol

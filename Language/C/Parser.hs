@@ -13,11 +13,11 @@ module Language.C.Parser
   )
   where
   
-  import Control.Applicative
+  import Control.Applicative hiding ((<|>))
   import Data.Generics
   import Language.C.AST
   import System.Cmd
-  import Text.Parsec hiding (parseTest, (<|>), many, optional)
+  import Text.Parsec hiding (parseTest, many, optional)
   import Text.Parsec.String hiding (Parser, parseFromFile)
   import Text.Printf
 
