@@ -81,7 +81,6 @@ module Language.C.AST where
     | STypedef
     | SAttribute [CExpr]
     deriving (Eq, Show, Typeable, Data)
-  -- TODO: __attribute__(()) should go in here, too
     
   data TypeQualifier
     = QConst
