@@ -47,9 +47,11 @@ where
     , enum
     , struct
     , union
+    , try builtin
     , try lookupTypedef
     ] <?> "type specifier"
     where
+      builtin = pure TBuiltin <*> L.symbol "__builtin_va_list"
       typeof = pure TTypeOfExpr <*> ((L.reserved "typeof" <|> L.reserved "__typeof__") *> expression)
       -- TODO: if name is Nothing and idents is empty, fail
       enum = pure TEnumeration <*> (L.reserved "enum" *> optional identifier)

@@ -55,8 +55,7 @@ module Main where
        let v = val :: String
        return $ split v ','
     let inrnls = Internals {
-      typedefs = [ ("__builtin_va_list", TypeName [TSpec TVoid] (Just (Abstract []))) 
-                 ]
+      typedefs = [ ]
     , newOperators = (either (const []) id rv)
     }
     result <- preprocessAndParse preprocessedC input inrnls

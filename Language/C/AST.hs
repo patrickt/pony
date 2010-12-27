@@ -117,6 +117,7 @@ module Language.C.AST where
      | TSigned
      | TUnsigned
      | TBool
+     | TBuiltin String
      | TStructOrUnion (Maybe String) Bool [CDeclaration]
      | TEnumeration (Maybe String) [Enumerator]
      | TTypedef String CDeclaration
