@@ -124,6 +124,9 @@ module Language.C.AST where
      | TTypeOfExpr CExpr
      deriving (Eq, Show, Typeable, Data)
   
+  data CAttribute = CAttribute [CExpr]
+    deriving (Eq, Show, Typeable, Data)
+  
   data CSize 
     = Sized CExpr
     | Unsized
@@ -136,8 +139,8 @@ module Language.C.AST where
     deriving (Eq, Show, Typeable, Data)
   
   data CDeclarator
-   = Named String [DerivedDeclarator] (Maybe String) 
-   | Abstract [DerivedDeclarator]
+   = Named String [DerivedDeclarator] (Maybe String) [CAttribute]
+   | Abstract [DerivedDeclarator] [CAttribute]
    deriving (Eq, Show, Typeable, Data)
   
   data Initializer 

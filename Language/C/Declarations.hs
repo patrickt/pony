@@ -28,7 +28,7 @@ where
     let ret = TopLevel specs decls
     when (head specs == SSpec STypedef) $
       case (fst3 (head decls)) of
-        (Named name _ _) -> updateState $ addTypeDef name (TopLevel (tail specs) decls)
+        (Named name _ _ _) -> updateState $ addTypeDef name (TopLevel (tail specs) decls)
         x -> fail "what?"
     return ret
   
@@ -96,15 +96,15 @@ where
   asmName :: Parser String
   asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
     
-  attributes :: Parser [CExpr]
-  attributes = L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression)
+  attributes :: Parser CAttribute
+  attributes = pure CAttribute <*> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression))
   
   abstractDeclarator :: Parser CDeclarator
   abstractDeclarator = do
     ptrs <- many pointer
     arrayOrFunction <- many (try array <|> func)
     let derived = ptrs ++ arrayOrFunction
-    return $ Abstract derived
+    return $ Abstract derived []
   
   block :: Parser DerivedDeclarator
   block = char '^' *> pure Block
@@ -119,8 +119,9 @@ where
     attrs <- many attributes
     let derived = maybeToList blk ++ ptrs ++ arrayOrFunction
     case direct' of
-      (Just (Single s)) -> return $ Named s derived asm
-      (Just (Parenthesized (Named s decls _))) -> return $ Named s (decls ++ derived) asm
+      (Just (Single s)) -> return $ Named s derived asm attrs
+      -- discarding the result of __attributes__ here; could this be a bug?
+      (Just (Parenthesized (Named s decls _ _))) -> return $ Named s (decls ++ derived) asm attrs
       -- is this even possible?
-      (Just (Parenthesized (Abstract decls))) -> return $ Abstract (decls ++ derived)
-      Nothing -> return $ Abstract derived
+      (Just (Parenthesized (Abstract decls _))) -> return $ Abstract (decls ++ derived) attrs
+      Nothing -> return $ Abstract derived attrs
