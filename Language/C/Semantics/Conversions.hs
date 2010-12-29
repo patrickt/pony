@@ -6,8 +6,13 @@ module Language.C.Semantics.Conversions where
   nameOfDeclarator (Named s _ _ _) = Just s
   nameOfDeclarator (Abstract _ _) = Nothing
   
+  -- there is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
-  partitionSpecifiers = undefined -- BECAUSE I HAVE NO IDEA HOW TO WRITE IT, HAHA, JOKE'S ON YOU
+  partitionSpecifiers specs = extract ([], [], []) specs where
+    extract r [] = r
+    extract (as, bs, cs) ((TSpec t) : rest) = extract (t:as, bs, cs) rest
+    extract (as, bs, cs) ((TQual q) : rest) = extract (as, q:bs, cs) rest
+    extract (as, bs, cs) ((SSpec s) : rest) = extract (as, bs, cs:s) rest
   
   -- this is where type aliases go, as defined C99 6.7.2.2
   typeQualifiersToType :: [TypeQualifier] -> SType
