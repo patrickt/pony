@@ -5,20 +5,21 @@ module Language.C.Semantics.Nodes where
   data SFunction = SFunction SType Name [SParameter] [SStatement]  
   
   data Signedness = Unsigned | Signed
+  data Width = Short | Regular | Long | LongLong
   
-  data IntegerFlags
+  data IntegerFlags = IntegerFlags Signedness Width
   
-  data FloatFlags
+  data FloatFlags = FFloat | FDouble | FLongDouble
   
   data SType 
     = SVoid [Attribute]
     | SInt IntegerFlags [Attribute]
     | SFloat FloatFlags [Attribute]
     | SChar Signedness [Attribute]
-    | SPointerTo CType [Attribute]
-    | SArray CType (Maybe Expression) [Attribute] 
+    | SPointerTo SType [Attribute]
+    | SArray SType (Maybe Expression) [Attribute] 
     | SFunctionPointer SFunction [Attribute]
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
   
-  data family Attributed 
+  

@@ -6,6 +6,11 @@ module Language.C.Semantics.Conversions where
   nameOfDeclarator (Named s _ _ _) = Just s
   nameOfDeclarator (Abstract _ _) = Nothing
   
+  convertToSemanticType :: CDeclarator -> [Specifier] -> CType
+  convertToSemanticType decl specs = undefined where
+    -- foldr over 
+    (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
+  
   -- there is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
   partitionSpecifiers specs = extract ([], [], []) specs where
@@ -13,6 +18,15 @@ module Language.C.Semantics.Conversions where
     extract (as, bs, cs) ((TSpec t) : rest) = extract (t:as, bs, cs) rest
     extract (as, bs, cs) ((TQual q) : rest) = extract (as, q:bs, cs) rest
     extract (as, bs, cs) ((SSpec s) : rest) = extract (as, bs, cs:s) rest
+  
+  shortSignedInt = SInt (IntegerFlags Signed Short) []
+  shortUnsignedInt = SInt (IntegerFlags Unsigned Short) []
+  signedInt = SInt (IntegerFlags Signed Regular) []
+  unsignedInt = SInt (IntegerFlags Unsigned Regular) []
+  longSignedInt = SInt (IntegerFlags Signed Long) []
+  longUnsignedInt = SInt (IntegerFlags Unsigned Long) []
+  longLongSignedInt = SInt (IntegerFlags Signed LongLong) []
+  longlongUnsignedInt = SInt (IntegerFlags Unsigned LongLong) []
   
   -- this is where type aliases go, as defined C99 6.7.2.2
   typeQualifiersToType :: [TypeQualifier] -> SType
@@ -24,43 +38,43 @@ module Language.C.Semantics.Conversions where
   
   typeQualifiersToType [TSigned, TChar] = SChar Signed []
   
-  typeQualifiersToType [TShort] = SInt undefined []
-  typeQualifiersToType [TSigned, TShort] = SInt undefined []
-  typeQualifiersToType [TShort, TInt] = SInt undefined []
-  typeQualifiersToType [TSigned, TShort, TInt] = SInt undefined []
-  typeQualifiersToType [TBool] = SInt undefined []
+  typeQualifiersToType [TShort]                = shortSignedInt
+  typeQualifiersToType [TSigned, TShort]       = shortSignedInt
+  typeQualifiersToType [TShort, TInt]          = shortSignedInt
+  typeQualifiersToType [TSigned, TShort, TInt] = shortSignedInt
+  typeQualifiersToType [TBool]                 = shortSignedInt
   
-  typeQualifiersToType [TUnsigned, TShort] = SInt undefined []
-  typeQualifiersToType [TUnsigned, TShort, TInt] = SInt undefined []
+  typeQualifiersToType [TUnsigned, TShort]       = shortUnsignedInt
+  typeQualifiersToType [TUnsigned, TShort, TInt] = shortUnsignedInt
   
-  typeQualifiersToType [TInt] = SInt undefined []
-  typeQualifiersToType [TSigned] = SInt undefined []
-  typeQualifiersToType [TSigned, TInt] = SInt undefined []
+  typeQualifiersToType [TInt]          = signedInt
+  typeQualifiersToType [TSigned]       = signedInt
+  typeQualifiersToType [TSigned, TInt] = signedInt
   
-  typeQualifiersToType [TUnsigned] = SInt undefined []
-  typeQualifiersToType [TUnsigned, TInt] = SInt undefined []
+  typeQualifiersToType [TUnsigned]       = unsignedInt
+  typeQualifiersToType [TUnsigned, TInt] = unsignedInt
   
-  typeQualifiersToType [TLong] = SInt undefined []
-  typeQualifiersToType [TSigned, TLong] = SInt undefined []
-  typeQualifiersToType [TLong, TInt] = SInt undefined []
-  typeQualifiersToType [TSigned, TLong, TInt] = SInt undefined []
+  typeQualifiersToType [TLong]                = signedLong
+  typeQualifiersToType [TSigned, TLong]       = signedLong
+  typeQualifiersToType [TLong, TInt]          = signedLong
+  typeQualifiersToType [TSigned, TLong, TInt] = signedLong
   
-  typeQualifiersToType [TUnsigned, TLong] = SInt undefined []
-  typeQualifiersToType [TUnsigned, TLong, TInt] = SInt undefined []
+  typeQualifiersToType [TUnsigned, TLong]       = longUnsignedInt
+  typeQualifiersToType [TUnsigned, TLong, TInt] = longUnsignedInt
   
-  typeQualifiersToType [TLong, TLong] = SInt undefined []
-  typeQualifiersToType [TSigned, TLong, TLong] = SInt undefined []
-  typeQualifiersToType [TLong, TLong, int] = SInt undefined []
-  typeQualifiersToType [TSigned, TLong, TLong, TInt] = SInt undefined []
+  typeQualifiersToType [TLong, TLong]                = longLongSignedInt
+  typeQualifiersToType [TSigned, TLong, TLong]       = longLongSignedInt
+  typeQualifiersToType [TLong, TLong, TInt]          = longLongSignedInt
+  typeQualifiersToType [TSigned, TLong, TLong, TInt] = longLongSignedInt
   
-  typeQualifiersToType [TUnsigned, TLong, TLong] = SInt undefined []
-  typeQualifiersToType [TUnsigned, TLong, TLong, TInt] = SInt undefined []
+  typeQualifiersToType [TUnsigned, TLong, TLong]       = longLongSignedInt
+  typeQualifiersToType [TUnsigned, TLong, TLong, TInt] = longLongSignedInt
   
-  typeQualifiersToType [TFloat] = SFloat undefined []
+  typeQualifiersToType [TFloat] = SFloat FFloat []
   
-  typeQualifiersToType [TDouble] = SFloat undefined []
+  typeQualifiersToType [TDouble] = SFloat FDouble []
   
-  typeQualifiersToType [TLong, TDouble] = SFloat undefined []
+  typeQualifiersToType [TLong, TDouble] = SFloat FLongDouble []
   
   -- haha, no idea what to do here!
   typeQualifiersToType [(TStructOrUnion _ _ _)] = SComposite undefined []

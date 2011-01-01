@@ -137,9 +137,11 @@ module Language.C.AST where
     | Parameter [Specifier] CDeclarator
     | TypeName [Specifier] (Maybe CDeclarator)
     deriving (Eq, Show, Typeable, Data)
+    
+  type AsmName = Maybe String
   
   data CDeclarator
-   = Named String [DerivedDeclarator] (Maybe String) [CAttribute]
+   = Named String [DerivedDeclarator] AsmName [CAttribute]
    | Abstract [DerivedDeclarator] [CAttribute]
    deriving (Eq, Show, Typeable, Data)
   
