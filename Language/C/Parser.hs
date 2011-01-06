@@ -13,7 +13,7 @@ module Language.C.Parser
   )
   where
   
-  import Control.Applicative hiding ((<|>))
+  import Control.Applicative hiding ((<|>), Const)
   import Data.Generics
   import Language.C.AST
   import System.Cmd

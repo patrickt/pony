@@ -1,9 +1,8 @@
-module Language.C.Semantics.Nodes where
+module Semantics.C.Nodes where
   
   type Name = String
   type SParameter = ()
   type SStatement = ()
-  type Attribute = ()
   type Expression = ()
   type CompositeInfo = ()
   type EnumerationInfo = ()
@@ -29,4 +28,8 @@ module Language.C.Semantics.Nodes where
     | SEnum EnumerationInfo [Attribute]
     deriving (Show)
   
-  
+  data Attribute 
+    = Const 
+    | Restrict
+    | Volatile
+    deriving (Show)
