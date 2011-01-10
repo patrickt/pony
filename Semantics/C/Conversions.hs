@@ -23,6 +23,12 @@ module Semantics.C.Conversions where
   rectifyDerivations (Pointer qs) t = SPointerTo t (map rectifyTypeQualifiers qs)
   rectifyDerivations (Array qs size) t = SArray t Nothing (map rectifyTypeQualifiers qs)
   
+  typeNameToSemanticType :: CDeclaration -> SType
+  typeNameToSemanticType (TopLevel _ _) = error "you screwed up"
+  typeNameToSemanticType (Parameter _ _) = error "you screwed up"
+  typeNameToSemanticType (TypeName specs (Just decl)) = convertToSemanticType decl specs
+  typeNameToSemanticType (TypeName specs Nothing) = convertToSemanticType (Abstract [] []) specs
+  
   convertToSemanticType :: CDeclarator -> [Specifier] -> SType
   convertToSemanticType decl specs = foldr rectifyDerivations (typeSpecifiersToType typeSpecs) (derivedPartsOfDeclarator decl) where
     (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
