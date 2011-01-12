@@ -7,7 +7,8 @@ module Semantics.C.Nodes where
   type CompositeInfo = ()
   type EnumerationInfo = ()
   
-  data SFunction = SFunction SType Name [SParameter] [SStatement] deriving (Show)
+  -- The parameters should really be SParameters.
+  data SFunction = SFunction SType Name [SType] [SStatement] deriving (Show)
   
   data Signedness = Unsigned | Signed deriving (Show)
   data Width = Short | Regular | Long | LongLong deriving (Show)
@@ -33,3 +34,18 @@ module Semantics.C.Nodes where
     | Restrict
     | Volatile
     deriving (Show)
+  
+  void = SVoid []
+  signedChar = SChar Signed []
+  unsignedChar = SChar Unsigned []
+  shortSignedInt = SInt (IntegerFlags Signed Short) []
+  shortUnsignedInt = SInt (IntegerFlags Unsigned Short) []
+  signedInt = SInt (IntegerFlags Signed Regular) []
+  unsignedInt = SInt (IntegerFlags Unsigned Regular) []
+  longSignedInt = SInt (IntegerFlags Signed Long) []
+  longUnsignedInt = SInt (IntegerFlags Unsigned Long) []
+  longLongSignedInt = SInt (IntegerFlags Signed LongLong) []
+  longlongUnsignedInt = SInt (IntegerFlags Unsigned LongLong) []
+  float = SFloat FFloat []
+  double = SFloat FDouble []
+  longDouble = SFloat FLongDouble []
