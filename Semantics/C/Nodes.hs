@@ -2,13 +2,12 @@ module Semantics.C.Nodes where
   
   type Name = String
   type SParameter = ()
-  type SStatement = ()
   type Expression = ()
   type CompositeInfo = ()
   type EnumerationInfo = ()
   
   -- The parameters should really be SParameters.
-  data SFunction = SFunction SType Name [SType] [SStatement] deriving (Show)
+  data SFunction = SFunction SType Name [SType] [SLocal] deriving (Show)
   
   data Signedness = Unsigned | Signed deriving (Show)
   data Width = Short | Regular | Long | LongLong deriving (Show)
@@ -28,6 +27,8 @@ module Semantics.C.Nodes where
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
     deriving (Show)
+    
+  data SVariable = Variable Name SType deriving (Show)
   
   data Attribute 
     = Const 
@@ -49,3 +50,18 @@ module Semantics.C.Nodes where
   float = SFloat FFloat []
   double = SFloat FDouble []
   longDouble = SFloat FLongDouble []
+  
+  -- Do we need to distinguish between statements and instructions, like CIL does?
+  data SLocal
+    = LDeclaration SVariable
+    | LStatement SStatement
+  
+  
+  data SGlobal
+    = GFunction SFunction
+    | GVariable SVariable
+    | GFunctionPrototype SFunction
+    | GTypedef Name SType
+    | GComposite Bool [SFields]
+  
+  type Program = [SGlobal]
