@@ -54,7 +54,7 @@ whether it can consume input before failing.
     ifStmt = pure IfStmt <*> (L.reserved "if" *> L.parens expression)
                          <*> statement
                          <*> optional (L.reserved "else" *> statement)
-    switch = pure SwitchStmt <*> L.parens expression <*> statement
+    switch = pure SwitchStmt <*> (L.reserved "switch" *> L.parens expression) <*> statement
   
   iterationStmt :: Parser CStatement
   iterationStmt = choice [ while
