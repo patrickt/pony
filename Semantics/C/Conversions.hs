@@ -6,6 +6,13 @@ module Semantics.C.Conversions where
   import Semantics.C.Nodes
   import Data.Maybe
   
+  -- TODO: deal with STypedef and SAttribute [CExpr] here
+  convertStorageQualifiers :: StorageQualifier -> Attribute
+  convertStorageQualifiers SAuto     = Auto
+  convertStorageQualifiers SRegister = Register
+  convertStorageQualifiers SStatic   = Static
+  convertStorageQualifiers SExtern   = Extern
+  
   convertTypeQualifiers :: TypeQualifier -> Attribute
   convertTypeQualifiers QConst    = Const
   convertTypeQualifiers QRestrict = Restrict
