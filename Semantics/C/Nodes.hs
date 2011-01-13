@@ -5,6 +5,8 @@ module Semantics.C.Nodes where
   type Expression = ()
   type CompositeInfo = ()
   type EnumerationInfo = ()
+  type SStatement = ()
+  type SFields = ()
   
   -- The parameters should really be SParameters.
   data SFunction = SFunction SType Name [SType] [SLocal] deriving (Show)
@@ -59,6 +61,7 @@ module Semantics.C.Nodes where
   data SLocal
     = LDeclaration SVariable
     | LStatement SStatement
+    deriving (Show)
   
   
   data SGlobal
@@ -67,5 +70,6 @@ module Semantics.C.Nodes where
     | GFunctionPrototype SFunction
     | GTypedef Name SType
     | GComposite Bool [SFields]
+    deriving (Show)
   
   type Program = [SGlobal]

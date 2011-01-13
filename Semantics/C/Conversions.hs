@@ -7,11 +7,11 @@ module Semantics.C.Conversions where
   import Data.Maybe
   
   -- TODO: deal with STypedef and SAttribute [CExpr] here
-  convertStorageQualifiers :: StorageQualifier -> Attribute
-  convertStorageQualifiers SAuto     = Auto
-  convertStorageQualifiers SRegister = Register
-  convertStorageQualifiers SStatic   = Static
-  convertStorageQualifiers SExtern   = Extern
+  convertStorageSpecifiers :: StorageSpecifier -> Attribute
+  convertStorageSpecifiers SAuto     = Auto
+  convertStorageSpecifiers SRegister = Register
+  convertStorageSpecifiers SStatic   = Static
+  convertStorageSpecifiers SExtern   = Extern
   
   convertTypeQualifiers :: TypeQualifier -> Attribute
   convertTypeQualifiers QConst    = Const
