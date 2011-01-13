@@ -31,8 +31,12 @@ module Semantics.C.Nodes where
   data SVariable = Variable Name SType deriving (Show)
   
   data Attribute 
-    = Const 
+    = Auto
+    | Const 
+    | Extern
     | Restrict
+    | Static
+    | Register
     | Volatile
     deriving (Show)
   
