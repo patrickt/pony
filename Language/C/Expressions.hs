@@ -13,9 +13,8 @@ module Language.C.Expressions
   buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
   buildChainedParser [] p = p
   
-  -- TODO: is this the right place to put builtin expressions?
   expression :: Parser CExpr
-  expression = builtinExpression <|> buildExpressionParser assignTable constantExpression <?> "C expression"
+  expression = buildExpressionParser assignTable constantExpression <?> "C expression"
   
   constantExpression :: Parser CExpr
   constantExpression = do
@@ -142,7 +141,8 @@ module Language.C.Expressions
 
   primaryExpression :: Parser CExpr
   primaryExpression = choice
-    [ identifier
+    [ builtinExpression
+    , identifier
     , constant
     , stringLiteral
     , L.parens expression 
