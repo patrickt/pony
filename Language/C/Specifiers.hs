@@ -3,6 +3,7 @@ module Language.C.Specifiers
   , typeSpecifier
   , storageSpecifier
   , specifier
+  , attribute
   )
 
 where
@@ -14,6 +15,9 @@ where
   import Language.C.Expressions (expression, constantExpression)
   
   as name qual = L.reserved name >> return qual
+  
+  attribute :: Parser CAttribute
+  attribute = pure CAttribute <*> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression))
   
   typeQualifier :: Parser TypeQualifier
   typeQualifier = choice 
@@ -56,12 +60,15 @@ where
       -- TODO: if name is Nothing and idents is empty, fail
       enum = pure TEnumeration <*> (L.reserved "enum" *> optional identifier)
                                <*> option [] (L.braces (enumerator `sepEndBy1` L.symbol ","))
+                               <*> many attribute
       struct = pure TStructOrUnion <*> (L.reserved "struct" *> optional identifier)
                                    <*> pure True
                                    <*> option [] (L.braces (some sizedDeclaration))
+                                   <*> many attribute
       union = pure TStructOrUnion <*> (L.reserved "union" *> optional identifier)
                                   <*> pure False
                                   <*> option [] (L.braces (some sizedDeclaration))
+                                  <*> many attribute
       lookupTypedef = do
         defs <- getState
         ident <- identifier
@@ -76,10 +83,9 @@ where
    , "static" `as` SStatic
    , "auto" `as` SAuto
    , "register" `as` SRegister
-   , attributes 
+   , SAttribute <$> attribute 
    ] <?> "storage specifier"
    where
-     attributes = pure SAttribute <*> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression))
     
 
   specifier :: Parser Specifier

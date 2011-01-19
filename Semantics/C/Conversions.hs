@@ -72,8 +72,8 @@ module Semantics.C.Conversions where
   convertTypeSpecifiers [TFloat]                        = float
   convertTypeSpecifiers [TDouble]                       = double
   convertTypeSpecifiers [TLong, TDouble]                = longDouble
-  convertTypeSpecifiers [(TStructOrUnion _ _ _)]        = SComposite undefined []
-  convertTypeSpecifiers [(TEnumeration _ _)]            = SEnum undefined []
+  convertTypeSpecifiers [(TStructOrUnion _ _ _ _)]      = SComposite undefined []
+  convertTypeSpecifiers [(TEnumeration _ _ _)]          = SEnum undefined []
   convertTypeSpecifiers [(TTypedef _ _)]                = undefined
   convertTypeSpecifiers other                           = error ("unknown type " ++ (show other))
   

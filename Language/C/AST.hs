@@ -21,7 +21,7 @@ module Language.C.AST where
     | ForDeclStmt CDeclaration (Maybe CExpr) (Maybe CExpr) CStatement
     | GotoStmt String
     | IfStmt CExpr CStatement (Maybe CStatement)
-    | LabeledStmt String CStatement
+    | LabeledStmt String [CAttribute] CStatement
     | ReturnStmt (Maybe CExpr)
     | SwitchStmt CExpr CStatement
     | WhileStmt CExpr CStatement
@@ -79,7 +79,7 @@ module Language.C.AST where
     | SStatic
     | SExtern
     | STypedef
-    | SAttribute [CExpr]
+    | SAttribute CAttribute
     deriving (Eq, Show, Typeable, Data)
     
   data TypeQualifier
@@ -118,8 +118,8 @@ module Language.C.AST where
      | TUnsigned
      | TBool
      | TBuiltin String
-     | TStructOrUnion (Maybe String) Bool [CDeclaration]
-     | TEnumeration (Maybe String) [Enumerator]
+     | TStructOrUnion (Maybe String) Bool [CDeclaration] [CAttribute]
+     | TEnumeration (Maybe String) [Enumerator] [CAttribute]
      | TTypedef String CDeclaration
      | TTypeOfExpr CExpr
      deriving (Eq, Show, Typeable, Data)

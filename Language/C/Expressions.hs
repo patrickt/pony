@@ -139,7 +139,7 @@ module Language.C.Expressions
   identifier = Identifier <$> L.identifier 
   
   constant :: Parser CExpr
-  constant = Constant <$> choice [ try float, integer , charLiteral ]
+  constant = Constant <$> choice [ try float, integer, charLiteral ]
                                  
   stringLiteral :: Parser CExpr
   stringLiteral = Constant <$> CString <$> concat `liftM` (L.stringLiteral `sepBy` L.whiteSpace)

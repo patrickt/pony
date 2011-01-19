@@ -95,9 +95,6 @@ where
     
   asmName :: Parser String
   asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
-    
-  attributes :: Parser CAttribute
-  attributes = pure CAttribute <*> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression))
   
   abstractDeclarator :: Parser CDeclarator
   abstractDeclarator = do
@@ -116,7 +113,7 @@ where
     direct' <- optionMaybe direct
     arrayOrFunction <- many (try array <|> func)
     asm <- optional (try asmName)
-    attrs <- many attributes
+    attrs <- many attribute
     let derived = maybeToList blk ++ ptrs ++ arrayOrFunction
     case direct' of
       (Just (Single s)) -> return $ Named s derived asm attrs

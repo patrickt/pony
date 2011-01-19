@@ -4,6 +4,7 @@ module Language.C.Statements where
   import Language.C.Expressions
   import Language.C.AST
   import Language.C.Declarations
+  import Language.C.Specifiers
   import qualified Language.C.Lexer as L
   
 {-
@@ -35,7 +36,7 @@ whether it can consume input before failing.
                        ] where
     caseStmt    = pure CaseStmt <*> (L.reserved "case" *> expression) <*> (L.colon *> statement)
     defaultStmt = DefaultStmt <$> (L.reserved "default" >> L.colon >> statement)
-    labelStmt   = pure LabeledStmt <*> (L.identifier <* L.colon) <*> statement 
+    labelStmt   = pure LabeledStmt <*> (L.identifier <* L.colon) <*> many attribute <*> statement 
   
   compoundStmt :: Parser CStatement
   compoundStmt = L.braces $ pure CompoundStmt <*> many blockItem
