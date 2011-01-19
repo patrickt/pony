@@ -85,8 +85,6 @@ where
    , "register" `as` SRegister
    , SAttribute <$> attribute 
    ] <?> "storage specifier"
-   where
-    
 
   specifier :: Parser Specifier
   specifier = choice 

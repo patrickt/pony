@@ -103,12 +103,12 @@ module Language.C.Expressions
 	  return $ foldl (flip Cast) expr types
   
   sizeofExpr = pure UnaryOp <*> pure "sizeof" <*> (L.reservedOp "sizeof" *> unaryExpression)
-  sizeofType = pure SizeOfType <*> (L.reservedOp "sizeof" *> (L.parens typeName))
+  sizeofType = pure SizeOfType <*> (L.reservedOp "sizeof" *> L.parens typeName)
   
   prefixInc = pure UnaryOp <*> pure "++" <*> (L.reservedOp "++" *> unaryExpression)
   prefixDec = pure UnaryOp <*> pure "--" <*> (L.reservedOp "--" *> unaryExpression)
   
-  unaryExpression = (try sizeofExpr) <|> sizeofType <|> prefixInc <|> prefixDec <|> unaryOperator
+  unaryExpression = try sizeofExpr <|> sizeofType <|> prefixInc <|> prefixDec <|> unaryOperator
   
   unaryOperator :: Parser CExpr
   unaryOperator = do
@@ -127,9 +127,10 @@ module Language.C.Expressions
                        , Parens <$> L.parens (L.commaSep expression) 
                        , Dot <$> (L.dot >> identifier)
                        , Arrow <$> (L.arrow >> identifier)
-                       , (L.reservedOp "++" >> L.whiteSpace >> return Increment)
-                       , (L.reservedOp "--" >> L.whiteSpace >> return Decrement)]
-    (return $ foldl translate e r) <?> "postfix expression"
+                       , L.reservedOp "++" >> L.whiteSpace >> return Increment
+                       , L.reservedOp "--" >> L.whiteSpace >> return Decrement
+                       ]
+    return (foldl translate e r) <?> "postfix expression"
     where
       translate :: CExpr -> PostfixOp -> CExpr
       translate a (Brackets b) = Index a b

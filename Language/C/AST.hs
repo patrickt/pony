@@ -123,13 +123,10 @@ module Language.C.AST where
   
   data CSize 
     = Sized CExpr
-    | Unsized
     deriving (Eq, Show, Typeable, Data)
   
   data CDeclaration 
-    = TopLevel [Specifier] [(CDeclarator, Initializer, CSize)]
-    | Parameter [Specifier] CDeclarator
-    | TypeName [Specifier] (Maybe CDeclarator)
+    = CDeclaration [Specifier] [(Maybe CDeclarator, Maybe Initializer, Maybe CSize)]
     deriving (Eq, Show, Typeable, Data)
     
   type AsmName = Maybe String
@@ -142,7 +139,6 @@ module Language.C.AST where
   data Initializer 
     = InitExpression CExpr
     | InitList [Initializer]
-    | Uninitialized
     deriving (Eq, Show, Typeable, Data)
   
   data DerivedDeclarator

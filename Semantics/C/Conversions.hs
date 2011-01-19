@@ -24,11 +24,9 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convertTypeQualifiers qs)
   
   -- should probably be CDeclaration -> Either SType SVariable
+  
   convertDeclarationToType :: CDeclaration -> Maybe SType
-  convertDeclarationToType (TopLevel _ _) = Nothing
-  convertDeclarationToType (Parameter specs decl) = Just (convertComponents specs decl)
-  convertDeclarationToType (TypeName specs (Just decl)) = Just (convertComponents specs decl)
-  convertDeclarationToType (TypeName specs Nothing) = Just (convertComponents specs (Abstract [] []))
+  convertDeclarationToType = undefined
   
   -- There is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])

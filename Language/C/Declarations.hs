@@ -25,24 +25,27 @@ where
   declaration = do
     specs <- some specifier
     decls <- (L.commaSep initDeclarator <* L.semi)
-    let ret = TopLevel specs decls
     when (head specs == SSpec STypedef) $
       case (fst3 (head decls)) of
-        (Named name _ _ _) -> updateState $ addTypeDef name (TopLevel (tail specs) decls)
+        (Just (Named name _ _ _)) -> updateState $ addTypeDef name (CDeclaration (tail specs) decls)
         x -> fail "what?"
-    return ret
+    return $ CDeclaration specs decls
   
   sizedDeclaration :: Parser CDeclaration
-  sizedDeclaration = pure TopLevel <*> some specifier
-                                   <*> L.commaSep sizedDeclarator <* L.semi
+  sizedDeclaration = pure CDeclaration <*> some specifier
+                                       <*> L.commaSep sizedDeclarator <* L.semi
   
   parameter :: Parser CDeclaration
-  parameter = pure Parameter <*> some specifier 
-                             <*> declarator
+  parameter = do
+    specs <- some specifier
+    decl <- declarator
+    return $ CDeclaration specs [(Just decl, Nothing, Nothing)]
   
   typeName :: Parser CDeclaration
-  typeName = pure TypeName <*> some specifier 
-                           <*> optional declarator
+  typeName = do
+    specs <- some specifier
+    decl <- optional declarator
+    return $ CDeclaration specs [(decl, Nothing, Nothing)]
   
   func :: Parser DerivedDeclarator
   func = L.parens $ do
@@ -69,16 +72,16 @@ where
   pointer :: Parser DerivedDeclarator
   pointer = Pointer <$> (char '*' >> L.whiteSpace >> many typeQualifier)
 
-  initDeclarator :: Parser (CDeclarator, Initializer, CSize)
-  initDeclarator = pure (,,) <*> declarator 
-                             <*> option Uninitialized assignment 
-                             <*> pure Unsized
+  initDeclarator :: Parser (Maybe CDeclarator, Maybe Initializer, Maybe CSize)
+  initDeclarator = pure (,,) <*> Just <$> declarator 
+                             <*> optional assignment 
+                             <*> pure Nothing
     where assignment = L.reservedOp "=" >> initializer
     
-  sizedDeclarator :: Parser (CDeclarator, Initializer, CSize)
-  sizedDeclarator = pure (,,) <*> declarator
-                              <*> pure Uninitialized
-                              <*> option Unsized (Sized <$> (L.colon *> expression))
+  sizedDeclarator :: Parser (Maybe CDeclarator, Maybe Initializer, Maybe CSize)
+  sizedDeclarator = pure (,,) <*> Just <$> declarator
+                              <*> pure Nothing
+                              <*> optional (Sized <$> (L.colon *> expression))
   
   initializer :: Parser Initializer
   initializer = (InitList <$> L.braces (L.commaSep1 initializer)) <|> (InitExpression <$> expression)
