@@ -46,19 +46,13 @@ module Language.C.AST where
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr
     | SizeOfType CDeclaration
-    deriving (Eq, Typeable, Data)
+    | CBuiltin BuiltinExpr
+    deriving (Eq, Show, Typeable, Data)
   
-  instance Show CExpr where
-    show (Constant l) = show l
-    show (Comma exprs) = show exprs
-    show (Identifier s) = s
-    show (Index lhs rhs) = printf "( %s[%s] )" (show lhs) (show rhs)
-    show (Call func args) = printf "( %s(%s) )" (show func) (show args)
-    show (Cast typ expr) = printf "(%s)%s" (show typ) (show expr)
-    show (UnaryOp str expr) = printf "(%s %s)" str (show expr)
-    show (BinaryOp str lhs rhs) = printf "(%s %s %s)" (show lhs) str (show rhs)
-    show (TernaryOp a b c) = printf "(%s ? %s : %s)" (show a) (show b) (show c)
-    show (SizeOfType t) = printf "sizeof(%s)" (show t)
+  -- TODO: Expand this to include __builtin_offsetof and __builtin_types_compatible_p
+  data BuiltinExpr
+    = BuiltinVaArg CExpr CDeclaration
+    deriving (Eq, Show, Typeable, Data)
   
   data CLiteral
     = CInteger Integer

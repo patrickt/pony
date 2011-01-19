@@ -13,9 +13,9 @@ module Language.C.Expressions
   buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
   buildChainedParser [] p = p
   
+  -- TODO: is this the right place to put builtin expressions?
   expression :: Parser CExpr
-  expression = buildExpressionParser assignTable constantExpression <?> "C expression"
-  
+  expression = builtinExpression <|> buildExpressionParser assignTable constantExpression <?> "C expression"
   
   constantExpression :: Parser CExpr
   constantExpression = do
@@ -75,6 +75,19 @@ module Language.C.Expressions
       , mkInfixL ">>" ] ]
   
   mkInfixL name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocLeft
+  
+  builtinExpression :: Parser CExpr
+  builtinExpression = CBuiltin <$> builtinVaArg
+  
+  builtinVaArg :: Parser BuiltinExpr
+  builtinVaArg = do
+    L.reserved "__builtin_va_arg"
+    L.symbol "("
+    expr <- expression
+    L.comma
+    typ <- typeName
+    L.symbol ")"
+    return $ BuiltinVaArg expr typ
   
   data PostfixOp
     = Brackets CExpr
