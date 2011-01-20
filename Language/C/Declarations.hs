@@ -106,18 +106,14 @@ where
     let derived = ptrs ++ arrayOrFunction
     return $ Abstract derived []
   
-  block :: Parser DerivedDeclarator
-  block = char '^' *> pure Block
-  
   declarator :: Parser CDeclarator
   declarator = do
-    blk <- optional block
     ptrs <- many pointer
     direct' <- optionMaybe direct
     arrayOrFunction <- many (try array <|> func)
     asm <- optional (try asmName)
     attrs <- many attribute
-    let derived = maybeToList blk ++ ptrs ++ arrayOrFunction
+    let derived = ptrs ++ arrayOrFunction
     case direct' of
       (Just (Single s)) -> return $ Named s derived asm attrs
       -- discarding the result of __attributes__ here; could this be a bug?

@@ -38,7 +38,7 @@ module Language.C.Parser
   type Parser = GenParser Char Internals
   
   preprocessAndParse p loc i = do
-    let preCmd = printf "/usr/bin/clang -E %s | grep \"^[^#]\" > ./ponytmp" loc :: String 
+    let preCmd = printf "/usr/bin/clang -U __BLOCKS__ -E %s | grep \"^[^#]\" > ./ponytmp" loc :: String 
     system preCmd
     parseFromFileCustom p "./ponytmp" i
   
