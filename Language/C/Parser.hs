@@ -10,6 +10,7 @@ module Language.C.Parser
   , parseUnsafe
   , parseFromFile
   , parseFromFileCustom
+  , parseFromFileUnsafe
   , preprocessAndParse
   )
   where
@@ -66,4 +67,9 @@ module Language.C.Parser
     str <- readFile loc
     return $ runParser p internals loc str
   
+  parseFromFileUnsafe p loc = do
+    str <- readFile loc
+    case (runParser p mkInternals loc str) of
+      (Left e) -> error $ show e
+      (Right a) -> a
   

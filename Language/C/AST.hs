@@ -1,13 +1,26 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Language.C.AST where
+module Language.C.AST
+  
+  where
   
   import Data.Either
   import Text.Printf
   import Data.Generics
   
-  type BlockItem = Either CDeclaration CStatement
+  -- TODO: Add position information to all of the types, etc.
+  -- TODO: Get some consistent naming structure up in here.
   
+  -- | A translation unit is a nonempty list of external declarations (C99 9.6).
+  type CTranslationUnit   
+    = [CExternal]
+  
+  -- | A block item is either a declaration or statement (C99 6.8.3).
+  -- | Block items make up the bodies of compound statements.
+  type BlockItem 
+    = Either CDeclaration CStatement
+  
+  -- | A statement specifies an action to be performed (C99 6.8.3).
   data CStatement 
     = BreakStmt 
     | CaseStmt CExpr CStatement
@@ -17,7 +30,9 @@ module Language.C.AST where
     | DoWhileStmt CStatement CExpr
     | EmptyStmt
     | ExpressionStmt CExpr
+    -- | This is the old style of for loops.
     | ForStmt (Maybe CExpr) (Maybe CExpr) (Maybe CExpr) CStatement
+    -- | This is the new style defined in C99.
     | ForDeclStmt CDeclaration (Maybe CExpr) (Maybe CExpr) CStatement
     | GotoStmt String
     | IfStmt CExpr CStatement (Maybe CStatement)
@@ -27,16 +42,18 @@ module Language.C.AST where
     | WhileStmt CExpr CStatement
     deriving (Eq, Show, Typeable, Data)
   
+  -- | A C function (C99 6.9.1).
   data CFunction = CFunction [Specifier] CDeclarator CStatement
     deriving (Eq, Show, Typeable, Data)
-    
+  
+  -- | External declarations (C99 6.9). Wraps either a 'CFunction' or 'CDeclaration'.
   data CExternal 
     = FunctionDecl CFunction
     | ExternDecl CDeclaration
     deriving (Eq, Show, Typeable, Data)
-    
-  type CTranslationUnit = [CExternal]
   
+  -- | C expressions (C99 6.5).
+  -- Please note that the comma operator is currently unimplemented.
   data CExpr
     = Constant CLiteral
     | Comma [CExpr]

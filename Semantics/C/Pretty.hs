@@ -2,6 +2,7 @@
 
 module Semantics.C.Pretty
   ( module Text.PrettyPrint.HughesPJ
+  , semicolon
   , Pretty (pretty)
   )
   where
@@ -16,3 +17,5 @@ module Semantics.C.Pretty
   
   instance Pretty Int where
     pretty = text . show
+    
+  semicolon = text ";"

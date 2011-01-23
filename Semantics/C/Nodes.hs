@@ -83,6 +83,24 @@ module Semantics.C.Nodes where
     | Switch Expression Statement
     | While Expression Statement 
     deriving (Show, Typeable, Data)
+    
+  instance Pretty Statement where
+    pretty Break = text "break"
+    pretty (Case _ _) = text "case (TODO)"
+    pretty (Compound _) = text "compound (TODO)"
+    pretty Continue = text "continue"
+    pretty (Default s) = text "default:" <+> pretty s
+    pretty (DoWhile _ _) = text "dowhile (TODO)"
+    pretty EmptyS = empty
+    pretty (ExpressionS s) = text $ show s
+    pretty (For _ _ _ _) = text "for(TODO)"
+    pretty (GoTo n) = text "goto" <+> pretty n
+    pretty (IfThen _ _) = text "if(TODO)"
+    pretty (IfThenElse _ _ _) = text "ifelse(TODO)"
+    pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
+    pretty (Return _) = text "return (TODO)"
+    pretty (Switch _ s) = text "switch(TODO)" <+> pretty s
+    pretty (While _ _) = text "while(TODO)"
   
   data Attribute 
     = Auto
@@ -117,6 +135,7 @@ module Semantics.C.Nodes where
     deriving (Show, Typeable, Data)
     
   instance Pretty SLocal where
+    pretty (LStatement s) = pretty s <> semicolon
     pretty _ = text "local;"
   
   
