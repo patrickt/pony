@@ -27,7 +27,7 @@ module Semantics.C.Conversions where
   
   convertStatement :: CStatement -> Statement
   convertStatement BreakStmt            = Break
-  convertStatement (CaseStmt ex st)         = Case (convertExpression ex) (convertStatement st)
+  convertStatement (CaseStmt ex st)     = Case (convertExpression ex) (convertStatement st)
   convertStatement (CompoundStmt bis)   = Compound (convertBlockItem `concatMap` bis)
   convertStatement ContinueStmt         = Continue
   convertStatement (DefaultStmt st)     = Default (convertStatement st)
@@ -35,7 +35,7 @@ module Semantics.C.Conversions where
   convertStatement EmptyStmt            = EmptyS
   convertStatement (ExpressionStmt ex)  = ExpressionS (convertExpression ex)
   convertStatement (ForStmt e1 e2 e3 s) = For 
-    undefined
+    (convertExpressionToLocal <$> e1)
     (convertExpression <$> e2)
     (convertExpression <$> e3)
     (convertStatement s) 
@@ -52,6 +52,9 @@ module Semantics.C.Conversions where
   convertStatement (ReturnStmt mE)         = Return (convertExpression <$> mE)
   convertStatement (SwitchStmt ex st)      = Switch (convertExpression ex) (convertStatement st)
   convertStatement (WhileStmt ex st)       = While (convertExpression ex) (convertStatement st)
+  
+  convertExpressionToLocal :: CExpr -> SLocal
+  convertExpressionToLocal e = LStatement $ ExpressionS $ convertExpression e
   
   convertExpression :: CExpr -> Expression
   convertExpression = id
