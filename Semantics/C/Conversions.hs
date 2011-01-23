@@ -6,6 +6,30 @@ module Semantics.C.Conversions where
   import Semantics.C.Nodes
   import Data.Maybe
   
+  convertTranslationUnit :: CTranslationUnit -> Program
+  convertTranslationUnit = concatMap convert where
+    convert :: CExternal -> [SGlobal]
+    convert (FunctionDecl f) = GFunction <$> [convertFunction f]
+    convert (ExternDecl d) = GVariable <$> convertDeclarationToVariables d
+  
+  convertFunction :: CFunction -> SFunction
+  convertFunction f@(CFunction spec decl (CompoundStmt body)) = 
+    let ftype = returnTypeOfFunction f
+        name = fromJust $ nameOfDeclarator decl
+        args = convertFunctionArguments decl
+        newBody = concatMap convertBlockItem body
+        in SFunction ftype name args newBody
+  
+  convertBlockItem :: BlockItem -> [SLocal]
+  convertBlockItem (Left  declaration) = LDeclaration <$> convertDeclarationToVariables declaration 
+  convertBlockItem (Right statement) = LStatement <$> [convertStatement statement]
+  
+  convertStatement :: CStatement -> Statement
+  convertStatement = undefined
+  
+  convertExpression :: CExpr -> Expression
+  convertExpression = undefined
+  
   -- TODO: deal with STypedef and SAttribute [CExpr] here
   convertStorageSpecifiers :: StorageSpecifier -> Attribute
   convertStorageSpecifiers SAuto     = Auto
@@ -23,18 +47,17 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convertTypeQualifiers qs)
   convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convertTypeQualifiers qs)
   
-  -- should probably be CDeclaration -> Either SType SVariable
-  
   convertDeclarationToType :: CDeclaration -> Maybe SType
   convertDeclarationToType = undefined
   
-  -- There is probably a better way to do this with Data.Generics or something
-  partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
-  partitionSpecifiers specs = extract ([], [], []) specs where
-    extract r [] = r
-    extract (as, bs, cs) ((TSpec t) : rest) = extract (t:as, bs, cs) rest
-    extract (as, bs, cs) ((TQual q) : rest) = extract (as, q:bs, cs) rest
-    extract (as, bs, cs) ((SSpec s) : rest) = extract (as, bs, s:cs) rest
+  convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
+  convertDeclarationToVariable = undefined
+  
+  convertDeclarationToVariables :: CDeclaration -> [SVariable]
+  convertDeclarationToVariables = undefined
+  
+  convertFunctionArguments :: CDeclarator -> [SVariable]
+  convertFunctionArguments = undefined
   
   -- TODO: Finish composite types, enumerations, and typedefs
   -- This is where type aliases go, as defined in C99, 6.7.2.2
@@ -84,18 +107,4 @@ module Semantics.C.Conversions where
   -- item in the list of derived declarators.
   returnTypeOfFunction :: CFunction -> SType
   returnTypeOfFunction (CFunction specs (Named n derived asm attrs) _) = convertComponents specs (Named n (init derived) asm attrs)
-  
-  argumentsOfFunctionDeclarator :: CDeclarator -> [SType]
-  argumentsOfFunctionDeclarator (Named _ derived _ _) = 
-    case (last derived) of
-      (Function args _) -> catMaybes $ map convertDeclarationToType args
-  
-  -- TODO: fill in the function body here.
-  convertFunction :: CFunction -> SFunction
-  convertFunction f@(CFunction spec decl body) = 
-    let ftype = returnTypeOfFunction f
-        name = fromJust $ nameOfDeclarator decl
-        args = argumentsOfFunctionDeclarator decl
-        body = []
-        in SFunction ftype name args body
   

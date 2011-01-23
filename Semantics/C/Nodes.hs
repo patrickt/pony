@@ -5,11 +5,11 @@ module Semantics.C.Nodes where
   type Expression = ()
   type CompositeInfo = ()
   type EnumerationInfo = ()
-  type SStatement = ()
+  type Statement = ()
   type SFields = ()
   
   -- The parameters should really be SParameters.
-  data SFunction = SFunction SType Name [SType] [SLocal] deriving (Show)
+  data SFunction = SFunction SType Name [SVariable] [SLocal] deriving (Show)
   
   data Signedness = Unsigned | Signed deriving (Show)
   data Width = Short | Regular | Long | LongLong deriving (Show)
@@ -58,9 +58,10 @@ module Semantics.C.Nodes where
   longDouble = SFloat FLongDouble []
   
   -- Do we need to distinguish between statements and instructions, like CIL does?
+  -- Will we need a separate ADT for typedefs? I feel that global typedefs are a good first step.
   data SLocal
     = LDeclaration SVariable
-    | LStatement SStatement
+    | LStatement Statement
     deriving (Show)
   
   

@@ -34,6 +34,8 @@ module Language.C.AST where
     = FunctionDecl CFunction
     | ExternDecl CDeclaration
     deriving (Eq, Show, Typeable, Data)
+    
+  type CTranslationUnit = [CExternal]
   
   data CExpr
     = Constant CLiteral
