@@ -1,6 +1,14 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Semantics.C.Nodes where
   
+  -- TODO: When this is reasonably stable, rename it to Semantics.C.Tree
+  
+  import Data.Generics
+  import Language.Pony.MachineSizes
+  import Control.Applicative ((<$>))
   import Language.C.AST (CExpr)
+  import Semantics.C.Pretty
   
   type Name = String
   type SParameter = ()
@@ -9,15 +17,25 @@ module Semantics.C.Nodes where
   type EnumerationInfo = ()
   type SFields = ()
   
-  -- The parameters should really be SParameters.
-  data SFunction = SFunction SType Name [SVariable] [SLocal] deriving (Show)
+  data SFunction = SFunction SType Name [SVariable] [SLocal] 
+    deriving (Show, Typeable, Data)
   
-  data Signedness = Unsigned | Signed deriving (Show)
-  data Width = Short | Regular | Long | LongLong deriving (Show)
+  instance Pretty SFunction where
+    pretty (SFunction retType name params body) = 
+      pretty retType 
+        <+> pretty name 
+        <+> (parens $ hsep $ punctuate comma (pretty <$> params)) 
+        $+$ braces (nest 2 (vcat $ pretty <$> body))
   
-  data IntegerFlags = IntegerFlags Signedness Width deriving (Show)
   
-  data FloatFlags = FFloat | FDouble | FLongDouble deriving (Show)
+  data Signedness = Unsigned | Signed deriving (Show, Typeable, Data)
+  instance Pretty Signedness where
+    pretty Unsigned = text "u"
+    pretty Signed = empty
+  
+  data IntegerFlags = IntegerFlags Signedness Int deriving (Show, Typeable, Data)
+  
+  data FloatFlags = FFloat | FDouble | FLongDouble deriving (Show, Typeable, Data)
   
   data SType 
     = SVoid [Attribute]
@@ -26,12 +44,26 @@ module Semantics.C.Nodes where
     | SChar Signedness [Attribute]
     | SPointerTo SType [Attribute]
     | SArray SType (Maybe Expression) [Attribute] 
-    | SFunctionPointer SFunction [Attribute] -- hmm...
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
-    deriving (Show)
+    deriving (Show, Typeable, Data)
     
-  data SVariable = Variable Name SType deriving (Show)
+  instance Pretty SType where
+    pretty (SVoid _) = text "void"
+    pretty (SInt (IntegerFlags s w) _) = pretty s <> text "int" <> pretty w
+    pretty (SFloat FFloat _) = text "float"
+    pretty (SFloat FDouble _) = text "double"
+    pretty (SFloat FLongDouble _) = text "long double"
+    pretty (SChar signedness _) = text "char"
+    pretty (SPointerTo t _) = pretty t <+> text "*"
+    pretty (SArray t mE _) = pretty t <> text "[]"
+    pretty (SComposite _ _) = undefined
+    pretty (SEnum _ _) = undefined
+    
+  data SVariable = Variable Name SType deriving (Show, Typeable, Data)
+  
+  instance Pretty SVariable where
+    pretty (Variable n t) = pretty t <+> pretty n
   
   data Statement
     = Break
@@ -50,7 +82,7 @@ module Semantics.C.Nodes where
     | Return (Maybe Expression)
     | Switch Expression Statement
     | While Expression Statement 
-    deriving (Show)
+    deriving (Show, Typeable, Data)
   
   data Attribute 
     = Auto
@@ -60,19 +92,19 @@ module Semantics.C.Nodes where
     | Static
     | Register
     | Volatile
-    deriving (Show)
+    deriving (Show, Typeable, Data)
   
   void = SVoid []
   signedChar = SChar Signed []
   unsignedChar = SChar Unsigned []
-  shortSignedInt = SInt (IntegerFlags Signed Short) []
-  shortUnsignedInt = SInt (IntegerFlags Unsigned Short) []
-  signedInt = SInt (IntegerFlags Signed Regular) []
-  unsignedInt = SInt (IntegerFlags Unsigned Regular) []
-  longSignedInt = SInt (IntegerFlags Signed Long) []
-  longUnsignedInt = SInt (IntegerFlags Unsigned Long) []
-  longLongSignedInt = SInt (IntegerFlags Signed LongLong) []
-  longlongUnsignedInt = SInt (IntegerFlags Unsigned LongLong) []
+  shortSignedInt = SInt (IntegerFlags Signed sizeOfShort) []
+  shortUnsignedInt = SInt (IntegerFlags Unsigned sizeOfShort) []
+  signedInt = SInt (IntegerFlags Signed sizeOfInt) []
+  unsignedInt = SInt (IntegerFlags Unsigned sizeOfInt) []
+  longSignedInt = SInt (IntegerFlags Signed sizeOfLong) []
+  longUnsignedInt = SInt (IntegerFlags Unsigned sizeOfLong) []
+  longLongSignedInt = SInt (IntegerFlags Signed sizeOfLongLong) []
+  longlongUnsignedInt = SInt (IntegerFlags Unsigned sizeOfLongLong) []
   float = SFloat FFloat []
   double = SFloat FDouble []
   longDouble = SFloat FLongDouble []
@@ -82,7 +114,10 @@ module Semantics.C.Nodes where
   data SLocal
     = LDeclaration SVariable
     | LStatement Statement
-    deriving (Show)
+    deriving (Show, Typeable, Data)
+    
+  instance Pretty SLocal where
+    pretty _ = text "local;"
   
   
   data SGlobal
@@ -91,6 +126,6 @@ module Semantics.C.Nodes where
     | GFunctionPrototype SFunction
     | GTypedef Name SType
     | GComposite Bool [SFields]
-    deriving (Show)
+    deriving (Show, Typeable, Data)
   
   type Program = [SGlobal]

@@ -17,28 +17,28 @@ int main (int argc, char const *argv[])
 	fprintf(hask, "module Language.Pony.MachineSizes where\n");
 	
 	fprintf(hask, "sizeOfChar :: Int\n");
-	fprintf(hask, "sizeOfChar = %lu\n\n", sizeof(signed char));
+	fprintf(hask, "sizeOfChar = %lu\n\n", sizeof(signed char) * 8);
 	
 	fprintf(hask, "sizeOfShort :: Int\n");
-	fprintf(hask, "sizeOfShort = %lu\n\n", sizeof(short int));
+	fprintf(hask, "sizeOfShort = %lu\n\n", sizeof(short int) * 8);
 	
 	fprintf(hask, "sizeOfInt :: Int\n");
-	fprintf(hask, "sizeOfInt = %lu\n\n", sizeof(int));
+	fprintf(hask, "sizeOfInt = %lu\n\n", sizeof(int) * 8);
 	
 	fprintf(hask, "sizeOfLong :: Int\n");
-	fprintf(hask, "sizeOfLong = %lu\n\n", sizeof(long int));
+	fprintf(hask, "sizeOfLong = %lu\n\n", sizeof(long int) * 8);
 	
 	fprintf(hask, "sizeOfLongLong :: Int\n");
-	fprintf(hask, "sizeOfLongLong = %lu\n\n", sizeof(long long int));
+	fprintf(hask, "sizeOfLongLong = %lu\n\n", sizeof(long long int) * 8);
 	
 	fprintf(hask, "sizeOfFloat :: Int\n");
-	fprintf(hask, "sizeOfFloat = %lu\n\n", sizeof(float));
+	fprintf(hask, "sizeOfFloat = %lu\n\n", sizeof(float) * 8);
 	
 	fprintf(hask, "sizeOfDouble :: Int\n");
-	fprintf(hask, "sizeOfDouble = %lu\n\n", sizeof(double));
+	fprintf(hask, "sizeOfDouble = %lu\n\n", sizeof(double) * 8);
 	
 	fprintf(hask, "sizeOfLongDouble :: Int\n");
-	fprintf(hask, "sizeOfLongDouble = %lu\n\n", sizeof(long double));
+	fprintf(hask, "sizeOfLongDouble = %lu\n\n", sizeof(long double) * 8);
 	
 	return 0;
 }

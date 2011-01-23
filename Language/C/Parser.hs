@@ -7,6 +7,7 @@ module Language.C.Parser
   , addTypeDef
   , parseTest
   , parseTestCustom
+  , parseUnsafe
   , parseFromFile
   , parseFromFileCustom
   , preprocessAndParse
@@ -51,6 +52,11 @@ module Language.C.Parser
     case (runParser p i "" s) of
       (Left error) -> print error
       (Right a) -> print a
+      
+  parseUnsafe p s = 
+    case (runParser p mkInternals "" s) of
+      (Left e) -> error $ show e
+      (Right a) -> a
 
   parseFromFile p loc = do
     str <- readFile loc
