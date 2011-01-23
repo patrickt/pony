@@ -1,11 +1,12 @@
 module Semantics.C.Nodes where
   
+  import Language.C.AST (CExpr)
+  
   type Name = String
   type SParameter = ()
-  type Expression = ()
+  type Expression = CExpr
   type CompositeInfo = ()
   type EnumerationInfo = ()
-  type Statement = ()
   type SFields = ()
   
   -- The parameters should really be SParameters.
@@ -31,6 +32,25 @@ module Semantics.C.Nodes where
     deriving (Show)
     
   data SVariable = Variable Name SType deriving (Show)
+  
+  data Statement
+    = Break
+    | Case Expression Statement
+    | Compound [SLocal]
+    | Continue
+    | Default Statement
+    | DoWhile Statement Expression
+    | EmptyS
+    | ExpressionS Expression
+    | For (Maybe SLocal) (Maybe Expression) (Maybe Expression) Statement
+    | GoTo Name
+    | IfThen Expression Statement
+    | IfThenElse Expression Statement Statement
+    | Labeled Name [Attribute] Statement
+    | Return (Maybe Expression)
+    | Switch Expression Statement
+    | While Expression Statement 
+    deriving (Show)
   
   data Attribute 
     = Auto

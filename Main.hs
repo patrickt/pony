@@ -8,6 +8,7 @@ module Main where
   import Language.C.AST
   import Language.C.Functions
   import Language.C.TopLevel
+  import Semantics.C.Conversions
   import System.Console.CmdArgs
   import System.Environment
   
@@ -61,7 +62,7 @@ module Main where
     result <- preprocessAndParse preprocessedC input inrnls
     case result of
       (Left parseError) -> writeFile output (show parseError)
-      Right externs -> writeFile output (show externs)
+      Right externs -> writeFile output (show (convertTranslationUnit externs))
     
   main :: IO ()
   main = cmdArgs ponyOptions >>= parsePony

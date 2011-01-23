@@ -5,6 +5,7 @@ module Semantics.C.Conversions where
   import Language.C.Miscellany
   import Semantics.C.Nodes
   import Data.Maybe
+  import Data.List (find)
   
   convertTranslationUnit :: CTranslationUnit -> Program
   convertTranslationUnit = concatMap convert where
@@ -25,10 +26,38 @@ module Semantics.C.Conversions where
   convertBlockItem (Right statement) = LStatement <$> [convertStatement statement]
   
   convertStatement :: CStatement -> Statement
-  convertStatement = undefined
+  convertStatement BreakStmt            = Break
+  convertStatement (CaseStmt ex st)         = Case (convertExpression ex) (convertStatement st)
+  convertStatement (CompoundStmt bis)   = Compound (convertBlockItem `concatMap` bis)
+  convertStatement ContinueStmt         = Continue
+  convertStatement (DefaultStmt st)     = Default (convertStatement st)
+  convertStatement (DoWhileStmt st ex)  = DoWhile (convertStatement st) (convertExpression ex)
+  convertStatement EmptyStmt            = EmptyS
+  convertStatement (ExpressionStmt ex)  = ExpressionS (convertExpression ex)
+  convertStatement (ForStmt e1 e2 e3 s) = For 
+    undefined
+    (convertExpression <$> e2)
+    (convertExpression <$> e3)
+    (convertStatement s) 
+  convertStatement (ForDeclStmt d e2 e3 s) = For
+    undefined
+    (convertExpression <$> e2)
+    (convertExpression <$> e3)
+    (convertStatement s)
+  convertStatement (GotoStmt s)            = GoTo s
+  convertStatement (IfStmt e s mS)         = case mS of
+    (Just s') -> IfThenElse (convertExpression e) (convertStatement s) (convertStatement s')
+    Nothing -> IfThen (convertExpression e) (convertStatement s)
+  convertStatement (LabeledStmt l attrs s) = Labeled l (convertAttribute <$> attrs) (convertStatement s)
+  convertStatement (ReturnStmt mE)         = Return (convertExpression <$> mE)
+  convertStatement (SwitchStmt ex st)      = Switch (convertExpression ex) (convertStatement st)
+  convertStatement (WhileStmt ex st)       = While (convertExpression ex) (convertStatement st)
   
   convertExpression :: CExpr -> Expression
-  convertExpression = undefined
+  convertExpression = id
+  
+  convertAttribute :: CAttribute -> Attribute
+  convertAttribute = error "convertAttribute = undefined"
   
   -- TODO: deal with STypedef and SAttribute [CExpr] here
   convertStorageSpecifiers :: StorageSpecifier -> Attribute
@@ -48,16 +77,22 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convertTypeQualifiers qs)
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
-  convertDeclarationToType = undefined
+  convertDeclarationToType (CDeclaration specs [(Just declr, Nothing, Nothing)]) = Just (convertComponents specs declr)
+  convertDeclarationToType _ = Nothing
   
   convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
-  convertDeclarationToVariable = undefined
+  convertDeclarationToVariable (CDeclaration specs [(Just decl, Nothing, Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl))
+  convertDeclarationToVariable _ = Nothing
   
   convertDeclarationToVariables :: CDeclaration -> [SVariable]
-  convertDeclarationToVariables = undefined
+  convertDeclarationToVariables = error "convertDeclarationToVariables = undefined"
   
   convertFunctionArguments :: CDeclarator -> [SVariable]
-  convertFunctionArguments = undefined
+  convertFunctionArguments (Named n derived asm attributes) = catMaybes $ map convertDeclarationToVariable args
+    where (Just (Function args _)) = funcArgs
+          funcArgs = find isFunction derived
+          isFunction (Function _ _) = True
+          isFunction _ = False
   
   -- TODO: Finish composite types, enumerations, and typedefs
   -- This is where type aliases go, as defined in C99, 6.7.2.2
