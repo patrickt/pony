@@ -24,8 +24,4 @@ Pony is open-source software released under the Simplified BSD License, the text
 
 Pony is written by Patrick Thomson.
 
-Pony depends heavily on [Filet-O-Fish][filet], © 2007-2009 ETH Zurich and Microsoft Corporation and made available as part of the [Barrelfish][barrelfish] project. Because there is no Cabal package for Filet-O-Fish, a version is distributed along with the Pony source code. A copy of the license is included in `Language/FiletOFish/LICENSE`. Pony has a number of additional build dependencies, specified in the `pony.cabal` file. 
-
-[filet]: http://www.barrelfish.org/fof_plos09.pdf "Filet-o-Fish: practical and dependable domain-specific languages for OS development"
-[barrelfish]: http://www.barrelfish.org/ "The Barrelfish Operating System"
-
+Pony has a number of additional build dependencies, specified in the `pony.cabal` file. 
