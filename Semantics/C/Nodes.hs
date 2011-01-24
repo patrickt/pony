@@ -18,7 +18,7 @@ module Semantics.C.Nodes where
   type SFields = ()
   
   data SFunction = SFunction SType Name [SVariable] [SLocal] 
-    deriving (Show, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SFunction where
     pretty (SFunction retType name params body) = 
@@ -28,14 +28,14 @@ module Semantics.C.Nodes where
         $+$ braces (nest 2 (vcat $ pretty <$> body))
   
   
-  data Signedness = Unsigned | Signed deriving (Show, Typeable, Data)
+  data Signedness = Unsigned | Signed deriving (Show, Typeable, Eq, Data)
   instance Pretty Signedness where
     pretty Unsigned = text "u"
     pretty Signed = empty
   
-  data IntegerFlags = IntegerFlags Signedness Int deriving (Show, Typeable, Data)
+  data IntegerFlags = IntegerFlags Signedness Int deriving (Show, Eq, Typeable, Data)
   
-  data FloatFlags = FFloat | FDouble | FLongDouble deriving (Show, Typeable, Data)
+  data FloatFlags = FFloat | FDouble | FLongDouble deriving (Show, Eq, Typeable, Data)
   
   data SType 
     = SVoid [Attribute]
@@ -46,7 +46,18 @@ module Semantics.C.Nodes where
     | SArray SType (Maybe Expression) [Attribute] 
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
-    deriving (Show, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data)
+  
+  setAttributes :: SType -> [Attribute] -> SType
+  setAttributes (SVoid _) a = SVoid a
+  setAttributes (SInt f _) a = SInt f a
+  setAttributes (SFloat f _) a = SFloat f a
+  setAttributes (SChar s _) a = SChar s a
+  setAttributes (SPointerTo t _) a = SPointerTo t a
+  setAttributes (SArray t e _) a = SArray t e a
+  setAttributes (SComposite i _) a = SComposite i a
+  setAttributes (SEnum i _) a = SEnum i a
+  
     
   instance Pretty SType where
     pretty (SVoid _) = text "void"
@@ -60,7 +71,7 @@ module Semantics.C.Nodes where
     pretty (SComposite _ _) = undefined
     pretty (SEnum _ _) = undefined
     
-  data SVariable = Variable Name SType deriving (Show, Typeable, Data)
+  data SVariable = Variable Name SType deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SVariable where
     pretty (Variable n t) = pretty t <+> pretty n
@@ -82,7 +93,7 @@ module Semantics.C.Nodes where
     | Return (Maybe Expression)
     | Switch Expression Statement
     | While Expression Statement 
-    deriving (Show, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data)
     
   instance Pretty Statement where
     pretty Break = text "break"
@@ -110,7 +121,7 @@ module Semantics.C.Nodes where
     | Static
     | Register
     | Volatile
-    deriving (Show, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data)
   
   void = SVoid []
   signedChar = SChar Signed []
@@ -132,7 +143,7 @@ module Semantics.C.Nodes where
   data SLocal
     = LDeclaration SVariable
     | LStatement Statement
-    deriving (Show, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data)
     
   instance Pretty SLocal where
     pretty (LStatement s) = pretty s <> semicolon
@@ -145,6 +156,6 @@ module Semantics.C.Nodes where
     | GFunctionPrototype SFunction
     | GTypedef Name SType
     | GComposite Bool [SFields]
-    deriving (Show, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data)
   
   type Program = [SGlobal]

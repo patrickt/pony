@@ -138,7 +138,9 @@ module Semantics.C.Conversions where
   
   -- TODO: We're leaving storage specifiers out here, those should be included too.
   convertComponents :: [Specifier] -> CDeclarator -> SType
-  convertComponents specs decl = foldr convertDerivedDeclarators (convertTypeSpecifiers typeSpecs) (derivedPartsOfDeclarator decl) where
+  convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convertTypeSpecifiers typeSpecs) (storageAttrs ++ qualAttrs)) (derivedPartsOfDeclarator decl) where
+    storageAttrs = convertStorageSpecifiers <$> storageSpecs
+    qualAttrs = convertTypeQualifiers <$> typeQuals
     (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
     
   -- This is an easy conversion; all that is necessary is to drop the last

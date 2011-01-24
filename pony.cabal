@@ -23,11 +23,13 @@ tested-with:         GHC
 Cabal-version:       >=1.2.3
 
 Executable test
-  Main-is: test/quickcheck/Constants.hs
+  Main-is:             Testing/Main.hs
   
   Build-depends:       QuickCheck >= 2.0,
+                       HUnit == 1.2.2.3,
                        test-framework == 0.3.3,
-                       test-framework-quickcheck2 == 0.2.7
+                       test-framework-quickcheck2 == 0.2.7,
+                       test-framework-hunit == 0.2.6
 
 Executable pony
   Main-is:             Main.hs
@@ -45,5 +47,5 @@ Executable pony
                        syb >= 0.1,
                        syz >= 0.2,
                        process > 1.0,
-                       pretty >= 1.0,
+                       pretty >= 1.0
 
