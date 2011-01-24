@@ -69,10 +69,11 @@ module Semantics.C.Nodes where
     pretty (SComposite _ _) = undefined
     pretty (SEnum _ _) = undefined
     
-  data SVariable = Variable Name SType deriving (Show, Eq, Typeable, Data)
+  data SVariable = Variable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SVariable where
-    pretty (Variable n t) = pretty t <+> pretty n
+    pretty (Variable n t Nothing) = pretty t <+> pretty n
+    pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
   
   data Statement
     = Break

@@ -92,8 +92,10 @@ module Semantics.C.Conversions where
   convertDeclarationToType (CDeclaration specs [(Just declr, Nothing, Nothing)]) = Just (convertComponents specs declr)
   convertDeclarationToType _ = Nothing
   
+  -- TODO: Handle initializer lists here.
   convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
-  convertDeclarationToVariable (CDeclaration specs [(Just decl, Nothing, Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl))
+  convertDeclarationToVariable (CDeclaration specs [(Just decl, (Just (InitExpression e)), Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e)))
+  convertDeclarationToVariable (CDeclaration specs [(Just decl, Nothing, Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing)
   convertDeclarationToVariable _ = Nothing
   
   convertDeclarationToVariables :: CDeclaration -> [SVariable]
