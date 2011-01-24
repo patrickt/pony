@@ -30,9 +30,8 @@ module Language.C.AST
     | DoWhileStmt CStatement CExpr
     | EmptyStmt
     | ExpressionStmt CExpr
-    -- | This is the old style of for loops.
     | ForStmt (Maybe CExpr) (Maybe CExpr) (Maybe CExpr) CStatement
-    -- | This is the new style defined in C99.
+    -- | New-style for-loops (C99 6.8.5.3.1).
     | ForDeclStmt CDeclaration (Maybe CExpr) (Maybe CExpr) CStatement
     | GotoStmt String
     | IfStmt CExpr CStatement (Maybe CStatement)
