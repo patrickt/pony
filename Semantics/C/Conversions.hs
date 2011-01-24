@@ -57,7 +57,16 @@ module Semantics.C.Conversions where
   convertExpressionToLocal e = LStatement $ ExpressionS $ convertExpression e
   
   convertExpression :: CExpr -> Expression
-  convertExpression = id
+  convertExpression (Constant l) = Literal l
+  convertExpression (Identifier i) = Ident i
+  convertExpression (Index l r) = Brackets (convertExpression l) (convertExpression r)
+  convertExpression (Call f args) = FunctionCall (convertExpression f) (convertExpression <$> args)
+  convertExpression (Language.C.AST.Cast decl arg) = Semantics.C.Nodes.Cast (fromJust $ convertDeclarationToType decl) (convertExpression arg)
+  convertExpression (UnaryOp n arg) = Unary n (convertExpression arg)
+  convertExpression (BinaryOp n lhs rhs) = Binary (convertExpression lhs) n (convertExpression rhs)
+  convertExpression (TernaryOp a b c) = Ternary (convertExpression a) (convertExpression b) (convertExpression c)
+  convertExpression (SizeOfType decl) = SizeOfSType (fromJust $ convertDeclarationToType decl)
+  convertExpression (CBuiltin t) = Builtin t
   
   convertAttribute :: CAttribute -> Attribute
   convertAttribute = error "convertAttribute = undefined"

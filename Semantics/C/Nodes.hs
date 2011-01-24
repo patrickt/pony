@@ -2,17 +2,15 @@
 
 module Semantics.C.Nodes where
   
-  -- TODO: When this is reasonably stable, rename it to Semantics.C.Tree
-  
   import Data.Generics
   import Language.Pony.MachineSizes
   import Control.Applicative ((<$>))
-  import Language.C.AST (CExpr)
+  import Language.C.AST (CLiteral (..))
+  import qualified Language.C.AST as AST
   import Semantics.C.Pretty
   
   type Name = String
   type SParameter = ()
-  type Expression = CExpr
   type CompositeInfo = ()
   type EnumerationInfo = ()
   type SFields = ()
@@ -97,21 +95,53 @@ module Semantics.C.Nodes where
     
   instance Pretty Statement where
     pretty Break = text "break"
-    pretty (Case _ _) = text "case (TODO)"
+    pretty (Case e s) = text "case" <+> pretty e <> colon <+> pretty s
     pretty (Compound _) = text "compound (TODO)"
     pretty Continue = text "continue"
     pretty (Default s) = text "default:" <+> pretty s
-    pretty (DoWhile _ _) = text "dowhile (TODO)"
+    pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> (parens $ pretty e)
     pretty EmptyS = empty
-    pretty (ExpressionS s) = text $ show s
+    pretty (ExpressionS s) = textS s
     pretty (For _ _ _ _) = text "for(TODO)"
     pretty (GoTo n) = text "goto" <+> pretty n
-    pretty (IfThen _ _) = text "if(TODO)"
-    pretty (IfThenElse _ _ _) = text "ifelse(TODO)"
+    pretty (IfThen e s) = text "if" <+> (parens $ pretty e) <+> pretty s
+    pretty (IfThenElse e s s') = text "if" <+> (parens $ pretty e) <+> pretty s <+> text "else" <+> pretty s'
     pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
-    pretty (Return _) = text "return (TODO)"
-    pretty (Switch _ s) = text "switch(TODO)" <+> pretty s
-    pretty (While _ _) = text "while(TODO)"
+    pretty (Return Nothing) = text "return"
+    pretty (Return (Just e)) = text "return" <+> pretty e
+    pretty (Switch e s) = text "switch" <+> (parens $ pretty e) <+> pretty s
+    pretty (While e s) = text "while" <+> (parens $ pretty e) <+> pretty s
+    
+  data Expression
+    = Literal AST.CLiteral
+    | Ident Name
+    | Brackets Expression Expression
+    | FunctionCall Expression [Expression]
+    | Cast SType Expression
+    | Unary Name Expression
+    | Binary Expression Name Expression
+    | Ternary Expression Expression Expression
+    | SizeOfSType SType
+    | Builtin AST.BuiltinExpr
+    deriving (Show, Eq, Typeable, Data)
+    
+  instance Pretty AST.CLiteral where
+    pretty (CInteger i) = textS i
+    pretty (CChar c) = textS c
+    pretty (CFloat f) = textS f
+    pretty (CString s) = textS s 
+    
+  instance Pretty Expression where
+    pretty (Literal l) = pretty l
+    pretty (Ident n) = text n
+    pretty (Brackets lhs rhs) = pretty lhs <> (brackets $ pretty rhs)
+    pretty (FunctionCall lhs args) = pretty lhs <> (parens $ hcat $ punctuate comma (pretty <$> args))
+    pretty (Cast t e) = parens $ pretty t <> pretty e
+    pretty (Unary n e) = text n <> pretty e
+    pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
+    pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
+    pretty (SizeOfSType t) = text "sizeof" <> (parens $ pretty t)
+    pretty (Builtin b) = textS b
   
   data Attribute 
     = Auto
