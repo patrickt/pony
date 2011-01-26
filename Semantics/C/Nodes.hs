@@ -12,7 +12,6 @@ module Semantics.C.Nodes where
   type Name = String
   type SParameter = ()
   type CompositeInfo = ()
-  type EnumerationInfo = ()
   type SFields = ()
   
   data SFunction = SFunction SType Name [SVariable] [SLocal] 
@@ -46,6 +45,9 @@ module Semantics.C.Nodes where
     | SEnum EnumerationInfo [Attribute]
     deriving (Show, Eq, Typeable, Data)
   
+  data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
+    deriving (Show, Eq, Typeable, Data)
+  
   setAttributes :: SType -> [Attribute] -> SType
   setAttributes (SVoid _) a = SVoid a
   setAttributes (SInt f _) a = SInt f a
@@ -55,7 +57,6 @@ module Semantics.C.Nodes where
   setAttributes (SArray t e _) a = SArray t e a
   setAttributes (SComposite i _) a = SComposite i a
   setAttributes (SEnum i _) a = SEnum i a
-  
     
   instance Pretty SType where
     pretty (SVoid _) = text "void"
@@ -143,6 +144,9 @@ module Semantics.C.Nodes where
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
     pretty (SizeOfSType t) = text "sizeof" <> (parens $ pretty t)
     pretty (Builtin b) = textS b
+    
+  intToLiteral :: Int -> Expression
+  intToLiteral i = Literal (CInteger (toInteger i))
   
   data Attribute 
     = Auto

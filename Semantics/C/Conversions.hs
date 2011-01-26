@@ -109,6 +109,7 @@ module Semantics.C.Conversions where
           isFunction _ = False
   
   -- TODO: Finish composite types, enumerations, and typedefs
+  -- TOOD: Fill in the attributes for structs and enums
   -- This is where type aliases go, as defined in C99, 6.7.2.2
   convertTypeSpecifiers :: [TypeSpecifier] -> SType
   convertTypeSpecifiers [TVoid]                         = void
@@ -143,9 +144,18 @@ module Semantics.C.Conversions where
   convertTypeSpecifiers [TDouble]                       = double
   convertTypeSpecifiers [TLong, TDouble]                = longDouble
   convertTypeSpecifiers [(TStructOrUnion _ _ _ _)]      = SComposite undefined []
-  convertTypeSpecifiers [(TEnumeration _ _ _)]          = SEnum undefined []
+  convertTypeSpecifiers [(TEnumeration Nothing a _)]    = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
+  convertTypeSpecifiers [(TEnumeration (Just n) a _)]    = SEnum (EnumerationInfo n (convertEnumeration a)) []
   convertTypeSpecifiers [(TTypedef _ _)]                = undefined
   convertTypeSpecifiers other                           = error ("unknown type " ++ (show other))
+  
+  -- FIXME: increasing doesn't work in the case of {FOO, BAR=5, BAZ} (baz should == 6)
+  convertEnumeration :: [Enumerator] -> [(Name, Expression)]
+  convertEnumeration e = convert' 0 e [] where
+    convert' _ [] accum = accum
+    convert' i (e:es) accum = case e of
+      (EnumIdent n) -> convert' (i+1) es (accum ++ [(n, intToLiteral i)])
+      (EnumAssign n e) -> convert' (i+1) es (accum ++ [(n, convertExpression e)])
   
   -- TODO: We're leaving storage specifiers out here, those should be included too.
   convertComponents :: [Specifier] -> CDeclarator -> SType

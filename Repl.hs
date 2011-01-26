@@ -11,5 +11,7 @@ module Main where
   import Language.C.TopLevel
   import Semantics.C.Conversions
   import Semantics.C.Pretty
+  import Semantics.C.Nodes
+  import Data.Generics.Zipper
   
   main = putStrLn "Hello World"
