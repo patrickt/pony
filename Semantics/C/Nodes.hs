@@ -21,9 +21,10 @@ module Semantics.C.Nodes where
     pretty (SFunction retType name params body) = 
       pretty retType 
         <+> pretty name 
-        <+> (parens $ hsep $ punctuate comma (pretty <$> params)) 
-        $+$ braces (nest 2 (vcat $ pretty <$> body))
-  
+        <+> parens parameters
+        $+$ braces bodyContents
+        where parameters = hsep $ punctuate comma (pretty <$> params)
+              bodyContents = nest 2 (vcat $ pretty <$> body)
   
   data Signedness = Unsigned | Signed deriving (Show, Typeable, Eq, Data)
   instance Pretty Signedness where
@@ -47,6 +48,12 @@ module Semantics.C.Nodes where
   
   data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
     deriving (Show, Eq, Typeable, Data)
+    
+  instance Pretty EnumerationInfo where 
+    pretty (EnumerationInfo n vals) =
+      text "enum" <+> text n $+$ braces values where
+        values = vcat $ map pretty' vals
+        pretty' (n, e) = text n <+> equals <+> pretty e
   
   setAttributes :: SType -> [Attribute] -> SType
   setAttributes (SVoid _) a = SVoid a
@@ -68,7 +75,7 @@ module Semantics.C.Nodes where
     pretty (SPointerTo t _) = pretty t <+> text "*"
     pretty (SArray t mE _) = pretty t <> text "[]"
     pretty (SComposite _ _) = undefined
-    pretty (SEnum _ _) = undefined
+    pretty (SEnum i _) = pretty i
     
   data SVariable = Variable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
   
@@ -101,18 +108,18 @@ module Semantics.C.Nodes where
     pretty (Compound _) = text "compound (TODO)"
     pretty Continue = text "continue"
     pretty (Default s) = text "default:" <+> pretty s
-    pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> (parens $ pretty e)
+    pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> parens (pretty e)
     pretty EmptyS = empty
     pretty (ExpressionS s) = textS s
     pretty (For _ _ _ _) = text "for(TODO)"
     pretty (GoTo n) = text "goto" <+> pretty n
-    pretty (IfThen e s) = text "if" <+> (parens $ pretty e) <+> pretty s
-    pretty (IfThenElse e s s') = text "if" <+> (parens $ pretty e) <+> pretty s <+> text "else" <+> pretty s'
+    pretty (IfThen e s) = text "if" <+> parens (pretty e) <+> pretty s
+    pretty (IfThenElse e s s') = text "if" <+> parens (pretty e) <+> pretty s <+> text "else" <+> pretty s'
     pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
     pretty (Return Nothing) = text "return"
     pretty (Return (Just e)) = text "return" <+> pretty e
-    pretty (Switch e s) = text "switch" <+> (parens $ pretty e) <+> pretty s
-    pretty (While e s) = text "while" <+> (parens $ pretty e) <+> pretty s
+    pretty (Switch e s) = text "switch" <+> parens (pretty e) <+> pretty s
+    pretty (While e s) = text "while" <+> parens (pretty e) <+> pretty s
     
   data Expression
     = Literal AST.CLiteral
@@ -136,13 +143,13 @@ module Semantics.C.Nodes where
   instance Pretty Expression where
     pretty (Literal l) = pretty l
     pretty (Ident n) = text n
-    pretty (Brackets lhs rhs) = pretty lhs <> (brackets $ pretty rhs)
-    pretty (FunctionCall lhs args) = pretty lhs <> (parens $ hcat $ punctuate comma (pretty <$> args))
+    pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
+    pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
     pretty (Cast t e) = parens $ pretty t <> pretty e
     pretty (Unary n e) = text n <> pretty e
     pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
-    pretty (SizeOfSType t) = text "sizeof" <> (parens $ pretty t)
+    pretty (SizeOfSType t) = text "sizeof" <> parens (pretty t)
     pretty (Builtin b) = textS b
     
   intToLiteral :: Int -> Expression

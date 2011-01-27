@@ -94,7 +94,7 @@ module Semantics.C.Conversions where
   
   -- TODO: Handle initializer lists here.
   convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
-  convertDeclarationToVariable (CDeclaration specs [(Just decl, (Just (InitExpression e)), Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e)))
+  convertDeclarationToVariable (CDeclaration specs [(Just decl, Just (InitExpression e), Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e)))
   convertDeclarationToVariable (CDeclaration specs [(Just decl, Nothing, Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing)
   convertDeclarationToVariable _ = Nothing
   
@@ -102,7 +102,7 @@ module Semantics.C.Conversions where
   convertDeclarationToVariables = error "convertDeclarationToVariables = undefined"
   
   convertFunctionArguments :: CDeclarator -> [SVariable]
-  convertFunctionArguments (Named n derived asm attributes) = catMaybes $ map convertDeclarationToVariable args
+  convertFunctionArguments (Named n derived asm attributes) = mapMaybe convertDeclarationToVariable args
     where (Just (Function args _)) = funcArgs
           funcArgs = find isFunction derived
           isFunction (Function _ _) = True
@@ -143,11 +143,11 @@ module Semantics.C.Conversions where
   convertTypeSpecifiers [TFloat]                        = float
   convertTypeSpecifiers [TDouble]                       = double
   convertTypeSpecifiers [TLong, TDouble]                = longDouble
-  convertTypeSpecifiers [(TStructOrUnion _ _ _ _)]      = SComposite undefined []
-  convertTypeSpecifiers [(TEnumeration Nothing a _)]    = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
-  convertTypeSpecifiers [(TEnumeration (Just n) a _)]    = SEnum (EnumerationInfo n (convertEnumeration a)) []
-  convertTypeSpecifiers [(TTypedef _ _)]                = undefined
-  convertTypeSpecifiers other                           = error ("unknown type " ++ (show other))
+  convertTypeSpecifiers [TStructOrUnion _ _ _ _]        = SComposite undefined []
+  convertTypeSpecifiers [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
+  convertTypeSpecifiers [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
+  convertTypeSpecifiers [TTypedef _ _]                  = undefined
+  convertTypeSpecifiers other                           = error ("unknown type " ++ show other)
   
   -- FIXME: increasing doesn't work in the case of {FOO, BAR=5, BAZ} (baz should == 6)
   convertEnumeration :: [Enumerator] -> [(Name, Expression)]

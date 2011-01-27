@@ -57,7 +57,7 @@ module Main where
        return $ split v ','
     let inrnls = Internals {
       typedefs = [ ]
-    , newOperators = (either (const []) id rv)
+    , newOperators = either (const []) id rv
     }
     result <- preprocessAndParse preprocessedC input inrnls
     case result of

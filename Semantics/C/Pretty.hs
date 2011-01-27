@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
 
 module Semantics.C.Pretty
   ( module Text.PrettyPrint.HughesPJ
@@ -17,7 +17,7 @@ module Semantics.C.Pretty
   class Pretty a where
     pretty :: a -> Doc
     
-  instance Pretty [Char] where
+  instance Pretty String where
     pretty = text
   
   instance Pretty Int where

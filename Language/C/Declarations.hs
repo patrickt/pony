@@ -16,9 +16,7 @@ where
   import Language.C.Lexer as L
   import Language.C.Parser
   import Language.C.Specifiers
-  
-  fst3 :: (a, b, c) -> a
-  fst3 (a, _, _) = a
+  import Language.C.Miscellany
   
   -- | C99 6.7
   declaration :: Parser CDeclaration
@@ -31,21 +29,18 @@ where
         x -> fail "what?"
     return $ CDeclaration specs decls
   
+  -- | Sized declarations can only appear in structure bodies.
   sizedDeclaration :: Parser CDeclaration
   sizedDeclaration = pure CDeclaration <*> some specifier
                                        <*> L.commaSep sizedDeclarator <* L.semi
   
   parameter :: Parser CDeclaration
-  parameter = do
-    specs <- some specifier
-    decl <- declarator
-    return $ CDeclaration specs [(Just decl, Nothing, Nothing)]
+  parameter = pure declaration <*> some specifier <*> declarator where
+    declaration s d = CDeclaration s [(Just d, Nothing, Nothing)]
   
   typeName :: Parser CDeclaration
-  typeName = do
-    specs <- some specifier
-    decl <- optional declarator
-    return $ CDeclaration specs [(decl, Nothing, Nothing)]
+  typeName = pure declaration <*> some specifier <*> optional declarator where
+    declaration s d = CDeclaration s [(d, Nothing, Nothing)]
   
   func :: Parser DerivedDeclarator
   func = L.parens $ do

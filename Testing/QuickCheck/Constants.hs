@@ -46,4 +46,4 @@ module Testing.QuickCheck.Constants
   prop_spaceSeparatedStrings s = case (parseConstant separated) of
     (Right (Constant (CString s'))) -> (concat s == s')
     (Left _) -> False
-    where separated = concat $ intersperse " " $ map show s
+    where separated = unwords $ map show s
