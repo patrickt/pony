@@ -3,10 +3,8 @@ module Testing.HUnit.SpaceFreeParsing
   
   import Test.Framework
   import Test.Framework.Providers.HUnit
-  import Language.C.Parser
   import Test.HUnit hiding (Test)
-  import Language.C.AST
-  import Language.C.Expressions (expression)
+  import Language.C
   
   tests :: [Test]
   tests = [ testCase "no spaces but no infix operations" testNoSpacesNoInfixOps

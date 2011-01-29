@@ -1,13 +1,10 @@
 module Testing.QuickCheck.Constants
   (tests)
   where 
-    
-  import Data.List (intersperse)
+  
   import Test.Framework (Test, defaultMain)
   import Test.Framework.Providers.QuickCheck2 (testProperty)
-  import Language.C.Parser
-  import Language.C.AST
-  import Language.C.Expressions
+  import Language.C
   import Test.QuickCheck
 
   parseConstant = runParser constantExpression mkInternals "test data"

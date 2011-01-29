@@ -3,22 +3,11 @@ module Main where
   import Control.Monad.Error
   import Data.ConfigFile
   import Data.Generics
-  import Language.C.Parser
-  import Language.C.Expressions
-  import Language.C.AST
-  import Language.C.Functions
-  import Language.C.TopLevel
+  import Language.C
   import Semantics.C.Conversions
   import System.Console.CmdArgs
   import System.Environment
-  
-  split :: String -> Char -> [String]
-  split [] delim = [""]
-  split (c:cs) delim
-     | c == delim = "" : rest
-     | otherwise = (c : head rest) : tail rest
-     where
-         rest = split cs delim
+  import Text.CSV
   
   -- TODO: allow for multiple inputs (input :: [FilePath])
   data PonyOptions = PonyOptions {
@@ -45,24 +34,28 @@ module Main where
         &= argPos 0 
   } &= program "pony"
     &= summary "pony 0.0.1, (c) Patrick Thomson 2010"
-  
+    
+  getOperators ponyproj = do
+    cp <- join $ liftIO $ readfile emptyCP ponyproj
+    arith <- get cp "operators" "arithmetic"
+    case (parseCSV ponyproj (arith :: String)) of
+      (Left e) -> throwError (ParseError (show e), "in CSV parsing")
+      (Right csv) -> return $ csv !! 0
   
   parsePony :: PonyOptions -> IO ()
   parsePony PonyOptions { output, input, ponyproj } = do
-    rv <- runErrorT $
-     do
-       cp <- join $ liftIO $ readfile emptyCP ponyproj
-       val <- get cp "operators" "arithmetic"
-       let v = val :: String
-       return $ split v ','
+    rv <- runErrorT $ getOperators ponyproj
     let inrnls = Internals {
-      typedefs = [ ]
-    , newOperators = either (const []) id rv
+      typedefs = []
+    , arithmeticOps = either (const []) id rv
+    , comparativeOps = []
+    , bitwiseOps = []
+    , logicalOps = []
     }
     result <- preprocessAndParse preprocessedC input inrnls
     case result of
       (Left parseError) -> writeFile output (show parseError)
-      Right externs -> writeFile output (show (convertTranslationUnit externs))
+      Right externs -> writeFile output (show externs)
     
   main :: IO ()
   main = cmdArgs ponyOptions >>= parsePony

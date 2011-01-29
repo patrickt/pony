@@ -26,12 +26,18 @@ module Language.C.Parser
   
   data Internals = Internals 
     { typedefs :: [(String, CDeclaration)]
-    , newOperators :: [String]
+    , arithmeticOps :: [String]
+    , comparativeOps :: [String]
+    , bitwiseOps :: [String]
+    , logicalOps :: [String]
     }
   
   mkInternals :: Internals
-  mkInternals = Internals { typedefs = []
-                          , newOperators = [] 
+  mkInternals = Internals { typedefs       = []
+                          , arithmeticOps  = [] 
+                          , comparativeOps = []
+                          , bitwiseOps     = []
+                          , logicalOps     = []
                           }
   
   addTypeDef :: String -> CDeclaration -> Internals -> Internals

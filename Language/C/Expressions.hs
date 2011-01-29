@@ -19,8 +19,7 @@ module Language.C.Expressions
   constantExpression :: Parser CExpr
   constantExpression = do
     st <- getState
-    let ops = newOperators st
-    let arithTable' = arithTable ++ [map mkInfixL ops]
+    let arithTable' = arithTable ++ [map mkInfixL (arithmeticOps st)]
     buildChainedParser [ (arithTable', "arithmetic expression")
                        , (compTable, "comparative expression")
                        , (bitwiseTable, "bitwise operation")

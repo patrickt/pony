@@ -1,15 +1,13 @@
 module Testing.HUnit.TypeNames 
   ( tests ) where
   
-  import Language.C.Declarations
   import Test.Framework
   import Test.Framework.Providers.HUnit
-  import Language.C.Parser
   import Test.HUnit hiding (Test)
-  import Data.Either
-  import Data.Maybe
+  import Language.C
   import Semantics.C.Conversions
   import Semantics.C.Nodes
+  import Data.Maybe (fromJust)
   
   tests :: [Test]
   tests = [ testCase "whatever" testRestrictPtrToConstPtrToInt ]

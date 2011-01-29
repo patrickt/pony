@@ -1,5 +1,6 @@
 int main(int argc, char const** argv)
 {
+	int foo = 1 >>> 2;
   switch(argc) {
     case 1:
     printf("Got no arguments\n");
