@@ -9,7 +9,8 @@ module Testing.HUnit.SpaceFreeParsing
   tests :: [Test]
   tests = [ testCase "no spaces but no infix operations" testNoSpacesNoInfixOps
           , testCase "spaces and infix operators" testSpacesAndInfixOps 
-          , testCase "spaces and infix operators" testNoSpacesAndInfixOps
+          , testCase "no spaces and infix operators" testNoSpacesAndInfixOps
+          , testCase "spaces and one infix operator" testNoSpacesAndOneInfixOp
           ]
     
   testNoSpacesNoInfixOps :: Assertion
@@ -26,3 +27,8 @@ module Testing.HUnit.SpaceFreeParsing
   testNoSpacesAndInfixOps = assertEqual "" theory practice where
     practice = parseUnsafe expression "*a!=*b"
     theory = BinaryOp "!=" (UnaryOp "*" (Identifier "a")) (UnaryOp "*" (Identifier "b"))
+  
+  testNoSpacesAndOneInfixOp :: Assertion
+  testNoSpacesAndOneInfixOp = assertEqual "" theory practice where
+    practice = parseUnsafe expression "*a!=b"
+    theory = BinaryOp "!=" (UnaryOp "*" (Identifier "a")) (Identifier "b")
