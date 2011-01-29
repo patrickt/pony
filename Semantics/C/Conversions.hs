@@ -99,7 +99,9 @@ module Semantics.C.Conversions where
   convertDeclarationToVariable _ = Nothing
   
   convertDeclarationToVariables :: CDeclaration -> [SVariable]
-  convertDeclarationToVariables = error "convertDeclarationToVariables = undefined"
+  convertDeclarationToVariables (CDeclaration specs tuples) = map convert tuples where
+    convert (Just decl, Just (InitExpression e), Nothing) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e))
+    convert (Just decl, Nothing, Nothing) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing
   
   convertFunctionArguments :: CDeclarator -> [SVariable]
   convertFunctionArguments (Named n derived asm attributes) = mapMaybe convertDeclarationToVariable args
