@@ -13,5 +13,6 @@ module Main where
   import Semantics.C.Pretty
   import Semantics.C.Nodes
   import Data.Generics.Zipper
+  import Language.Pony.CheckMalloc
   
   main = putStrLn "Hello World"
