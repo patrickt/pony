@@ -10,7 +10,6 @@ module Language.C.Parser
   , parseUnsafe
   , parseFromFile
   , parseFromFileCustom
-  , parseFromFileUnsafe
   , preprocessAndParse
   )
   where
@@ -45,37 +44,36 @@ module Language.C.Parser
   
   type Parser = GenParser Char Internals
   
+  preprocessAndParse :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
   preprocessAndParse p loc i = do
     let preCmd = printf "/usr/bin/clang -U __BLOCKS__ -E %s | grep \"^[^#]\" > ./ponytmp" loc :: String 
     system preCmd
     parseFromFileCustom p "./ponytmp" i
   
+  parseTest :: (Show a) => Parser a -> String -> IO ()
   parseTest p s = 
     case (runParser p mkInternals "" s) of
       (Left error) -> print error
       (Right a) -> print a
   
+  parseTestCustom :: (Show a) => Parser a -> String -> Internals -> IO ()
   parseTestCustom p s i = 
     case (runParser p i "" s) of
       (Left error) -> print error
       (Right a) -> print a
-      
+  
+  parseUnsafe :: Parser a -> String -> a
   parseUnsafe p s = 
     case (runParser p mkInternals "" s) of
       (Left e) -> error $ show e
       (Right a) -> a
-
+  
+  parseFromFile :: Parser a -> FilePath -> IO (Either ParseError a)
   parseFromFile p loc = do
     str <- readFile loc
     return $ runParser p mkInternals loc str
   
+  parseFromFileCustom :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
   parseFromFileCustom p loc internals = do
     str <- readFile loc
     return $ runParser p internals loc str
-  
-  parseFromFileUnsafe p loc = do
-    str <- readFile loc
-    case (runParser p mkInternals loc str) of
-      (Left e) -> error $ show e
-      (Right a) -> a
-  
