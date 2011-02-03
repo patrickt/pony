@@ -145,11 +145,19 @@ module Semantics.C.Conversions where
   convertTypeSpecifiers [TFloat]                        = float
   convertTypeSpecifiers [TDouble]                       = double
   convertTypeSpecifiers [TLong, TDouble]                = longDouble
-  convertTypeSpecifiers [TStructOrUnion _ _ _ _]        = SComposite undefined []
+  convertTypeSpecifiers [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
   convertTypeSpecifiers [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
   convertTypeSpecifiers [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
   convertTypeSpecifiers [TTypedef _ _]                  = undefined
   convertTypeSpecifiers other                           = error ("unknown type " ++ show other)
+  
+  -- FIXME: ignoring attributes here
+  convertComposite :: TypeSpecifier -> CompositeInfo
+  convertComposite (TStructOrUnion n b decls _) = CompositeInfo b n (convertDeclarationToField <$> decls)
+  
+  -- FIXME: this won't work if there's more than one declarator per declaration
+  convertDeclarationToField :: CDeclaration -> SField
+  convertDeclarationToField = undefined
   
   -- FIXME: increasing doesn't work in the case of {FOO, BAR=5, BAZ} (baz should == 6)
   convertEnumeration :: [Enumerator] -> [(Name, Expression)]

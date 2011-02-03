@@ -11,29 +11,38 @@ module Semantics.C.Nodes where
   
   type Name = String
   type SParameter = ()
-  type CompositeInfo = ()
   type SFields = ()
   
-  data SFunction = SFunction SType Name [SVariable] [SLocal] 
+  -- TODO: add support for variadic functions
+  data SFunction 
+    = SFunction SType Name [SVariable] [SLocal] 
     deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SFunction where
     pretty (SFunction retType name params body) = 
-      pretty retType 
-        <+> pretty name 
-        <+> parens parameters
-        $+$ braces bodyContents
+      pretty retType <+> pretty name <> parens parameters 
+      <+> lbrace 
+        $$ bodyContents 
+      $$ rbrace
         where parameters = hsep $ punctuate comma (pretty <$> params)
               bodyContents = nest 2 (vcat $ pretty <$> body)
   
-  data Signedness = Unsigned | Signed deriving (Show, Typeable, Eq, Data)
+  data Signedness 
+    = Unsigned 
+    | Signed 
+    deriving (Show, Typeable, Eq, Data)
+  
   instance Pretty Signedness where
     pretty Unsigned = text "u"
     pretty Signed = empty
   
-  data IntegerFlags = IntegerFlags Signedness Int deriving (Show, Eq, Typeable, Data)
+  data IntegerFlags 
+    = IntegerFlags Signedness Int deriving (Show, Eq, Typeable, Data)
   
-  data FloatFlags = FFloat | FDouble | FLongDouble deriving (Show, Eq, Typeable, Data)
+  data FloatFlags 
+    = FFloat 
+    | FDouble 
+    | FLongDouble deriving (Show, Eq, Typeable, Data)
   
   data SType 
     = SVoid [Attribute]
@@ -45,15 +54,6 @@ module Semantics.C.Nodes where
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
     deriving (Show, Eq, Typeable, Data)
-  
-  data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
-    deriving (Show, Eq, Typeable, Data)
-    
-  instance Pretty EnumerationInfo where 
-    pretty (EnumerationInfo n vals) =
-      text "enum" <+> text n $+$ braces values where
-        values = vcat $ map pretty' vals
-        pretty' (n, e) = text n <+> equals <+> pretty e
   
   setAttributes :: SType -> [Attribute] -> SType
   setAttributes (SVoid _) a = SVoid a
@@ -76,6 +76,25 @@ module Semantics.C.Nodes where
     pretty (SArray t mE _) = pretty t <> text "[]"
     pretty (SComposite _ _) = undefined
     pretty (SEnum i _) = pretty i
+  
+  data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
+    deriving (Show, Eq, Typeable, Data)
+    
+  instance Pretty EnumerationInfo where 
+    pretty (EnumerationInfo n vals) =
+      text "enum" <+> text n $+$ braces values where
+        values = vcat $ map pretty' vals
+        pretty' (n, e) = text n <+> equals <+> pretty e
+  
+  data CompositeInfo = CompositeInfo Bool (Maybe Name) [SField]
+    deriving (Show, Eq, Typeable, Data)
+  
+  data SField = SField Name SType (Maybe Int)
+    deriving (Show, Eq, Typeable, Data)
+    
+  instance Pretty SField where
+    pretty (SField n t Nothing) = pretty n <+> pretty t <> semicolon
+    pretty (SField n t (Just i)) = pretty n <+> pretty t <> colon <+> pretty i <> semicolon
     
   data SVariable = Variable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
   
@@ -110,7 +129,7 @@ module Semantics.C.Nodes where
     pretty (Default s) = text "default:" <+> pretty s
     pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> parens (pretty e)
     pretty EmptyS = empty
-    pretty (ExpressionS s) = textS s
+    pretty (ExpressionS s) = pretty s
     pretty (For _ _ _ _) = text "for(TODO)"
     pretty (GoTo n) = text "goto" <+> pretty n
     pretty (IfThen e s) = text "if" <+> parens (pretty e) <+> pretty s
@@ -189,7 +208,7 @@ module Semantics.C.Nodes where
     
   instance Pretty SLocal where
     pretty (LStatement s) = pretty s <> semicolon
-    pretty _ = text "local;"
+    pretty (LDeclaration d) = pretty d <> semicolon
   
   
   data SGlobal

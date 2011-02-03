@@ -40,7 +40,7 @@ module Main where
     arith <- get cp "operators" "arithmetic"
     case (parseCSV ponyproj (arith :: String)) of
       (Left e) -> throwError (ParseError (show e), "in CSV parsing")
-      (Right csv) -> return $ csv !! 0
+      (Right csv) -> return $ head csv
   
   parsePony :: PonyOptions -> IO ()
   parsePony PonyOptions { output, input, ponyproj } = do

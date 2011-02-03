@@ -15,4 +15,10 @@ module Main where
   import Data.Generics.Zipper
   import Language.Pony.CheckMalloc
   
-  main = putStrLn "Hello World"
+  prog = "int main(int argc, char const** argv){ char *buffer = malloc(sizeof(char) * 4096); printf(\"Successfully allocated memory\\n\"); return 0; }"
+  
+  ast = parseUnsafe functionDefinition prog
+  
+  st = convertFunction ast
+  
+  pr = pretty st
