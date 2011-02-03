@@ -67,16 +67,16 @@ where
   pointer :: Parser DerivedDeclarator
   pointer = Pointer <$> (char '*' >> L.whiteSpace >> many typeQualifier)
 
-  initDeclarator :: Parser (Maybe CDeclarator, Maybe Initializer, Maybe CSize)
+  initDeclarator :: Parser (Maybe CDeclarator, Maybe Initializer, Maybe CExpr)
   initDeclarator = pure (,,) <*> Just <$> declarator 
                              <*> optional assignment 
                              <*> pure Nothing
     where assignment = L.reservedOp "=" >> initializer
     
-  sizedDeclarator :: Parser (Maybe CDeclarator, Maybe Initializer, Maybe CSize)
+  sizedDeclarator :: Parser (Maybe CDeclarator, Maybe Initializer, Maybe CExpr)
   sizedDeclarator = pure (,,) <*> Just <$> declarator
                               <*> pure Nothing
-                              <*> optional (Sized <$> (L.colon *> expression))
+                              <*> optional (L.colon *> expression)
   
   initializer :: Parser Initializer
   initializer = (InitList <$> L.braces (L.commaSep1 initializer)) <|> (InitExpression <$> expression)

@@ -145,18 +145,13 @@ module Language.C.AST
   data CAttribute = CAttribute [CExpr]
     deriving (Eq, Show, Typeable, Data)
   
-  -- TODO: Remove this, as it is no longer necessary
-  data CSize 
-    = Sized CExpr
-    deriving (Eq, Show, Typeable, Data)
-  
   -- | C declarations (C99 6.7).
   -- Though this definition is rather byzantine in its structure, it has 
   -- distinct advantage in that it can encapsulate structure declarations,
   -- parameter declarations, and type names. This method of structuring declarations 
   -- was innovated by Benedikt Huber.
   data CDeclaration 
-    = CDeclaration [Specifier] [(Maybe CDeclarator, Maybe Initializer, Maybe CSize)]
+    = CDeclaration [Specifier] [(Maybe CDeclarator, Maybe Initializer, Maybe CExpr)]
     deriving (Eq, Show, Typeable, Data)
     
   type AsmName = Maybe String
