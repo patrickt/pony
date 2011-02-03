@@ -2,13 +2,13 @@ Name:                pony
 Version:             0.0.2
 Synopsis:            a modular, extensible source transformer for systems programming
 
-Description:         Pony is a tool intended for programmers of low-level systems. Code authors will write code in PonyC, a C-like language, that is then transformed into C99. It allows for high-level features such as garbage collection, closures, and typesafe memory to be imported individually. It uses the Filet-O-Fish library developed at ETA Zurich to generate C code.
+Description:         Pony is a tool intended for programmers of low-level systems. Code authors will write code in standard C99, then specify a set of  high-level transformations that they wish to add to their code, such as garbage collection, closures, and new operators. Pony will apply these transformations, ensure that the generated code is correct, and emit C99.
 
 License:             BSD3
 License-file:        LICENSE.md
 Author:              Patrick Thomson
 Maintainer:          thomsonp@gwmail.gwu.edu
-Copyright:           (c) 2010 Patrick Thomson
+Copyright:           (c) 2010-2011 George Washington University
 
 Category:            Language
 Build-type:          Configure
@@ -18,7 +18,7 @@ tested-with:         GHC
 
 -- Extra files to be distributed with the package, such as examples or
 -- a README.
--- Extra-source-files:  
+Extra-source-files:  README.md, CREDITS.md, configure
 
 Cabal-version:       >=1.2.3
 
