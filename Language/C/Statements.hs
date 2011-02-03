@@ -22,20 +22,21 @@ whether it can consume input before failing.
 -}
   
   statement :: Parser CStatement
-  statement  = try labeledStmt 
-            <|> compoundStmt 
-            <|> jumpStmt 
-            <|> expressionStmt
-            <|> selectionStmt
-            <|> iterationStmt
+  statement = choice [ try labeledStmt 
+                     , compoundStmt 
+                     , jumpStmt 
+                     , expressionStmt
+                     , selectionStmt
+                     , iterationStmt
+                     ]
   
   labeledStmt :: Parser CStatement
   labeledStmt = choice [ caseStmt
                        , defaultStmt
                        , labelStmt
                        ] where
-    caseStmt    = pure CaseStmt <*> (L.reserved "case" *> expression) <*> (L.colon *> statement)
-    defaultStmt = DefaultStmt <$> (L.reserved "default" >> L.colon >> statement)
+    caseStmt    = pure CaseStmt    <*> (L.reserved "case" *> expression) <*> (L.colon *> statement)
+    defaultStmt = pure DefaultStmt <*> (L.reserved "default" *> L.colon *> statement)
     labelStmt   = pure LabeledStmt <*> (L.identifier <* L.colon) <*> many attribute <*> statement 
   
   compoundStmt :: Parser CStatement
@@ -46,7 +47,7 @@ whether it can consume input before failing.
   
   expressionStmt :: Parser CStatement
   expressionStmt = do
-    expr <- optionMaybe expression
+    expr <- optional expression
     L.semi
     return $ maybe EmptyStmt ExpressionStmt expr
   
