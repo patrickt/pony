@@ -7,6 +7,8 @@ module Language.C.Declarations
   , parameter )
 where
   
+  -- Lasciate ogne speranza, voi ch'intrate.
+  
   import Control.Monad (when)
   import Data.Either
   import Data.Maybe
@@ -104,7 +106,7 @@ where
   declarator :: Parser CDeclarator
   declarator = do
     ptrs <- many pointer
-    direct' <- optionMaybe direct
+    direct' <- optional direct
     arrayOrFunction <- many (try array <|> func)
     asm <- optional (try asmName)
     attrs <- many attribute
@@ -112,7 +114,7 @@ where
     case direct' of
       (Just (Single s)) -> return $ Named s derived asm attrs
       -- discarding the result of __attributes__ here; could this be a bug?
-      (Just (Parenthesized (Named s decls _ _))) -> return $ Named s (decls ++ derived) asm attrs
+      (Just (Parenthesized (Named s decls _ _))) -> return $ Named s (derived ++ decls) asm attrs
       -- is this even possible?
-      (Just (Parenthesized (Abstract decls _))) -> return $ Abstract (decls ++ derived) attrs
+      (Just (Parenthesized (Abstract decls _))) -> return $ Abstract (derived ++ decls) attrs
       Nothing -> return $ Abstract derived attrs

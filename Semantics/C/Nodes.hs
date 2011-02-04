@@ -50,6 +50,7 @@ module Semantics.C.Nodes where
     | SFloat FloatFlags [Attribute]
     | SChar Signedness [Attribute]
     | SPointerTo SType [Attribute]
+    | SFunctionPointer SType [SVariable] [Attribute]
     | SArray SType (Maybe Expression) [Attribute] 
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]

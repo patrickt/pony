@@ -87,6 +87,7 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
   convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convertTypeQualifiers qs)
   convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convertTypeQualifiers qs)
+  convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t (concatMap convertDeclarationToVariables args) []
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
   convertDeclarationToType (CDeclaration specs [(Just declr, Nothing, Nothing)]) = Just (convertComponents specs declr)
