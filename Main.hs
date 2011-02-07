@@ -8,6 +8,7 @@ module Main where
   import System.Console.CmdArgs
   import System.Environment
   import Text.CSV
+  import Text.Printf
   
   -- TODO: allow for multiple inputs (input :: [FilePath])
   data PonyOptions = PonyOptions {
@@ -55,7 +56,7 @@ module Main where
     result <- preprocessAndParse preprocessedC input inrnls
     case result of
       (Left parseError) -> writeFile output (show parseError)
-      Right externs -> writeFile output (show externs)
+      Right externs -> writeFile output $ printf "Parsed %d nodes\n" (gnodecount externs)
     
   main :: IO ()
   main = cmdArgs ponyOptions >>= parsePony
