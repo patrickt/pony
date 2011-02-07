@@ -40,7 +40,7 @@ module Semantics.C.Conversions where
     (convertExpression <$> e3)
     (convertStatement s) 
   convertStatement (ForDeclStmt d e2 e3 s) = For
-    undefined
+    (convertDeclarationToLocal d)
     (convertExpression <$> e2)
     (convertExpression <$> e3)
     (convertStatement s)
@@ -55,6 +55,9 @@ module Semantics.C.Conversions where
   
   convertExpressionToLocal :: CExpr -> SLocal
   convertExpressionToLocal e = LStatement $ ExpressionS $ convertExpression e
+  
+  convertDeclarationToLocal :: CDeclaration -> Maybe SLocal
+  convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
   
   convertExpression :: CExpr -> Expression
   convertExpression (Constant l) = Literal l
