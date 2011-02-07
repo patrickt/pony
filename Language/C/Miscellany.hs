@@ -6,15 +6,13 @@ module Language.C.Miscellany where
   fst3 (a, _, _) = a
   
   nameOfDeclarator :: CDeclarator -> Maybe String
-  nameOfDeclarator (Named s _ _ _) = Just s
-  nameOfDeclarator (Abstract _ _) = Nothing
+  nameOfDeclarator (CDeclarator s _ _ _) = s
   
   derivedPartsOfDeclarator :: CDeclarator -> [DerivedDeclarator]
-  derivedPartsOfDeclarator (Named _ ds _ _) = ds
-  derivedPartsOfDeclarator (Abstract ds _) = ds
+  derivedPartsOfDeclarator (CDeclarator _ ds _ _) = ds
   
   isFunctionVariadic :: CFunction -> Bool
-  isFunctionVariadic (CFunction _ (Named _ ((Function _ b):rest) _ _) _) = b
+  isFunctionVariadic (CFunction _ (CDeclarator _ ((Function _ b):rest) _ _) _) = b
   
   -- There is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])

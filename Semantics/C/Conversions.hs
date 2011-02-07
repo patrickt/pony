@@ -108,7 +108,7 @@ module Semantics.C.Conversions where
     convert (Just decl, Nothing, Nothing) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing
   
   convertFunctionArguments :: CDeclarator -> [SVariable]
-  convertFunctionArguments (Named n derived asm attributes) = mapMaybe convertDeclarationToVariable args
+  convertFunctionArguments (CDeclarator n derived asm attributes) = mapMaybe convertDeclarationToVariable args
     where (Just (Function args _)) = funcArgs
           funcArgs = find isFunction derived
           isFunction (Function _ _) = True
@@ -181,5 +181,5 @@ module Semantics.C.Conversions where
   -- This is an easy conversion; all that is necessary is to drop the last
   -- item in the list of derived declarators.
   returnTypeOfFunction :: CFunction -> SType
-  returnTypeOfFunction (CFunction specs (Named n derived asm attrs) _) = convertComponents specs (Named n (init derived) asm attrs)
+  returnTypeOfFunction (CFunction specs (CDeclarator n derived asm attrs) _) = convertComponents specs (CDeclarator n (init derived) asm attrs)
   

@@ -27,7 +27,7 @@ where
     decls <- (L.commaSep initDeclarator <* L.semi)
     when (head specs == SSpec STypedef) $
       case (fst3 (head decls)) of
-        (Just (Named name _ _ _)) -> updateState $ addTypeDef name (CDeclaration (tail specs) decls)
+        (Just (CDeclarator (Just name) _ _ _)) -> updateState $ addTypeDef name (CDeclaration (tail specs) decls)
         x -> fail "what?"
     return $ CDeclaration specs decls
   
@@ -101,7 +101,7 @@ where
     ptrs <- many pointer
     arrayOrFunction <- many (try array <|> func)
     let derived = ptrs ++ arrayOrFunction
-    return $ Abstract derived []
+    return $ CDeclarator Nothing derived Nothing []
   
   declarator :: Parser CDeclarator
   declarator = do
@@ -112,9 +112,7 @@ where
     attrs <- many attribute
     let derived = ptrs ++ arrayOrFunction
     case direct' of
-      (Just (Single s)) -> return $ Named s derived asm attrs
+      (Just (Single s)) -> return $ CDeclarator (Just s) derived asm attrs
       -- discarding the result of __attributes__ here; could this be a bug?
-      (Just (Parenthesized (Named s decls _ _))) -> return $ Named s (derived ++ decls) asm attrs
-      -- is this even possible?
-      (Just (Parenthesized (Abstract decls _))) -> return $ Abstract (derived ++ decls) attrs
-      Nothing -> return $ Abstract derived attrs
+      (Just (Parenthesized (CDeclarator n decls _ _))) -> return $ CDeclarator n (derived ++ decls) asm attrs
+      Nothing -> return $ CDeclarator Nothing derived Nothing attrs

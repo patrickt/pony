@@ -156,11 +156,9 @@ module Language.C.AST
     
   type AsmName = Maybe String
   
-  -- TODO: Unify this declaration.
-  -- | C declarators (C99 6.7.5 and 6.7.6).
+  -- | C declarators, both abstract and concrete (C99 6.7.5 and 6.7.6).
   data CDeclarator
-   = Named String [DerivedDeclarator] AsmName [CAttribute]
-   | Abstract [DerivedDeclarator] [CAttribute]
+   = CDeclarator (Maybe String) [DerivedDeclarator] AsmName [CAttribute]
    deriving (Eq, Show, Typeable, Data)
   
   -- | Initialization types can contain one expression or a bracketed list of initializers.

@@ -128,7 +128,7 @@ module Semantics.C.Nodes where
   instance Pretty Statement where
     pretty Break = text "break"
     pretty (Case e s) = text "case" <+> pretty e <> colon <+> pretty s
-    pretty (Compound _) = text "compound (TODO)"
+    pretty (Compound b) = lbrace $$ nest 2 (vcat (pretty <$> b)) $$ rbrace
     pretty Continue = text "continue"
     pretty (Default s) = text "default:" <+> pretty s
     pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> parens (pretty e)
