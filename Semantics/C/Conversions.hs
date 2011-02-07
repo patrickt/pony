@@ -19,7 +19,7 @@ module Semantics.C.Conversions where
         name = fromJust $ nameOfDeclarator decl
         args = convertFunctionArguments decl
         newBody = concatMap convertBlockItem body
-        in SFunction ftype name args newBody
+        in SFunction ftype name args newBody (isFunctionVariadic f)
   
   convertBlockItem :: BlockItem -> [SLocal]
   convertBlockItem (Left  declaration) = LDeclaration <$> convertDeclarationToVariables declaration 

@@ -13,19 +13,22 @@ module Semantics.C.Nodes where
   type SParameter = ()
   type SFields = ()
   
-  -- TODO: add support for variadic functions
+  -- | A semantic function has four components: its return type (a 'SType'),
+  -- its name, its parameters (a list of 'SVariables'), and a boolean that 
+  -- determines whether it is variadic or not.
   data SFunction 
-    = SFunction SType Name [SVariable] [SLocal] 
+    = SFunction SType Name [SVariable] [SLocal] Bool
     deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SFunction where
-    pretty (SFunction retType name params body) = 
-      pretty retType <+> pretty name <> parens parameters 
+    pretty (SFunction retType name params body isVariadic) = 
+      pretty retType <+> pretty name <> parens (parameters <> ellipsis) 
       <+> lbrace 
         $$ bodyContents 
       $$ rbrace
         where parameters = hsep $ punctuate comma (pretty <$> params)
               bodyContents = nest 2 (vcat $ pretty <$> body)
+              ellipsis = if isVariadic then text ", ..." else empty
   
   data Signedness 
     = Unsigned 

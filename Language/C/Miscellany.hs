@@ -13,6 +13,9 @@ module Language.C.Miscellany where
   derivedPartsOfDeclarator (Named _ ds _ _) = ds
   derivedPartsOfDeclarator (Abstract ds _) = ds
   
+  isFunctionVariadic :: CFunction -> Bool
+  isFunctionVariadic (CFunction _ (Named _ ((Function _ b):rest) _ _) _) = b
+  
   -- There is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
   partitionSpecifiers specs = extract ([], [], []) specs where
