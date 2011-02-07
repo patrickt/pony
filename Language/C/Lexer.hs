@@ -27,6 +27,7 @@ module Language.C.Lexer
   
   where
   
+  import Data.Char (isSpace)
   import Text.Parsec
   import Text.Parsec.Language
   import qualified Text.Parsec.Token as T
@@ -44,6 +45,9 @@ module Language.C.Lexer
                         "volatile", "while", "...", "__asm", "__attribute__", "__inline", "__inline__",
                         "__typeof__", "__builtin_va_arg" ]
     , T.identStart = letter <|> char '_'
+    -- Since the C preprocessor removes comments, there is no need to 
+    -- have facilities for //, /* and */. Tee-hee.
+    , T.commentLine = "#"
     }
   
   lexer = T.makeTokenParser ponyCDef

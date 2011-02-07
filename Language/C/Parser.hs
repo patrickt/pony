@@ -46,7 +46,7 @@ module Language.C.Parser
   
   preprocessAndParse :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
   preprocessAndParse p loc i = do
-    let preCmd = printf "/usr/bin/clang -U __BLOCKS__ -E %s | grep \"^[^#]\" > ./ponytmp" loc :: String 
+    let preCmd = printf "/usr/bin/gcc -U __BLOCKS__ -E %s > ./ponytmp" loc :: String 
     system preCmd
     parseFromFileCustom p "./ponytmp" i
   
