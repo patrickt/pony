@@ -9,6 +9,8 @@ module Main where
   import System.Environment
   import Text.CSV
   import Text.Printf
+  import Language.Pony.LogicalShift
+  import Semantics.C.Pretty
   
   -- TODO: allow for multiple inputs (input :: [FilePath])
   data PonyOptions = PonyOptions {
@@ -56,7 +58,10 @@ module Main where
     result <- preprocessAndParse preprocessedC input inrnls
     case result of
       (Left parseError) -> writeFile output (show parseError)
-      Right externs -> writeFile output $ printf "Parsed %d nodes\n" (gnodecount externs)
+      Right externs -> do
+        let converted = convertTranslationUnit externs
+        let transformed = everywhere (mkT convertLogicalShift) converted
+        writeFile output (show $ pretty transformed)
     
   main :: IO ()
   main = cmdArgs ponyOptions >>= parsePony

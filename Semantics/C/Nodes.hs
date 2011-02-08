@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, TypeSynonymInstances #-}
 
 module Semantics.C.Nodes where
   
@@ -223,4 +223,13 @@ module Semantics.C.Nodes where
     | GComposite Bool [SFields]
     deriving (Show, Eq, Typeable, Data)
   
+  instance Pretty SGlobal where
+    pretty (GFunction g) = pretty g
+    pretty (GVariable v) = pretty v
+    pretty _ = undefined
+  
   type Program = [SGlobal]
+  instance Pretty Program where
+    pretty a = vcat $ pretty <$> a
+  
+  
