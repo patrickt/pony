@@ -14,6 +14,7 @@ module Language.C.Parser
   )
   where
   
+  import Control.Monad
   import Control.Applicative hiding (Const)
   import Data.Generics
   import Language.C.AST
@@ -45,35 +46,20 @@ module Language.C.Parser
   type Parser = GenParser Char Internals
   
   preprocessAndParse :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
-  preprocessAndParse p loc i = do
-    let preCmd = printf "/usr/bin/gcc -U __BLOCKS__ -E %s > ./ponytmp" loc :: String 
-    system preCmd
-    parseFromFileCustom p "./ponytmp" i
+  preprocessAndParse p loc i = system preprocess >> parseFromFileCustom p "./ponytmp" i
+    where preprocess = printf "/usr/bin/gcc -U __BLOCKS__ -E %s > ./ponytmp" loc
   
   parseTest :: (Show a) => Parser a -> String -> IO ()
-  parseTest p s = 
-    case (runParser p mkInternals "" s) of
-      (Left error) -> print error
-      (Right a) -> print a
+  parseTest p s = parseTestCustom p s mkInternals
   
   parseTestCustom :: (Show a) => Parser a -> String -> Internals -> IO ()
-  parseTestCustom p s i = 
-    case (runParser p i "" s) of
-      (Left error) -> print error
-      (Right a) -> print a
+  parseTestCustom p s i = either print print (runParser p i "" s)
   
   parseUnsafe :: Parser a -> String -> a
-  parseUnsafe p s = 
-    case (runParser p mkInternals "" s) of
-      (Left e) -> error $ show e
-      (Right a) -> a
+  parseUnsafe p s = either (error . show) id (runParser p mkInternals "" s)
   
   parseFromFile :: Parser a -> FilePath -> IO (Either ParseError a)
-  parseFromFile p loc = do
-    str <- readFile loc
-    return $ runParser p mkInternals loc str
+  parseFromFile p loc = readFile loc >>= return . runParser p mkInternals loc
   
   parseFromFileCustom :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
-  parseFromFileCustom p loc internals = do
-    str <- readFile loc
-    return $ runParser p internals loc str
+  parseFromFileCustom p loc internals = readFile loc >>= return . runParser p internals loc
