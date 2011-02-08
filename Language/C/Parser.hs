@@ -59,7 +59,7 @@ module Language.C.Parser
   parseUnsafe p s = either (error . show) id (runParser p mkInternals "" s)
   
   parseFromFile :: Parser a -> FilePath -> IO (Either ParseError a)
-  parseFromFile p loc = readFile loc >>= return . runParser p mkInternals loc
+  parseFromFile p loc = runParser p mkInternals loc <$> readFile loc
   
   parseFromFileCustom :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
-  parseFromFileCustom p loc internals = readFile loc >>= return . runParser p internals loc
+  parseFromFileCustom p loc internals = runParser p internals loc <$> readFile loc
