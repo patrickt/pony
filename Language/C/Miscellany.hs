@@ -12,7 +12,7 @@ module Language.C.Miscellany where
   derivedPartsOfDeclarator (CDeclarator _ ds _ _) = ds
   
   isFunctionVariadic :: CFunction -> Bool
-  isFunctionVariadic (CFunction _ (CDeclarator _ (Function _ b : rest) _ _) _) = b
+  isFunctionVariadic (CFunction _ (CDeclarator _ (Function _ b : _) _ _) _) = b
   
   -- There is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
