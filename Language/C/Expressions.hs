@@ -87,14 +87,6 @@ module Language.C.Expressions
     L.symbol ")"
     return $ BuiltinVaArg expr typ
   
-  data PostfixOp
-    = Brackets CExpr
-    | Parens [CExpr]
-    | Dot CExpr
-    | Arrow CExpr
-    | Increment
-    | Decrement
-  
   castExpression :: Parser CExpr
   castExpression = do
 	  types <- many $ try (L.parens typeName)
@@ -122,22 +114,33 @@ module Language.C.Expressions
   postfixExpression :: Parser CExpr
   postfixExpression = do
     e <- primaryExpression
-    r <- many $ choice [ Brackets <$> L.brackets expression
-                       , Parens <$> L.parens (L.commaSep expression) 
-                       , Dot <$> (L.dot >> identifier)
-                       , Arrow <$> (L.arrow >> identifier)
-                       , L.reservedOp "++" >> L.whiteSpace >> return Increment
-                       , L.reservedOp "--" >> L.whiteSpace >> return Decrement
-                       ]
-    return (foldl translate e r) <?> "postfix expression"
+    r <- many $ choice [ try arrow, dot, call, index, try increment, try decrement ]
+    L.whiteSpace
+    return (foldl translate e r)
     where
-      translate :: CExpr -> PostfixOp -> CExpr
-      translate a (Brackets b) = Index a b
-      translate a (Parens es) = Call a es
-      translate a (Dot ident) = BinaryOp "." a ident
-      translate a (Arrow ident) = BinaryOp "->" a ident
-      translate a Increment = UnaryOp "post++" a
-      translate a Decrement = UnaryOp "post--" a
+      translate a b = b a
+      increment = do
+        string "++"
+        return $ UnaryOp "++ post"
+      decrement = do
+        string "--"
+        return $ UnaryOp "-- post"
+      index = do
+        char '['
+        idx <- expression
+        char ']'
+        return $ \x -> Index x idx
+      call = do
+        char '('
+        args <- L.commaSep expression
+        char ')'
+        return $ \x -> Call x args
+      dot = do
+        ident <- (char '.' *> identifier)
+        return $ \x -> BinaryOp "." x ident
+      arrow = do
+        ident <- (string "->" *> identifier)
+        return $ \x -> BinaryOp "->" x ident
 
   primaryExpression :: Parser CExpr
   primaryExpression = choice
@@ -155,7 +158,7 @@ module Language.C.Expressions
   constant = Constant <$> choice [ try float, integer, charLiteral ]
                                  
   stringLiteral :: Parser CExpr
-  stringLiteral = Constant <$> CString <$> concat `liftM` (L.stringLiteral `sepBy` L.whiteSpace)
+  stringLiteral = Constant <$> CString <$> concat `liftM` (L.stringLiteral `sepBy1` L.whiteSpace)
   
   -- remember, kids, <$> is an infix synonym for fmap.
   -- TODO: The definition for integer suffixes is pretty gauche
