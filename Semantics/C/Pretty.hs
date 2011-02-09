@@ -9,7 +9,7 @@ module Semantics.C.Pretty
   )
   where
   
-  import Text.PrettyPrint.HughesPJ
+  import Text.PrettyPrint.HughesPJ hiding (char, int, integer, float, double)
   
   textS :: (Show a) => a -> Doc
   textS = text . show
