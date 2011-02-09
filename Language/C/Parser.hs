@@ -3,7 +3,7 @@ module Language.C.Parser
   , module Control.Applicative
   , Parser
   , Internals(..)
-  , mkInternals
+  , emptyInternals
   , addTypeDef
   , parseTest
   , parseTestCustom
@@ -32,13 +32,13 @@ module Language.C.Parser
     , logicalOps :: [String]
     }
   
-  mkInternals :: Internals
-  mkInternals = Internals { typedefs       = []
-                          , arithmeticOps  = [] 
-                          , comparativeOps = []
-                          , bitwiseOps     = []
-                          , logicalOps     = []
-                          }
+  emptyInternals :: Internals
+  emptyInternals = Internals { typedefs       = []
+                             , arithmeticOps  = [] 
+                             , comparativeOps = []
+                             , bitwiseOps     = []
+                             , logicalOps     = []
+                             }
   
   addTypeDef :: String -> CDeclaration -> Internals -> Internals
   addTypeDef name decl record = record { typedefs = typedefs record ++ [(name, decl)]}
@@ -50,16 +50,16 @@ module Language.C.Parser
     where preprocess = printf "/usr/bin/gcc -U __BLOCKS__ -E %s > ./ponytmp" loc
   
   parseTest :: (Show a) => Parser a -> String -> IO ()
-  parseTest p s = parseTestCustom p s mkInternals
+  parseTest p s = parseTestCustom p s emptyInternals
   
   parseTestCustom :: (Show a) => Parser a -> String -> Internals -> IO ()
   parseTestCustom p s i = either print print (runParser p i "" s)
   
   parseUnsafe :: Parser a -> String -> a
-  parseUnsafe p s = either (error . show) id (runParser p mkInternals "" s)
+  parseUnsafe p s = either (error . show) id (runParser p emptyInternals "" s)
   
   parseFromFile :: Parser a -> FilePath -> IO (Either ParseError a)
-  parseFromFile p loc = runParser p mkInternals loc <$> readFile loc
+  parseFromFile p loc = parseFromFileCustom p loc emptyInternals
   
   parseFromFileCustom :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
   parseFromFileCustom p loc internals = runParser p internals loc <$> readFile loc

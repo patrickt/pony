@@ -7,7 +7,7 @@ module Testing.QuickCheck.Constants
   import Language.C
   import Test.QuickCheck
 
-  parseConstant = runParser constantExpression mkInternals "test data"
+  parseConstant = runParser constantExpression emptyInternals "test data"
 
   tests :: [Test]
   tests = [ testProperty "decimal integers" prop_decimalIntegers
