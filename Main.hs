@@ -4,13 +4,12 @@ module Main where
   import Data.ConfigFile
   import Data.Generics
   import Language.C
-  import Semantics.C.Conversions
+  import Semantics.C
   import System.Console.CmdArgs
   import System.Environment
   import Text.CSV
   import Text.Printf
   import Language.Pony.LogicalShift
-  import Semantics.C.Pretty
   
   -- TODO: allow for multiple inputs (input :: [FilePath])
   data PonyOptions = PonyOptions {
@@ -36,8 +35,10 @@ module Main where
         &= typFile
         &= argPos 0 
   } &= program "pony"
-    &= summary "pony 0.0.1, (c) Patrick Thomson 2010"
-    
+    &= summary "pony 0.0.2, (c) George Washington University 2010-2011"
+  
+  getOperators :: (MonadError CPError m, MonadIO m) => FilePath -> m [Field]
+  getOperators [] = return []
   getOperators ponyproj = do
     cp <- join $ liftIO $ readfile emptyCP ponyproj
     arith <- get cp "operators" "arithmetic"
@@ -48,13 +49,13 @@ module Main where
   parsePony :: PonyOptions -> IO ()
   parsePony PonyOptions { output, input, ponyproj } = do
     rv <- runErrorT $ getOperators ponyproj
-    let inrnls = Internals {
-      typedefs = []
-    , arithmeticOps = either (const []) id rv
-    , comparativeOps = []
-    , bitwiseOps = []
-    , logicalOps = []
-    }
+    let inrnls = Internals { 
+        typedefs = []
+      , arithmeticOps = either (const []) id rv
+      , comparativeOps = []
+      , bitwiseOps = []
+      , logicalOps = []
+      }
     result <- preprocessAndParse preprocessedC input inrnls
     case result of
       (Left parseError) -> writeFile output (show parseError)

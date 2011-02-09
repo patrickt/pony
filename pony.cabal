@@ -37,6 +37,7 @@ Executable pony
   Extensions:          DeriveDataTypeable,
                        NamedFieldPuns,
                        Rank2Types,
+                       FlexibleContexts,
                        TypeSynonymInstances
   
   Build-depends:       base >= 4.2 && < 5,
