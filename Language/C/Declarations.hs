@@ -23,8 +23,9 @@ where
   -- | C99 6.7 - declarations.
   declaration :: Parser CDeclaration
   declaration = declaration' >>= checkTypedefs
-    where declaration' = pure CDeclaration <*> some specifier 
-                                           <*> (L.commaSep initDeclarator <* L.semi)
+    where declaration' = pure CDeclaration <*> some specifier <*> initDecls
+          initDecls = L.commaSep initDeclarator <* L.semi
+  
   
   checkTypedefs :: CDeclaration -> Parser CDeclaration
   checkTypedefs d@(CDeclaration (SSpec STypedef : rest) declInfo) = do
@@ -62,6 +63,10 @@ where
     when (notNull dots && (not (singleton dots) || null params || last given /= Right ())) (unexpected "ellipsis")
     return $ Function params $ notNull dots
   
+  -- This doesn't handle a lot of the stupid cases introduced by C99's variable-length arrays, e.g.
+  -- [ static type-qualifier-list? assignment-expression ]
+  -- [type-qualifier-list static assignment-expression]
+  -- [type-qualifier-list? *]
   array :: Parser DerivedDeclarator
   array = do
     (quals, expr) <- L.brackets lunacy

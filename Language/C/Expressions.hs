@@ -129,14 +129,14 @@ module Language.C.Expressions
         string "--"
         return $ UnaryOp "-- post"
       index = do
-        char '['
+        char '[' >> L.whiteSpace
         idx <- expression
-        char ']'
+        L.whiteSpace >> char ']'
         return $ \x -> Index x idx
       call = do
-        char '('
+        char '(' >> L.whiteSpace
         args <- L.commaSep expression
-        char ')'
+        L.whiteSpace >> char ')'
         return $ \x -> Call x args
       dot = do
         ident <- (char '.' *> identifier)
