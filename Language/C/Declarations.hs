@@ -20,16 +20,19 @@ where
   import Language.C.Specifiers
   import Language.C.Miscellany
   
-  -- | C99 6.7
+  -- | C99 6.7 - declarations.
   declaration :: Parser CDeclaration
-  declaration = do
-    specs <- some specifier
-    decls <- (L.commaSep initDeclarator <* L.semi)
-    when (head specs == SSpec STypedef) $
-      case (fst3 (head decls)) of
-        (Just (CDeclarator (Just name) _ _ _)) -> updateState $ addTypeDef name (CDeclaration (tail specs) decls)
-        x -> fail "what?"
-    return $ CDeclaration specs decls
+  declaration = declaration' >>= checkTypedefs
+    where declaration' = pure CDeclaration <*> some specifier 
+                                           <*> (L.commaSep initDeclarator <* L.semi)
+  
+  checkTypedefs :: CDeclaration -> Parser CDeclaration
+  checkTypedefs d@(CDeclaration (SSpec STypedef : rest) declInfo) = do
+    let (Just declr) = fst3 $ head declInfo
+    let (Just name) = nameOfDeclarator declr
+    updateState $ addTypeDef name (CDeclaration rest declInfo)
+    return d
+  checkTypedefs x = return x
   
   -- | Sized declarations can only appear in structure bodies.
   sizedDeclaration :: Parser CDeclaration
