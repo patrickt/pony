@@ -170,7 +170,7 @@ module Semantics.C.Nodes where
     pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
     pretty (Cast t e) = parens $ pretty t <> pretty e
     pretty (Unary n e) = text n <> pretty e
-    pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
+    pretty (Binary lhs op rhs) = parens $ pretty lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
     pretty (SizeOfSType t) = text "sizeof" <> parens (pretty t)
     pretty (Builtin b) = textS b

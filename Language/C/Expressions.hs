@@ -20,10 +20,13 @@ module Language.C.Expressions
   constantExpression = do
     st <- getState
     let arithTable' = arithTable ++ [map mkInfixL (arithmeticOps st)]
+    let compTable' = compTable ++ [map mkInfixL (comparativeOps st)]
+    let bitwiseTable' = bitwiseTable ++ [map mkInfixL (bitwiseOps st)]
+    let logicTable' = logicTable ++ [map mkInfixL (logicalOps st)]
     buildChainedParser [ (arithTable', "arithmetic expression")
-                       , (compTable, "comparative expression")
-                       , (bitwiseTable, "bitwise operation")
-                       , (logicTable, "logical operation")
+                       , (compTable', "comparative expression")
+                       , (bitwiseTable', "bitwise operation")
+                       , (logicTable', "logical operation")
                        ] castExpression <?> "constant expression"
 
   assignTable = 
