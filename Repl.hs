@@ -5,10 +5,10 @@ module Main where
   import Semantics.C
   import Data.Generics
   import Data.Generics.Zipper
-  import Language.Pony.CheckMalloc
+  import Language.Pony.SeparateDeclarations
   import System.IO.Unsafe
   
-  prog = "int main() { char *buffer = malloc(sizeof(char) * 4096); char* otherbuffer; otherbuffer = malloc(2049); return 0;}"
+  prog = "int main() { int x = 5; dosomething(); int y = 10; somethingElse(); return 0;}"
   
   ast = parseUnsafe functionDefinition prog
   
