@@ -37,29 +37,34 @@ module Main where
         &= argPos 0 
   } &= program "pony"
     &= summary "pony 0.0.2, (c) George Washington University 2010-2011"
+    
   
-  getOperators :: (MonadError CPError m, MonadIO m) => FilePath -> String -> m [Field]
-  getOperators [] _ = return []
-  getOperators ponyproj name = do
-    cp <- join $ liftIO $ readfile emptyCP ponyproj
-    arith <- get cp "operators" name
-    case (parseCSV ponyproj (arith :: String)) of
-      (Left e) -> throwError (ParseError (show e), "in CSV parsing")
-      (Right csv) -> return $ head csv
-  
-  parsePony :: PonyOptions -> IO ()
-  parsePony PonyOptions { output, input, ponyproj } = do
-    ar <- runErrorT $ getOperators ponyproj "arithmetic"
-    co <- runErrorT $ getOperators ponyproj "comparative"
-    bw <- runErrorT $ getOperators ponyproj "bitwise"
-    lo <- runErrorT $ getOperators ponyproj "logical"
-    let inrnls = Internals { 
+  getInternals [] = return emptyInternals
+  getInternals ponyproj = do
+    cp' <- runErrorT $ join $ liftIO $ readfile emptyCP ponyproj
+    let cp = either (const emptyCP) id cp'
+    ar <- runErrorT $ getOperators cp "arithmetic"
+    co <- runErrorT $ getOperators cp "comparative"
+    bw <- runErrorT $ getOperators cp "bitwise"
+    lo <- runErrorT $ getOperators cp "logical"
+    return Internals { 
         typedefs = []
       , arithmeticOps = either (const []) id ar
       , comparativeOps = either (const []) id co
       , bitwiseOps = either (const []) id bw
       , logicalOps = either (const []) id lo
       }
+  
+  getOperators :: (MonadError CPError m, MonadIO m) => ConfigParser -> String -> m [Field]
+  getOperators cp name = do
+    arith <- get cp "operators" name
+    case (parseCSV ".ponyproj" (arith :: String)) of
+      (Left e) -> throwError (ParseError (show e), "in CSV parsing")
+      (Right csv) -> return $ head csv
+  
+  parsePony :: PonyOptions -> IO ()
+  parsePony PonyOptions { output, input, ponyproj } = do
+    inrnls <- getInternals ponyproj
     result <- preprocessAndParse preprocessedC input inrnls
     case result of
       (Left parseError) -> writeFile output (show parseError)
