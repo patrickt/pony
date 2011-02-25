@@ -5,6 +5,12 @@ module Language.Pony.SeparateDeclarations where
   import Semantics.C
   import Semantics.C.Nodes
   
+  declare :: String -> SType -> SLocal
+  declare n t = LDeclaration (Variable n t Nothing)
+  
+  (.=.) :: Expression -> Expression -> SLocal
+  a .=. b = LStatement $ ExpressionS (Binary a "=" b)
+  
   partitionLocals :: [SLocal] -> ([SLocal], [SLocal])
   partitionLocals ls = partition ls ([], []) 
     where 
@@ -14,8 +20,8 @@ module Language.Pony.SeparateDeclarations where
       partition (s@(LStatement st) : rest) (a, b) = 
         partition rest (a, b ++ [s])
       partition (d@(LDeclaration (Variable n t (Just e))) : rest) (a,b) =
-        partition rest (a ++ [LDeclaration (Variable n t Nothing)], 
-                        b ++ [LStatement (ExpressionS (Binary (Ident n) "=" e))])
+        partition rest (a ++ [declare n t], 
+                        b ++ [((Ident n) .=. e)])
   
   
   separate :: [SLocal] -> [SLocal]
