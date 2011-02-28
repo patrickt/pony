@@ -8,7 +8,7 @@ module Main where
   import Semantics.C
   import Data.Generics
   import Data.Generics.Zipper
-  import Language.Pony.SeparateDeclarations
+  import Language.Pony.Transformation
   import System.IO.Unsafe
   
   prog = "int main() { int x = 5; dosomething(); int y = 10; somethingElse(); return 0;}"

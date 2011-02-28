@@ -9,12 +9,12 @@ module Main where
   import System.Environment
   import Text.CSV
   import Text.Printf
-  import Language.Pony.CheckMalloc
-  import Language.Pony.LogicalShift
+  import Language.Pony.Transformation
   
   -- TODO: allow for multiple inputs (input :: [FilePath])
   data PonyOptions = PonyOptions {
     output :: FilePath,
+    trans :: String,
     ponyproj :: FilePath,
     input :: FilePath
   } deriving (Show, Typeable, Data)
@@ -31,6 +31,11 @@ module Main where
         &= typFile
         &= help ".ponyproj file that specifies syntactic extensions"
         &= opt "project",
+    trans = 
+      ""
+        &= typ "transformation name"
+        &= help "name of the transformation you want to apply"
+        &= opt "trans",
     input = 
       def 
         &= typFile
@@ -63,14 +68,16 @@ module Main where
       (Right csv) -> return $ head csv
   
   parsePony :: PonyOptions -> IO ()
-  parsePony PonyOptions { output, input, ponyproj } = do
+  parsePony PonyOptions { output, input, trans, ponyproj } = do
     inrnls <- getInternals ponyproj
     result <- preprocessAndParse preprocessedC input inrnls
     case result of
       (Left parseError) -> writeFile output (show parseError)
       Right externs -> do
         let converted = convert externs
-        let transformed = everywhere (checkMalloc `extT` convertLogicalShift) converted
+        print trans
+        let (MkTrans n t) = read trans :: Transformation
+        let transformed = everywhere t converted
         writeFile output (show $ pretty transformed)
     
   main :: IO ()
