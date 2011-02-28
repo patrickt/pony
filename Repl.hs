@@ -1,7 +1,10 @@
+{-# LANGUAGE RankNTypes, TypeOperators, DeriveDataTypeable #-}
+
 module Main where
   
-  import Text.Parsec hiding (parseTest)
+  import Text.Parsec hiding (parseTest, (<|>))
   import Language.C
+  import Language.C.Lexer as L
   import Semantics.C
   import Data.Generics
   import Data.Generics.Zipper
@@ -15,3 +18,11 @@ module Main where
   st = convertFunction ast
   
   pr = pretty st
+  
+  data Hello = MkHello deriving (Eq, Typeable, Data, Show)
+  
+  parseHello :: Parser Hello
+  parseHello = pure MkHello <* L.symbol "hello"
+
+  expression' :: Parser (Hello :+: CExpr)
+  expression' = Inl <$> parseHello <|> Inr <$> expression
