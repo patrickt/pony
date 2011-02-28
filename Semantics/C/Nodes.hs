@@ -58,6 +58,7 @@ module Semantics.C.Nodes where
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
     | Typedef Name SType [Attribute]
+    | SBuiltinType Name [Attribute]
     deriving (Show, Eq, Typeable, Data)
   
   setAttributes :: SType -> [Attribute] -> SType
@@ -70,6 +71,7 @@ module Semantics.C.Nodes where
   setAttributes (SComposite i _) a = SComposite i a
   setAttributes (SEnum i _) a = SEnum i a
   setAttributes (Typedef n t _) a = Typedef n t a
+  setAttributes (SBuiltinType n _) a = SBuiltinType n a
     
   instance Pretty SType where
     pretty (SVoid _) = text "void"
@@ -79,10 +81,12 @@ module Semantics.C.Nodes where
     pretty (SFloat FLongDouble _) = text "long double"
     pretty (SChar signedness _) = text "char"
     pretty (SPointerTo t _) = pretty t <+> text "*"
-    pretty (SArray t mE _) = pretty t <> text "[]"
-    pretty (SComposite _ _) = pretty "FIXME"
+    pretty (SArray t Nothing _) = pretty t <> text "[]"
+    pretty (SArray t (Just e) _) = pretty t <> (brackets $ pretty e)
+    pretty (SComposite i _) = pretty i
     pretty (SEnum i _) = pretty i
     pretty (Typedef s _ _) = text s
+    pretty (SBuiltinType n _) = text n
   
   data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
     deriving (Show, Eq, Typeable, Data)
@@ -97,6 +101,17 @@ module Semantics.C.Nodes where
   
   data CompositeInfo = CompositeInfo Bool (Maybe Name) [SField]
     deriving (Show, Eq, Typeable, Data)
+  
+  instance Pretty CompositeInfo where
+    pretty (CompositeInfo True (Just n) fields) = 
+      text "struct" <+> text n $+$ braces (vcat $ pretty <$> fields)
+    pretty (CompositeInfo True Nothing fields) =
+      text "struct " $+$ braces (vcat $ pretty <$> fields)
+    pretty (CompositeInfo False (Just n) fields) = 
+      text "union" <+> text n $+$ braces (vcat $ pretty <$> fields)
+    pretty (CompositeInfo False Nothing fields) =
+      text "union " $+$ braces (vcat $ pretty <$> fields)
+  
   
   data SField = SField Name SType (Maybe Expression)
     deriving (Show, Eq, Typeable, Data)

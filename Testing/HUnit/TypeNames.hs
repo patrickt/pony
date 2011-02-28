@@ -10,7 +10,7 @@ module Testing.HUnit.TypeNames
   import Data.Maybe (fromJust)
   
   tests :: [Test]
-  tests = [ testCase "whatever" testRestrictPtrToConstPtrToInt ]
+  tests = [ testCase "const int * const * restrict => restrict pointer to const pointer to const int" testRestrictPtrToConstPtrToInt ]
     
   testRestrictPtrToConstPtrToInt :: Assertion
   testRestrictPtrToConstPtrToInt = assertEqual "whatever" theory practice where

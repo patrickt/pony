@@ -16,6 +16,7 @@ module Semantics.C.Conversions where
     convert = concatMap convert' where
       convert' :: CExternal -> [SGlobal]
       convert' (FunctionDecl f) = GFunction <$> [convert f]
+      -- TODO: For the love of god, turn this into pattern matching
       convert' (ExternDecl d) =
         if declarationIsTypedef d
           then [GTypedef (fromJust $ nameOfDeclaration d) (fromJust $ convertDeclarationToType $ dropTypedef d)]
@@ -152,6 +153,7 @@ module Semantics.C.Conversions where
     convert [TLong, TInt]                   = longSignedInt
     convert [TSigned, TLong, TInt]          = longSignedInt
     convert [TUnsigned, TLong]              = longUnsignedInt
+    convert [TLong, TUnsigned, TInt]        = longUnsignedInt
     convert [TUnsigned, TLong, TInt]        = longUnsignedInt
     convert [TLong, TLong]                  = longLongSignedInt
     convert [TSigned, TLong, TLong]         = longLongSignedInt
@@ -166,6 +168,7 @@ module Semantics.C.Conversions where
     convert [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
     convert [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
     convert [TTypedef n d]                  = Typedef n (fromJust $ convertDeclarationToType d) []
+    convert [TBuiltin s]                    = SBuiltinType s []
     convert other                           = error ("unknown type " ++ show other)
   
   -- FIXME: ignoring attributes here
@@ -186,7 +189,7 @@ module Semantics.C.Conversions where
   
   -- TODO: We're leaving storage specifiers out here, those should be included too.
   convertComponents :: [Specifier] -> CDeclarator -> SType
-  convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convert typeSpecs) (storageAttrs ++ qualAttrs)) (derivedPartsOfDeclarator decl) where
+  convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convert typeSpecs) (storageAttrs ++ qualAttrs)) (reverse $ derivedPartsOfDeclarator decl) where
     storageAttrs = convert <$> storageSpecs
     qualAttrs = convert <$> typeQuals
     (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
