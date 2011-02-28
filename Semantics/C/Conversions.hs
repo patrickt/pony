@@ -16,7 +16,10 @@ module Semantics.C.Conversions where
     convert = concatMap convert' where
       convert' :: CExternal -> [SGlobal]
       convert' (FunctionDecl f) = GFunction <$> [convert f]
-      convert' (ExternDecl d) = GVariable <$> convertDeclarationToVariables d
+      convert' (ExternDecl d) =
+        if declarationIsTypedef d
+          then [GTypedef (fromJust $ nameOfDeclaration d) (fromJust $ convertDeclarationToType $ dropTypedef d)]
+          else GVariable <$> convertDeclarationToVariables d
 
   instance Syntax CFunction SFunction where
     convert f@(CFunction spec decl (CompoundStmt body)) =
@@ -162,7 +165,7 @@ module Semantics.C.Conversions where
     convert [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
     convert [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
     convert [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
-    convert [TTypedef _ _]                  = error "typedefs undefined"
+    convert [TTypedef n d]                  = Typedef n (fromJust $ convertDeclarationToType d) []
     convert other                           = error ("unknown type " ++ show other)
   
   -- FIXME: ignoring attributes here

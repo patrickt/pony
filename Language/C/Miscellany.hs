@@ -5,6 +5,17 @@ module Language.C.Miscellany where
   fst3 :: (a, b, c) -> a
   fst3 (a, _, _) = a
   
+  declarationIsTypedef :: CDeclaration -> Bool
+  declarationIsTypedef (CDeclaration (SSpec STypedef : rest) _) = True
+  declarationIsTypedef _ = False
+  
+  nameOfDeclaration :: CDeclaration -> Maybe String
+  nameOfDeclaration (CDeclaration _ [(Just d, _, _)]) = nameOfDeclarator d
+  nameOfDeclaration _ = Nothing
+  
+  dropTypedef :: CDeclaration -> CDeclaration
+  dropTypedef (CDeclaration (SSpec STypedef : rest) it) = CDeclaration rest it
+  
   nameOfDeclarator :: CDeclarator -> Maybe String
   nameOfDeclarator (CDeclarator s _ _ _) = s
   

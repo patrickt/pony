@@ -11,9 +11,9 @@ module Main where
   import Language.Pony.Transformation
   import System.IO.Unsafe
   
-  prog = "int main() { int x = 5; dosomething(); int y = 10; somethingElse(); return 0;}"
+  prog = "typedef int rune_t;"
   
-  ast = parseUnsafe functionDefinition prog
+  ast = parseUnsafe preprocessedC prog
   
   st = convert ast
   

@@ -57,7 +57,7 @@ module Semantics.C.Nodes where
     | SArray SType (Maybe Expression) [Attribute] 
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
-    | STypedef String [Attribute]
+    | Typedef Name SType [Attribute]
     deriving (Show, Eq, Typeable, Data)
   
   setAttributes :: SType -> [Attribute] -> SType
@@ -69,11 +69,11 @@ module Semantics.C.Nodes where
   setAttributes (SArray t e _) a = SArray t e a
   setAttributes (SComposite i _) a = SComposite i a
   setAttributes (SEnum i _) a = SEnum i a
-  setAttributes (STypedef n _) a = STypedef n a
+  setAttributes (Typedef n t _) a = Typedef n t a
     
   instance Pretty SType where
     pretty (SVoid _) = text "void"
-    pretty (SInt (IntegerFlags s w) _) = pretty s <> text "int" <> pretty w
+    pretty (SInt (IntegerFlags s w) _) = pretty s <> text "int" <> pretty w <> text "_t"
     pretty (SFloat FFloat _) = text "float"
     pretty (SFloat FDouble _) = text "double"
     pretty (SFloat FLongDouble _) = text "long double"
@@ -82,7 +82,7 @@ module Semantics.C.Nodes where
     pretty (SArray t mE _) = pretty t <> text "[]"
     pretty (SComposite _ _) = pretty "FIXME"
     pretty (SEnum i _) = pretty i
-    pretty (STypedef s _) = text s
+    pretty (Typedef s _ _) = text s
   
   data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
     deriving (Show, Eq, Typeable, Data)
@@ -232,6 +232,7 @@ module Semantics.C.Nodes where
   instance Pretty SGlobal where
     pretty (GFunction g) = pretty g
     pretty (GVariable v) = pretty v
+    pretty (GTypedef n t) = text "typedef" <+> pretty t <+> pretty n <> semicolon
     pretty _ = pretty "FIXME"
   
   type Program = [SGlobal]

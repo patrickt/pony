@@ -12,7 +12,7 @@ module Language.Pony.StringConcat where
   
   checkForConcatenation :: SLocal -> [SLocal]
   checkForConcatenation (LStatement (ExpressionS (Binary (Ident a) "=" (Binary (Ident l) "<+>" (Ident r))))) = 
-    [ LDeclaration (Variable "needed_size" (STypedef "size_t" []) 
+    [ LDeclaration (Variable "needed_size" (Typedef "size_t" unsignedInt []) 
         (Just (Binary (strlen l) "+" (strlen r))))
     , malloc a (Ident "needed_size")
     , strlcpy (Ident a) (Ident l) (Ident "needed_size")
