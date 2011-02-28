@@ -75,7 +75,6 @@ module Main where
       (Left parseError) -> writeFile output (show parseError)
       Right externs -> do
         let converted = convert externs
-        print trans
         let (MkTrans n t) = read trans :: Transformation
         let transformed = everywhere t converted
         writeFile output (show $ pretty transformed)

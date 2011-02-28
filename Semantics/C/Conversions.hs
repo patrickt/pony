@@ -162,7 +162,7 @@ module Semantics.C.Conversions where
     convert [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
     convert [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
     convert [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
-    convert [TTypedef _ _]                  = undefined
+    convert [TTypedef _ _]                  = error "typedefs undefined"
     convert other                           = error ("unknown type " ++ show other)
   
   -- FIXME: ignoring attributes here
@@ -171,7 +171,7 @@ module Semantics.C.Conversions where
   
   -- FIXME: this won't work if there's more than one declarator per declaration
   convertDeclarationToField :: CDeclaration -> SField
-  convertDeclarationToField = undefined
+  convertDeclarationToField d@(CDeclaration _ [((Just decl), _, size)]) = SField (fromJust $ nameOfDeclarator decl) (fromJust $ convertDeclarationToType d) (convert <$> size)
   
   -- FIXME: increasing doesn't work in the case of {FOO, BAR=5, BAZ} (baz should == 6)
   convertEnumeration :: [Enumerator] -> [(Name, Expression)]
