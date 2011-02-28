@@ -38,7 +38,11 @@ Executable pony
                        NamedFieldPuns,
                        Rank2Types,
                        FlexibleContexts,
-                       TypeSynonymInstances
+                       TypeSynonymInstances,
+                       MultiParamTypeClasses,
+                       TypeOperators,
+                       FunctionalDependencies,
+                       FlexibleInstances
   
   Build-depends:       base >= 4.2 && < 5,
                        cmdargs == 0.6.1, 

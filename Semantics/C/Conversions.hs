@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, FlexibleInstances #-}
+
 module Semantics.C.Conversions where
   
   import Language.C.Parser
@@ -7,90 +9,98 @@ module Semantics.C.Conversions where
   import Data.Maybe
   import Data.List (find)
   
-  convertTranslationUnit :: CTranslationUnit -> Program
-  convertTranslationUnit = concatMap convert where
-    convert :: CExternal -> [SGlobal]
-    convert (FunctionDecl f) = GFunction <$> [convertFunction f]
-    convert (ExternDecl d) = GVariable <$> convertDeclarationToVariables d
+  class Syntax abstract semantic | abstract -> semantic where
+    convert :: abstract -> semantic
+    
+  instance Syntax CTranslationUnit Program where
+    convert = concatMap convert' where
+      convert' :: CExternal -> [SGlobal]
+      convert' (FunctionDecl f) = GFunction <$> [convert f]
+      convert' (ExternDecl d) = GVariable <$> convertDeclarationToVariables d
+
+  instance Syntax CFunction SFunction where
+    convert f@(CFunction spec decl (CompoundStmt body)) =
+      let ftype = returnTypeOfFunction f
+          name = fromJust $ nameOfDeclarator decl
+          args = convertFunctionArguments decl
+          newBody = body >>= convert
+          in SFunction ftype name args newBody (isFunctionVariadic f)
   
-  convertFunction :: CFunction -> SFunction
-  convertFunction f@(CFunction spec decl (CompoundStmt body)) = 
-    let ftype = returnTypeOfFunction f
-        name = fromJust $ nameOfDeclarator decl
-        args = convertFunctionArguments decl
-        newBody = concatMap convertBlockItem body
-        in SFunction ftype name args newBody (isFunctionVariadic f)
+  instance Syntax BlockItem FunctionBody where
+    convert (Left declaration) = LDeclaration <$> convertDeclarationToVariables declaration
+    convert (Right statement) = LStatement <$> [convert statement]
   
-  convertBlockItem :: BlockItem -> [SLocal]
-  convertBlockItem (Left  declaration) = LDeclaration <$> convertDeclarationToVariables declaration 
-  convertBlockItem (Right statement) = LStatement <$> [convertStatement statement]
-  
-  convertStatement :: CStatement -> Statement
-  convertStatement BreakStmt            = Break
-  convertStatement (CaseStmt ex st)     = Case (convertExpression ex) (convertStatement st)
-  convertStatement (CompoundStmt bis)   = Compound (convertBlockItem `concatMap` bis)
-  convertStatement ContinueStmt         = Continue
-  convertStatement (DefaultStmt st)     = Default (convertStatement st)
-  convertStatement (DoWhileStmt st ex)  = DoWhile (convertStatement st) (convertExpression ex)
-  convertStatement EmptyStmt            = EmptyS
-  convertStatement (ExpressionStmt ex)  = ExpressionS (convertExpression ex)
-  convertStatement (ForStmt e1 e2 e3 s) = For 
-    (convertExpressionToLocal <$> e1)
-    (convertExpression <$> e2)
-    (convertExpression <$> e3)
-    (convertStatement s) 
-  convertStatement (ForDeclStmt d e2 e3 s) = For
-    (convertDeclarationToLocal d)
-    (convertExpression <$> e2)
-    (convertExpression <$> e3)
-    (convertStatement s)
-  convertStatement (GotoStmt s)            = GoTo s
-  convertStatement (IfStmt e s mS)         = case mS of
-    (Just s') -> IfThenElse (convertExpression e) (convertStatement s) (convertStatement s')
-    Nothing -> IfThen (convertExpression e) (convertStatement s)
-  convertStatement (LabeledStmt l attrs s) = Labeled l (convertAttribute <$> attrs) (convertStatement s)
-  convertStatement (ReturnStmt mE)         = Return (convertExpression <$> mE)
-  convertStatement (SwitchStmt ex st)      = Switch (convertExpression ex) (convertStatement st)
-  convertStatement (WhileStmt ex st)       = While (convertExpression ex) (convertStatement st)
+  instance Syntax CStatement Statement where
+    convert BreakStmt = Break
+    convert (CaseStmt ex st) = Case (convertExpression ex) (convert st)
+    convert (CompoundStmt bis) = Compound (bis >>= convert)
+    convert ContinueStmt = Continue
+    convert (DefaultStmt st) = Default (convert st)
+    convert EmptyStmt = EmptyS
+    convert (ExpressionStmt ex) = ExpressionS (convert ex)
+    convert (ForStmt e1 e2 e3 s) = For 
+      (convertExpressionToLocal <$> e1)
+      (convert <$> e2)
+      (convert <$> e3)
+      (convert s)
+    convert (ForDeclStmt d e2 e3 s) = For
+      (convertDeclarationToLocal d)
+      (convert <$> e2)
+      (convert <$> e3)
+      (convert s)
+    convert (GotoStmt s) = GoTo s
+    convert (IfStmt e s mS) = case mS of
+      (Just s') -> IfThenElse (convert e) (convert s) (convert s')
+      Nothing -> IfThen (convertExpression e) (convert s)
+    convert (LabeledStmt l attrs s) = Labeled l (convertAttribute <$> attrs) (convert s)
+    convert (ReturnStmt mE) = Return (convert <$> mE)
+    convert (SwitchStmt ex st) = Switch (convert ex) (convert st)
+    convert (WhileStmt ex st) = While (convert ex) (convert st)
   
   convertExpressionToLocal :: CExpr -> SLocal
-  convertExpressionToLocal e = LStatement $ ExpressionS $ convertExpression e
+  convertExpressionToLocal e = LStatement $ ExpressionS $ convert e
   
   convertDeclarationToLocal :: CDeclaration -> Maybe SLocal
   convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
   
-  convertExpression :: CExpr -> Expression
-  convertExpression (Constant l) = Literal l
-  convertExpression (Identifier i) = Ident i
-  convertExpression (Index l r) = Brackets (convertExpression l) (convertExpression r)
-  convertExpression (Call f args) = FunctionCall (convertExpression f) (convertExpression <$> args)
-  convertExpression (Language.C.AST.Cast decl arg) = Semantics.C.Nodes.Cast (fromJust $ convertDeclarationToType decl) (convertExpression arg)
-  convertExpression (UnaryOp n arg) = Unary n (convertExpression arg)
-  convertExpression (BinaryOp n lhs rhs) = Binary (convertExpression lhs) n (convertExpression rhs)
-  convertExpression (TernaryOp a b c) = Ternary (convertExpression a) (convertExpression b) (convertExpression c)
-  convertExpression (SizeOfType decl) = SizeOfSType (fromJust $ convertDeclarationToType decl)
-  convertExpression (CBuiltin t) = Builtin t
+  instance Syntax CExpr Expression where
+    convert (Constant l) = Literal l
+    convert (Identifier i) = Ident i
+    convert (Index l r) = Brackets (convert l) (convert r)
+    convert (Call f args) = FunctionCall (convert f) (convert <$> args)
+    convert (Cast decl arg) = SCast (fromJust $ convertDeclarationToType decl) (convert arg)
+    convert (UnaryOp n arg) = Unary n (convert arg)
+    convert (BinaryOp n lhs rhs) = Binary (convert lhs) n (convert rhs)
+    convert (TernaryOp a b c) = Ternary (convert a) (convert b) (convert c)
+    convert (SizeOfType decl) = SizeOfSType (fromJust $ convertDeclarationToType decl)
+    convert (CBuiltin t) = Builtin t
+  
+  convertExpression = convert
   
   convertAttribute :: CAttribute -> Attribute
   convertAttribute = error "convertAttribute = undefined"
   
-  -- TODO: deal with STypedef and SAttribute [CExpr] here
-  convertStorageSpecifiers :: StorageSpecifier -> Attribute
-  convertStorageSpecifiers SAuto     = Auto
-  convertStorageSpecifiers SRegister = Register
-  convertStorageSpecifiers SStatic   = Static
-  convertStorageSpecifiers SExtern   = Extern
+  instance Syntax StorageSpecifier Attribute where
+    convert SAuto = Auto
+    convert SRegister = Register
+    convert SStatic   = Static
+    convert SExtern   = Extern
+    
+  instance Syntax TypeQualifier Attribute where
+    convert QConst    = Const
+    convert QRestrict = Restrict
+    convert QVolatile = Volatile
   
-  convertTypeQualifiers :: TypeQualifier -> Attribute
-  convertTypeQualifiers QConst    = Const
-  convertTypeQualifiers QRestrict = Restrict
-  convertTypeQualifiers QVolatile = Volatile
   
   -- TODO: remember to put in the array size when I have a handle on expressions
   convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
-  convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convertTypeQualifiers qs)
-  convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convertTypeQualifiers qs)
+  convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
+  convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convert qs)
   convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t (concatMap convertDeclarationToVariables args) []
+  
+  instance Syntax CDeclaration (Maybe SType) where
+    convert (CDeclaration specs [(Just declr, Nothing, Nothing)]) = Just (convertComponents specs declr)
+    convert _ = Nothing
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
   convertDeclarationToType (CDeclaration specs [(Just declr, Nothing, Nothing)]) = Just (convertComponents specs declr)
@@ -117,43 +127,43 @@ module Semantics.C.Conversions where
   -- TODO: Finish composite types, enumerations, and typedefs
   -- TOOD: Fill in the attributes for structs and enums
   -- This is where type aliases go, as defined in C99, 6.7.2.2
-  convertTypeSpecifiers :: [TypeSpecifier] -> SType
-  convertTypeSpecifiers [TVoid]                         = void
-  convertTypeSpecifiers [TChar]                         = signedChar
-  convertTypeSpecifiers [TSigned, TChar]                = signedChar
-  convertTypeSpecifiers [TUnsigned, TChar]              = unsignedChar
-  convertTypeSpecifiers [TShort]                        = shortSignedInt
-  convertTypeSpecifiers [TSigned, TShort]               = shortSignedInt
-  convertTypeSpecifiers [TShort, TInt]                  = shortSignedInt
-  convertTypeSpecifiers [TSigned, TShort, TInt]         = shortSignedInt
-  convertTypeSpecifiers [TBool]                         = shortSignedInt
-  convertTypeSpecifiers [TUnsigned, TShort]             = shortUnsignedInt
-  convertTypeSpecifiers [TUnsigned, TShort, TInt]       = shortUnsignedInt
-  convertTypeSpecifiers [TInt]                          = signedInt
-  convertTypeSpecifiers [TSigned]                       = signedInt
-  convertTypeSpecifiers [TSigned, TInt]                 = signedInt
-  convertTypeSpecifiers [TUnsigned]                     = unsignedInt
-  convertTypeSpecifiers [TUnsigned, TInt]               = unsignedInt
-  convertTypeSpecifiers [TLong]                         = longSignedInt
-  convertTypeSpecifiers [TSigned, TLong]                = longSignedInt
-  convertTypeSpecifiers [TLong, TInt]                   = longSignedInt
-  convertTypeSpecifiers [TSigned, TLong, TInt]          = longSignedInt
-  convertTypeSpecifiers [TUnsigned, TLong]              = longUnsignedInt
-  convertTypeSpecifiers [TUnsigned, TLong, TInt]        = longUnsignedInt
-  convertTypeSpecifiers [TLong, TLong]                  = longLongSignedInt
-  convertTypeSpecifiers [TSigned, TLong, TLong]         = longLongSignedInt
-  convertTypeSpecifiers [TLong, TLong, TInt]            = longLongSignedInt
-  convertTypeSpecifiers [TSigned, TLong, TLong, TInt]   = longLongSignedInt
-  convertTypeSpecifiers [TUnsigned, TLong, TLong]       = longLongSignedInt
-  convertTypeSpecifiers [TUnsigned, TLong, TLong, TInt] = longLongSignedInt
-  convertTypeSpecifiers [TFloat]                        = float
-  convertTypeSpecifiers [TDouble]                       = double
-  convertTypeSpecifiers [TLong, TDouble]                = longDouble
-  convertTypeSpecifiers [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
-  convertTypeSpecifiers [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
-  convertTypeSpecifiers [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
-  convertTypeSpecifiers [TTypedef _ _]                  = undefined
-  convertTypeSpecifiers other                           = error ("unknown type " ++ show other)
+  instance Syntax [TypeSpecifier] SType where
+    convert [TVoid]                         = void
+    convert [TChar]                         = signedChar
+    convert [TSigned, TChar]                = signedChar
+    convert [TUnsigned, TChar]              = unsignedChar
+    convert [TShort]                        = shortSignedInt
+    convert [TSigned, TShort]               = shortSignedInt
+    convert [TShort, TInt]                  = shortSignedInt
+    convert [TSigned, TShort, TInt]         = shortSignedInt
+    convert [TBool]                         = shortSignedInt
+    convert [TUnsigned, TShort]             = shortUnsignedInt
+    convert [TUnsigned, TShort, TInt]       = shortUnsignedInt
+    convert [TInt]                          = signedInt
+    convert [TSigned]                       = signedInt
+    convert [TSigned, TInt]                 = signedInt
+    convert [TUnsigned]                     = unsignedInt
+    convert [TUnsigned, TInt]               = unsignedInt
+    convert [TLong]                         = longSignedInt
+    convert [TSigned, TLong]                = longSignedInt
+    convert [TLong, TInt]                   = longSignedInt
+    convert [TSigned, TLong, TInt]          = longSignedInt
+    convert [TUnsigned, TLong]              = longUnsignedInt
+    convert [TUnsigned, TLong, TInt]        = longUnsignedInt
+    convert [TLong, TLong]                  = longLongSignedInt
+    convert [TSigned, TLong, TLong]         = longLongSignedInt
+    convert [TLong, TLong, TInt]            = longLongSignedInt
+    convert [TSigned, TLong, TLong, TInt]   = longLongSignedInt
+    convert [TUnsigned, TLong, TLong]       = longLongSignedInt
+    convert [TUnsigned, TLong, TLong, TInt] = longLongSignedInt
+    convert [TFloat]                        = float
+    convert [TDouble]                       = double
+    convert [TLong, TDouble]                = longDouble
+    convert [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
+    convert [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
+    convert [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
+    convert [TTypedef _ _]                  = undefined
+    convert other                           = error ("unknown type " ++ show other)
   
   -- FIXME: ignoring attributes here
   convertComposite :: TypeSpecifier -> CompositeInfo
@@ -173,9 +183,9 @@ module Semantics.C.Conversions where
   
   -- TODO: We're leaving storage specifiers out here, those should be included too.
   convertComponents :: [Specifier] -> CDeclarator -> SType
-  convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convertTypeSpecifiers typeSpecs) (storageAttrs ++ qualAttrs)) (derivedPartsOfDeclarator decl) where
-    storageAttrs = convertStorageSpecifiers <$> storageSpecs
-    qualAttrs = convertTypeQualifiers <$> typeQuals
+  convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convert typeSpecs) (storageAttrs ++ qualAttrs)) (derivedPartsOfDeclarator decl) where
+    storageAttrs = convert <$> storageSpecs
+    qualAttrs = convert <$> typeQuals
     (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
     
   -- This is an easy conversion; all that is necessary is to drop the last

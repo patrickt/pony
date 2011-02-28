@@ -90,6 +90,8 @@ module Semantics.C.Nodes where
         values = vcat $ map pretty' vals
         pretty' (n, e) = text n <+> equals <+> pretty e
   
+  -- use Either instead of a Bool here.
+  
   data CompositeInfo = CompositeInfo Bool (Maybe Name) [SField]
     deriving (Show, Eq, Typeable, Data)
   
@@ -149,7 +151,7 @@ module Semantics.C.Nodes where
     | Ident Name
     | Brackets Expression Expression
     | FunctionCall Expression [Expression]
-    | Cast SType Expression
+    | SCast SType Expression
     | Unary Name Expression
     | Binary Expression Name Expression
     | Ternary Expression Expression Expression
@@ -168,7 +170,7 @@ module Semantics.C.Nodes where
     pretty (Ident n) = text n
     pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
     pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
-    pretty (Cast t e) = parens $ pretty t <> pretty e
+    pretty (SCast t e) = parens $ pretty t <> pretty e
     pretty (Unary n e) = text n <> pretty e
     pretty (Binary lhs op rhs) = parens $ pretty lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
@@ -214,6 +216,7 @@ module Semantics.C.Nodes where
     pretty (LStatement s) = pretty s <> semicolon
     pretty (LDeclaration d) = pretty d <> semicolon
   
+  type FunctionBody = [SLocal]
   
   data SGlobal
     = GFunction SFunction

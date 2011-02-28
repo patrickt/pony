@@ -15,14 +15,7 @@ module Main where
   
   ast = parseUnsafe functionDefinition prog
   
-  st = convertFunction ast
+  st = convert ast
   
   pr = pretty st
   
-  data Hello = MkHello deriving (Eq, Typeable, Data, Show)
-  
-  parseHello :: Parser Hello
-  parseHello = pure MkHello <* L.symbol "hello"
-
-  expression' :: Parser (Hello :+: CExpr)
-  expression' = Inl <$> parseHello <|> Inr <$> expression

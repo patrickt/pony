@@ -69,7 +69,7 @@ module Main where
     case result of
       (Left parseError) -> writeFile output (show parseError)
       Right externs -> do
-        let converted = convertTranslationUnit externs
+        let converted = convert externs
         let transformed = everywhere (checkMalloc `extT` convertLogicalShift) converted
         writeFile output (show $ pretty transformed)
     
