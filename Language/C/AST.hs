@@ -154,6 +154,11 @@ module Language.C.AST
     = CDeclaration [Specifier] [(Maybe CDeclarator, Maybe Initializer, Maybe CExpr)]
     deriving (Eq, Show, Typeable, Data)
     
+  newtype TypeName    = TypeName CDeclaration deriving (Show, Eq, Typeable, Data)
+  newtype Parameter   = Parameter CDeclaration deriving (Show, Eq, Typeable, Data)
+  newtype VarDecl     = VarDecl CDeclaration deriving (Show, Eq, Typeable, Data)
+  newtype StructField = StructField CDeclaration deriving (Show, Eq, Typeable, Data)
+    
   type AsmName = Maybe String
   
   -- | C declarators, both abstract and concrete (C99 6.7.5 and 6.7.6).
@@ -173,4 +178,3 @@ module Language.C.AST
    | Array [TypeQualifier] (Maybe CExpr)
    | Function [CDeclaration] Bool
    deriving (Eq, Show, Typeable, Data)
-   
