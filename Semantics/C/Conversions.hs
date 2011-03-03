@@ -1,4 +1,5 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, FlexibleInstances, NamedFieldPuns #-}
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, 
+  TypeSynonymInstances, FlexibleInstances, NamedFieldPuns, RecordWildCards #-}
 
 module Semantics.C.Conversions where
   
@@ -72,11 +73,11 @@ module Semantics.C.Conversions where
     convert (Identifier i) = Ident i
     convert (Index l r) = Brackets (convert l) (convert r)
     convert (Call f args) = FunctionCall (convert f) (convert <$> args)
-    convert (Cast decl arg) = SCast (fromJust $ convertDeclarationToType decl) (convert arg)
+    convert (Cast tn arg) = SCast (convert tn) (convert arg)
     convert (UnaryOp n arg) = Unary n (convert arg)
     convert (BinaryOp n lhs rhs) = Binary (convert lhs) n (convert rhs)
     convert (TernaryOp a b c) = Ternary (convert a) (convert b) (convert c)
-    convert (SizeOfType decl) = SizeOfSType (fromJust $ convertDeclarationToType decl)
+    convert (SizeOfType decl) = SizeOfSType (convert decl)
     convert (CBuiltin t) = Builtin t
   
   convertExpression = convert
@@ -101,10 +102,9 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
   convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convert qs)
   convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t [] []
-  
-  instance Syntax CDeclaration (Maybe SType) where
-    convert (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
-    convert _ = Nothing
+    
+  instance Syntax CTypeName SType where
+    convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = convertComponents specs decl
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
   convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))

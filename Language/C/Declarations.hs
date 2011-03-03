@@ -44,9 +44,9 @@ where
   parameter = pure declaration <*> some specifier <*> declarator where
     declaration s d = CDeclaration s [DeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
   
-  typeName :: Parser CDeclaration
+  typeName :: Parser CTypeName
   typeName = pure declaration <*> some specifier <*> optional declarator where
-    declaration s d = CDeclaration s [DeclInfo {contents = d, initVal = Nothing, size = Nothing}]
+    declaration s d = CTypeName $ CDeclaration s [DeclInfo {contents = d, initVal = Nothing, size = Nothing}]
   
   func :: Parser DerivedDeclarator
   func = L.parens $ do

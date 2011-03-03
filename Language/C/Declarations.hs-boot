@@ -7,6 +7,6 @@ module Language.C.Declarations where
   
   sizedDeclaration :: Parser CDeclaration
   
-  typeName :: Parser CDeclaration
+  typeName :: Parser CTypeName
   
   declarator :: Parser CDeclarator

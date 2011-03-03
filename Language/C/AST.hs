@@ -58,11 +58,11 @@ module Language.C.AST
     | Identifier String
     | Index CExpr CExpr
     | Call CExpr [CExpr]
-    | Cast CDeclaration CExpr
+    | Cast CTypeName CExpr
     | UnaryOp String CExpr
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr
-    | SizeOfType CDeclaration
+    | SizeOfType CTypeName
     | CBuiltin BuiltinExpr
     deriving (Eq, Show, Typeable, Data)
   
@@ -70,7 +70,7 @@ module Language.C.AST
   -- | GNU/clang built-in functions that are exposed after preprocessing.
   data BuiltinExpr
     -- | Corresponds to @__builtin_va_arg(id, type)@.
-    = BuiltinVaArg CExpr CDeclaration
+    = BuiltinVaArg CExpr CTypeName
     deriving (Eq, Show, Typeable, Data)
   
   -- | C literals.
@@ -160,6 +160,11 @@ module Language.C.AST
   data CDeclaration 
     = CDeclaration [Specifier] [DeclInfo]
     deriving (Eq, Show, Typeable, Data)
+  
+  -- | Represents C type names. These have a number of invariants: there will 
+  -- be at least one specifier, only one @DeclInfo@, which will contain a 
+  -- non-Nothing declarator.
+  newtype CTypeName = CTypeName CDeclaration deriving (Show, Eq, Typeable, Data)
   
   type AsmName = Maybe String
   
