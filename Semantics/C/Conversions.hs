@@ -17,11 +17,11 @@ module Semantics.C.Conversions where
       convert' :: CExternal -> [SGlobal]
       convert' (FunctionDecl f) = GFunction <$> [convert f]
       -- TODO: For the love of god, turn this into pattern matching
-      convert' (ExternDecl d) =
-        if declarationIsTypedef d
-          then [GTypedef (fromJust $ nameOfDeclaration d) (fromJust $ convertDeclarationToType $ dropTypedef d)]
-          else GVariable <$> convertDeclarationToVariables d
-
+      convert' (ExternDecl d) 
+        | declarationIsTypedef d = [GTypedef (fromJust $ nameOfDeclaration d) (fromJust $ convertDeclarationToType $ dropTypedef d)]
+        | declarationIsComposite d = [GComposite $ convertDeclarationToCompositeInfo d]
+        | otherwise = GVariable <$> convertDeclarationToVariables d
+  
   instance Syntax CFunction SFunction where
     convert f@(CFunction spec decl (CompoundStmt body)) =
       let ftype = returnTypeOfFunction f
@@ -100,7 +100,7 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
   convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
   convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convert qs)
-  convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t (concatMap convertDeclarationToVariables args) []
+  convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t [] []
   
   instance Syntax CDeclaration (Maybe SType) where
     convert (CDeclaration specs [(Just declr, Nothing, Nothing)]) = Just (convertComponents specs declr)
@@ -120,6 +120,10 @@ module Semantics.C.Conversions where
   convertDeclarationToVariables (CDeclaration specs tuples) = map convert tuples where
     convert (Just decl, Just (InitExpression e), Nothing) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e))
     convert (Just decl, Nothing, Nothing) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing
+  
+  convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
+  convertDeclarationToCompositeInfo (CDeclaration [TSpec (TStructOrUnion mN isStruct fields _)] _) =
+    CompositeInfo isStruct mN (convertDeclarationToField <$> fields)
   
   convertFunctionArguments :: CDeclarator -> [SVariable]
   convertFunctionArguments (CDeclarator n derived asm attributes) = mapMaybe convertDeclarationToVariable args

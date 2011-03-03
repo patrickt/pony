@@ -9,6 +9,10 @@ module Language.C.Miscellany where
   declarationIsTypedef (CDeclaration (SSpec STypedef : rest) _) = True
   declarationIsTypedef _ = False
   
+  declarationIsComposite :: CDeclaration -> Bool
+  declarationIsComposite (CDeclaration (TSpec (TStructOrUnion _ _ _ _) : rest) _) = True
+  declarationIsComposite _ = False
+  
   nameOfDeclaration :: CDeclaration -> Maybe String
   nameOfDeclaration (CDeclaration _ [(Just d, _, _)]) = nameOfDeclarator d
   nameOfDeclaration _ = Nothing

@@ -11,7 +11,7 @@ module Main where
   import Language.Pony.Transformation
   import System.IO.Unsafe
   
-  prog = "typedef int rune_t;"
+  prog = "struct __darwin_pthread_handler_rec { void (*__routine)(void *); void *__arg; struct __darwin_pthread_handler_rec *__next; };"
   
   ast = parseUnsafe preprocessedC prog
   

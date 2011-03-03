@@ -112,7 +112,6 @@ module Semantics.C.Nodes where
     pretty (CompositeInfo False Nothing fields) =
       text "union " $+$ braces (vcat $ pretty <$> fields)
   
-  
   data SField = SField Name SType (Maybe Expression)
     deriving (Show, Eq, Typeable, Data)
     
@@ -181,7 +180,7 @@ module Semantics.C.Nodes where
     pretty (CInteger i) = textS i
     pretty (CChar c) = textS c
     pretty (CFloat f) = textS f
-    pretty (CString s) = textS s 
+    pretty (CString s) = text s 
     
   instance Pretty Expression where
     pretty (Literal l) = pretty l
@@ -241,7 +240,7 @@ module Semantics.C.Nodes where
     | GVariable SVariable
     | GFunctionPrototype SFunction
     | GTypedef Name SType
-    | GComposite Bool [SFields]
+    | GComposite CompositeInfo
     deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SGlobal where

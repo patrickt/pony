@@ -16,7 +16,7 @@ module Language.Pony.StringConcat where
         (Just (Binary (strlen l) "+" (strlen r))))
     , malloc a (Ident "needed_size")
     , strlcpy (Ident a) (Ident l) (Ident "needed_size")
-    , strlcpy (Ident a) (Ident r) (Ident "needed_size")
+    , strlcat (Ident a) (Ident r) (Ident "needed_size")
     ]
   checkForConcatenation x = [x]
   
