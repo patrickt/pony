@@ -21,7 +21,7 @@ module Language.C.Miscellany where
       isFunction _ = False
   
   nameOfDeclaration :: CDeclaration -> Maybe String
-  nameOfDeclaration (CDeclaration _ [(DeclInfo {contents, ..})]) = contents >>= nameOfDeclarator
+  nameOfDeclaration (CDeclaration _ [DeclInfo {contents, ..}]) = contents >>= nameOfDeclarator
   nameOfDeclaration _ = Nothing
   
   dropTypedef :: CDeclaration -> CDeclaration

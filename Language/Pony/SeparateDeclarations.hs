@@ -21,7 +21,7 @@ module Language.Pony.SeparateDeclarations where
         partition rest (a, b ++ [s])
       partition (d@(LDeclaration (Variable n t (Just e))) : rest) (a,b) =
         partition rest (a ++ [declare n t], 
-                        b ++ [((Ident n) .=. e)])
+                        b ++ [Ident n .=. e])
   
   
   separate :: [SLocal] -> [SLocal]

@@ -17,8 +17,8 @@ module Language.Pony.CheckMalloc where
   
   checkMallocAssignments :: Statement -> Statement
   checkMallocAssignments (ExpressionS call@(Binary left "=" (FunctionCall (Ident "malloc") args))) =
-    (IfThen (Unary "!" call) (ExpressionS (FunctionCall (Ident "abort") [])))
+    IfThen (Unary "!" call) (ExpressionS (FunctionCall (Ident "abort") []))
   checkMallocAssignments x = x
   
   checkMalloc :: GenericT
-  checkMalloc = (mkT checkMallocAssignments) `extT` checkMallocDeclarations
+  checkMalloc = mkT checkMallocAssignments `extT` checkMallocDeclarations

@@ -3,7 +3,7 @@ module Language.Pony.StringConcat where
   import Semantics.C
   import Data.Generics
   
-  strlen l = FunctionCall (Ident "strlen") [(Ident l)]
+  strlen l = FunctionCall (Ident "strlen") [Ident l]
   
   malloc l s = LStatement $ ExpressionS (Binary (Ident l) "=" (FunctionCall (Ident "alloca") [s]))
   

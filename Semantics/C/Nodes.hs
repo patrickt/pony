@@ -81,13 +81,13 @@ module Semantics.C.Nodes where
     pretty (SChar signedness _) = text "char"
     pretty (SPointerTo t _) = pretty t <+> text "*"
     pretty (SArray t Nothing _) = pretty t <> text "[]"
-    pretty (SArray t (Just e) _) = pretty t <> (brackets $ pretty e)
+    pretty (SArray t (Just e) _) = pretty t <> brackets (pretty e)
     pretty (SComposite i _) = pretty i
     pretty (SEnum i _) = pretty i
     pretty (Typedef s _ _) = text s
     pretty (SBuiltinType n _) = text n
-    pretty (SFunctionPointer t vs _) = parens (pretty t) <> (parens $ hsep $ punctuate comma (pretty <$> vs))
-    pretty x = text ("undefined for " ++ (show x))
+    pretty (SFunctionPointer t vs _) = parens (pretty t) <> parens (hsep $ punctuate comma (pretty <$> vs))
+    pretty x = text ("undefined for " ++ show x)
   
   data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
     deriving (Show, Eq, Typeable, Data)
