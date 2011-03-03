@@ -21,7 +21,16 @@ module Semantics.C.Conversions where
       convert' (ExternDecl d) 
         | declarationIsTypedef d = [GTypedef (fromJust $ nameOfDeclaration d) (fromJust $ convertDeclarationToType $ dropTypedef d)]
         | declarationIsComposite d = [GComposite $ convertDeclarationToCompositeInfo d]
+        | declarationIsFunctionPrototype d = [ functionPrototypeFromDeclaration d ]
         | otherwise = GVariable <$> convertDeclarationToVariables d
+        
+  functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
+  functionPrototypeFromDeclaration (CDeclaration specs [DeclInfo { contents = (Just contents), ..}]) 
+    = GFunctionPrototype rtype name params isVariadic where
+      (Just name) = nameOfDeclarator contents
+      params = extractFunctionArguments contents
+      rtype = returnTypeOfFunction (CFunction specs contents undefined)
+      isVariadic = False -- i am lazy
   
   instance Syntax CFunction SFunction where
     convert f@(CFunction spec decl (CompoundStmt body)) =
@@ -152,7 +161,7 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
   convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
   convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convert qs)
-  convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t [] []
+  convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t (convert <$> args) []
   
   instance Syntax CTypeName SType where
     convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = convertComponents specs decl

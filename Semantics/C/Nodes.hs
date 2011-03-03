@@ -52,7 +52,7 @@ module Semantics.C.Nodes where
     | SFloat FloatFlags [Attribute]
     | SChar Signedness [Attribute]
     | SPointerTo SType [Attribute]
-    | SFunctionPointer SType [SVariable] [Attribute]
+    | SFunctionPointer SType [SParameter] [Attribute]
     | SArray SType (Maybe Expression) [Attribute] 
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
@@ -246,16 +246,17 @@ module Semantics.C.Nodes where
   data SGlobal
     = GFunction SFunction
     | GVariable SVariable
-    | GFunctionPrototype SFunction
+    | GFunctionPrototype SType Name [SParameter] Bool
     | GTypedef Name SType
     | GComposite CompositeInfo
     deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SGlobal where
     pretty (GFunction g) = pretty g
-    pretty (GVariable v) = pretty v
+    pretty (GVariable v) = pretty v <> semicolon
     pretty (GTypedef n t) = text "typedef" <+> pretty t <+> pretty n <> semicolon
-    pretty (GComposite i) = pretty i
+    pretty (GComposite i) = pretty i <> semicolon
+    pretty (GFunctionPrototype t n p _) = pretty t <+> pretty n <>  parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
   
   type Program = [SGlobal]
   instance Pretty Program where

@@ -1,8 +1,10 @@
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE NamedFieldPuns, RecordWildCards #-}
 
 module Language.C.Miscellany where
   
   import Language.C.AST
+  import Data.Maybe
+  import Data.List (find)
   
   declarationIsTypedef :: CDeclaration -> Bool
   declarationIsTypedef (CDeclaration (SSpec STypedef : rest) _) = True
@@ -12,8 +14,14 @@ module Language.C.Miscellany where
   declarationIsComposite (CDeclaration (TSpec (TStructOrUnion _ _ _ _) : rest) _) = True
   declarationIsComposite _ = False
   
+  declarationIsFunctionPrototype :: CDeclaration -> Bool
+  declarationIsFunctionPrototype (CDeclaration _ (DeclInfo { contents = Just (CDeclarator (Just _) derived _ _), ..} : _)) = 
+    isJust $ find isFunction derived where
+      isFunction (Function _ _) = True
+      isFunction _ = False
+  
   nameOfDeclaration :: CDeclaration -> Maybe String
-  nameOfDeclaration (CDeclaration _ [(DeclInfo {contents, initVal, size})]) = contents >>= nameOfDeclarator
+  nameOfDeclaration (CDeclaration _ [(DeclInfo {contents, ..})]) = contents >>= nameOfDeclarator
   nameOfDeclaration _ = Nothing
   
   dropTypedef :: CDeclaration -> CDeclaration
@@ -25,6 +33,7 @@ module Language.C.Miscellany where
   derivedPartsOfDeclarator :: CDeclarator -> [DerivedDeclarator]
   derivedPartsOfDeclarator (CDeclarator _ ds _ _) = ds
   
+  -- this is buggy
   isFunctionVariadic :: CFunction -> Bool
   isFunctionVariadic (CFunction _ (CDeclarator _ (Function _ b : _) _ _) _) = b
   
