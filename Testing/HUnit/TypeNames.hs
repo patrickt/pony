@@ -14,7 +14,7 @@ module Testing.HUnit.TypeNames
     
   testRestrictPtrToConstPtrToInt :: Assertion
   testRestrictPtrToConstPtrToInt = assertEqual "whatever" theory practice where
-    practice = fromJust $ convertDeclarationToType $ parseUnsafe typeName "const int * const * restrict "
+    practice = convert $ parseUnsafe typeName "const int * const * restrict "
     theory = SPointerTo (SPointerTo (SInt (IntegerFlags Signed 32) [Const]) [Const]) [Restrict]
   
   

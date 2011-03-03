@@ -41,7 +41,8 @@ module Language.C.AST
     deriving (Eq, Show, Typeable, Data)
   
   -- | A C function (C99 6.9.1).
-  -- Invariant: The final CStatement will always be a 'CompountStmt'.
+  -- Invariant: The final CStatement will always be a 'CompoundStmt', and the 
+  -- provided declarator will always be named.
   data CFunction = CFunction [Specifier] CDeclarator CStatement
     deriving (Eq, Show, Typeable, Data)
   

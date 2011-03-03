@@ -154,7 +154,6 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convert qs)
   convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t [] []
   
-  -- this is wrong
   instance Syntax CTypeName SType where
     convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = convertComponents specs decl
     convert (CTypeName (CDeclaration specs _)) = convert specs
@@ -163,7 +162,6 @@ module Semantics.C.Conversions where
   convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
   convertDeclarationToType _ = Nothing
   
-  -- this is wrong too
   instance Syntax CParameter SParameter where
     convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (nameOfDeclarator contents) (convertComponents specs contents)
     convert (CParameter (CDeclaration specs _)) = SParameter Nothing (convert specs)

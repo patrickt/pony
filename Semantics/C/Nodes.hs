@@ -86,6 +86,8 @@ module Semantics.C.Nodes where
     pretty (SEnum i _) = pretty i
     pretty (Typedef s _ _) = text s
     pretty (SBuiltinType n _) = text n
+    pretty (SFunctionPointer t vs _) = parens (pretty t) <> (parens $ hsep $ punctuate comma (pretty <$> vs))
+    pretty x = text ("undefined for " ++ (show x))
   
   data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
     deriving (Show, Eq, Typeable, Data)
@@ -186,7 +188,7 @@ module Semantics.C.Nodes where
     pretty (CInteger i) = textS i
     pretty (CChar c) = textS c
     pretty (CFloat f) = textS f
-    pretty (CString s) = text s 
+    pretty (CString s) = text $ show s 
     
   instance Pretty Expression where
     pretty (Literal l) = pretty l
@@ -253,7 +255,7 @@ module Semantics.C.Nodes where
     pretty (GFunction g) = pretty g
     pretty (GVariable v) = pretty v
     pretty (GTypedef n t) = text "typedef" <+> pretty t <+> pretty n <> semicolon
-    pretty _ = pretty "FIXME"
+    pretty (GComposite i) = pretty i
   
   type Program = [SGlobal]
   instance Pretty Program where
