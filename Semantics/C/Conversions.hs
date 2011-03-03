@@ -27,7 +27,7 @@ module Semantics.C.Conversions where
     convert f@(CFunction spec decl (CompoundStmt body)) =
       let ftype = returnTypeOfFunction f
           name = fromJust $ nameOfDeclarator decl
-          args = convertFunctionArguments decl
+          args = extractFunctionArguments decl
           newBody = body >>= convert
           in SFunction ftype name args newBody (isFunctionVariadic f)
   
@@ -56,7 +56,7 @@ module Semantics.C.Conversions where
     convert (GotoStmt s) = GoTo s
     convert (IfStmt e s mS) = case mS of
       (Just s') -> IfThenElse (convert e) (convert s) (convert s')
-      Nothing -> IfThen (convertExpression e) (convert s)
+      Nothing -> IfThen (convert e) (convert s)
     convert (LabeledStmt l attrs s) = Labeled l (convertAttribute <$> attrs) (convert s)
     convert (ReturnStmt mE) = Return (convert <$> mE)
     convert (SwitchStmt ex st) = Switch (convert ex) (convert st)
@@ -96,46 +96,9 @@ module Semantics.C.Conversions where
     convert QRestrict = Restrict
     convert QVolatile = Volatile
   
-  
-  -- TODO: remember to put in the array size when I have a handle on expressions
-  convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
-  convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
-  convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convert qs)
-  convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t [] []
+  instance Syntax TypeSpecifier SType where
+    convert x = convert [x]
     
-  instance Syntax CTypeName SType where
-    convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = convertComponents specs decl
-  
-  convertDeclarationToType :: CDeclaration -> Maybe SType
-  convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
-  convertDeclarationToType _ = Nothing
-  
-  -- TODO: Handle initializer lists here.
-  convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
-  convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
-                                                             , initVal = Just (InitExpression e)
-                                                             , size = Nothing}]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e)))
-  convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
-                                                             , initVal = Nothing
-                                                             , size = Nothing }]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing)
-  convertDeclarationToVariable _ = Nothing
-  
-  convertDeclarationToVariables :: CDeclaration -> [SVariable]
-  convertDeclarationToVariables (CDeclaration specs infos) = map convert infos where
-    convert (DeclInfo {contents = Just decl, initVal, size = Just size}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression size))
-    convert (DeclInfo {contents = Just decl, initVal = Nothing, size = Nothing}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing
-  
-  convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
-  convertDeclarationToCompositeInfo (CDeclaration [TSpec (TStructOrUnion mN isStruct fields _)] _) =
-    CompositeInfo isStruct mN (convertDeclarationToField <$> fields)
-  
-  convertFunctionArguments :: CDeclarator -> [SVariable]
-  convertFunctionArguments (CDeclarator n derived asm attributes) = mapMaybe convertDeclarationToVariable args
-    where (Just (Function args _)) = funcArgs
-          funcArgs = find isFunction derived
-          isFunction (Function _ _) = True
-          isFunction _ = False
-  
   -- TODO: Finish composite types, enumerations, and typedefs
   -- TOOD: Fill in the attributes for structs and enums
   -- This is where type aliases go, as defined in C99, 6.7.2.2
@@ -178,6 +141,58 @@ module Semantics.C.Conversions where
     convert [TTypedef n d]                  = Typedef n (fromJust $ convertDeclarationToType d) []
     convert [TBuiltin s]                    = SBuiltinType s []
     convert other                           = error ("unknown type " ++ show other)
+  
+  instance Syntax [Specifier] SType where
+    convert specs = setAttributes typ quals where
+      (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
+      typ = convert typeSpecs
+      quals = (convert <$> typeQuals) ++ (convert <$> storageSpecs)
+  
+  -- TODO: remember to put in the array size when I have a handle on expressions
+  convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
+  convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
+  convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convert qs)
+  convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t [] []
+  
+  -- this is wrong
+  instance Syntax CTypeName SType where
+    convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = convertComponents specs decl
+    convert (CTypeName (CDeclaration specs _)) = convert specs
+  
+  convertDeclarationToType :: CDeclaration -> Maybe SType
+  convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
+  convertDeclarationToType _ = Nothing
+  
+  -- this is wrong too
+  instance Syntax CParameter SParameter where
+    convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (nameOfDeclarator contents) (convertComponents specs contents)
+    convert (CParameter (CDeclaration specs _)) = SParameter Nothing (convert specs)
+  
+  -- TODO: Handle initializer lists here.
+  convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
+  convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
+                                                             , initVal = Just (InitExpression e)
+                                                             , size = Nothing}]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e)))
+  convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
+                                                             , initVal = Nothing
+                                                             , size = Nothing }]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing)
+  convertDeclarationToVariable _ = Nothing
+  
+  convertDeclarationToVariables :: CDeclaration -> [SVariable]
+  convertDeclarationToVariables (CDeclaration specs infos) = map convert infos where
+    convert (DeclInfo {contents = Just decl, initVal, size = Just size}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression size))
+    convert (DeclInfo {contents = Just decl, initVal = Nothing, size = Nothing}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing
+  
+  convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
+  convertDeclarationToCompositeInfo (CDeclaration [TSpec (TStructOrUnion mN isStruct fields _)] _) =
+    CompositeInfo isStruct mN (convertDeclarationToField <$> fields)
+  
+  extractFunctionArguments :: CDeclarator -> [SParameter]
+  extractFunctionArguments (CDeclarator n derived asm attributes) = map convert args
+    where (Just (Function args _)) = funcArgs
+          funcArgs = find isFunction derived
+          isFunction (Function _ _) = True
+          isFunction _ = False
   
   -- FIXME: ignoring attributes here
   convertComposite :: TypeSpecifier -> CompositeInfo

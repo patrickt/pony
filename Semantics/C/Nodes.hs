@@ -10,14 +10,13 @@ module Semantics.C.Nodes where
   import Semantics.C.Pretty
   
   type Name = String
-  type SParameter = ()
   type SFields = ()
   
   -- | A semantic function has four components: its return type (a 'SType'),
   -- its name, its parameters (a list of 'SVariables'), and a boolean that 
   -- determines whether it is variadic or not.
   data SFunction 
-    = SFunction SType Name [SVariable] [SLocal] Bool
+    = SFunction SType Name [SParameter] [SLocal] Bool
     deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SFunction where
@@ -124,6 +123,13 @@ module Semantics.C.Nodes where
   instance Pretty SVariable where
     pretty (Variable n t Nothing) = pretty t <+> pretty n
     pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
+    
+  data SParameter = SParameter (Maybe Name) SType deriving (Show, Eq, Typeable, Data)
+  
+  instance Pretty SParameter where
+    pretty (SParameter Nothing t) = pretty t
+    pretty (SParameter (Just n) t) = pretty t <+> text n
+  
   
   data Statement
     = Break

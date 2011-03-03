@@ -40,9 +40,9 @@ where
   sizedDeclaration = pure CDeclaration <*> some specifier
                                        <*> L.commaSep sizedDeclarator <* L.semi
   
-  parameter :: Parser CDeclaration
+  parameter :: Parser CParameter
   parameter = pure declaration <*> some specifier <*> declarator where
-    declaration s d = CDeclaration s [DeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
+    declaration s d = CParameter $ CDeclaration s [DeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
   
   typeName :: Parser CTypeName
   typeName = pure declaration <*> some specifier <*> optional declarator where

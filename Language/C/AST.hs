@@ -41,6 +41,7 @@ module Language.C.AST
     deriving (Eq, Show, Typeable, Data)
   
   -- | A C function (C99 6.9.1).
+  -- Invariant: The final CStatement will always be a 'CompountStmt'.
   data CFunction = CFunction [Specifier] CDeclarator CStatement
     deriving (Eq, Show, Typeable, Data)
   
@@ -137,7 +138,7 @@ module Language.C.AST
      | TBuiltin String
      | TStructOrUnion (Maybe String) Bool [CDeclaration] [CAttribute]
      | TEnumeration (Maybe String) [Enumerator] [CAttribute]
-     | TTypedef String CDeclaration
+     | TTypedef String CDeclaration -- this should be TTypedef String CTypeName, I think
      | TTypeOfExpr CExpr
      deriving (Eq, Show, Typeable, Data)
   
@@ -162,9 +163,14 @@ module Language.C.AST
     deriving (Eq, Show, Typeable, Data)
   
   -- | Represents C type names. These have a number of invariants: there will 
-  -- be at least one specifier, only one @DeclInfo@, which will contain a 
-  -- non-Nothing declarator.
+  -- be at least one specifier, at most one @DeclInfo@, which may contain a 
+  -- declarator (if it is not Nothing, it will be unnamed) and will not have an initializer or size.
   newtype CTypeName = CTypeName CDeclaration deriving (Show, Eq, Typeable, Data)
+  
+  -- | Represents C parameters. There will be at least one specifier, and only 
+  -- one DeclInfo, which will contain a non-Nothing, possibly-named declarator
+  -- and no initializer or size.
+  newtype CParameter = CParameter CDeclaration deriving (Show, Eq, Typeable, Data)
   
   type AsmName = Maybe String
   
@@ -183,5 +189,5 @@ module Language.C.AST
   data DerivedDeclarator
    = Pointer [TypeQualifier]
    | Array [TypeQualifier] (Maybe CExpr)
-   | Function [CDeclaration] Bool
+   | Function [CParameter] Bool
    deriving (Eq, Show, Typeable, Data)
