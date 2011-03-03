@@ -1,9 +1,8 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Language.C.Miscellany where
   
   import Language.C.AST
-  
-  fst3 :: (a, b, c) -> a
-  fst3 (a, _, _) = a
   
   declarationIsTypedef :: CDeclaration -> Bool
   declarationIsTypedef (CDeclaration (SSpec STypedef : rest) _) = True
@@ -14,7 +13,7 @@ module Language.C.Miscellany where
   declarationIsComposite _ = False
   
   nameOfDeclaration :: CDeclaration -> Maybe String
-  nameOfDeclaration (CDeclaration _ [(Just d, _, _)]) = nameOfDeclarator d
+  nameOfDeclaration (CDeclaration _ [(DeclInfo {contents, initVal, size})]) = contents >>= nameOfDeclarator
   nameOfDeclaration _ = Nothing
   
   dropTypedef :: CDeclaration -> CDeclaration

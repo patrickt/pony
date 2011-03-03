@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, TypeSynonymInstances, FlexibleInstances, NamedFieldPuns #-}
 
 module Semantics.C.Conversions where
   
@@ -103,23 +103,27 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t [] []
   
   instance Syntax CDeclaration (Maybe SType) where
-    convert (CDeclaration specs [(Just declr, Nothing, Nothing)]) = Just (convertComponents specs declr)
+    convert (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
     convert _ = Nothing
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
-  convertDeclarationToType (CDeclaration specs [(Just declr, Nothing, Nothing)]) = Just (convertComponents specs declr)
+  convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
   convertDeclarationToType _ = Nothing
   
   -- TODO: Handle initializer lists here.
   convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
-  convertDeclarationToVariable (CDeclaration specs [(Just decl, Just (InitExpression e), Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e)))
-  convertDeclarationToVariable (CDeclaration specs [(Just decl, Nothing, Nothing)]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing)
+  convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
+                                                             , initVal = Just (InitExpression e)
+                                                             , size = Nothing}]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e)))
+  convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
+                                                             , initVal = Nothing
+                                                             , size = Nothing }]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing)
   convertDeclarationToVariable _ = Nothing
   
   convertDeclarationToVariables :: CDeclaration -> [SVariable]
-  convertDeclarationToVariables (CDeclaration specs tuples) = map convert tuples where
-    convert (Just decl, Just (InitExpression e), Nothing) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e))
-    convert (Just decl, Nothing, Nothing) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing
+  convertDeclarationToVariables (CDeclaration specs infos) = map convert infos where
+    convert (DeclInfo {contents = Just decl, initVal, size = Just size}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression size))
+    convert (DeclInfo {contents = Just decl, initVal = Nothing, size = Nothing}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing
   
   convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
   convertDeclarationToCompositeInfo (CDeclaration [TSpec (TStructOrUnion mN isStruct fields _)] _) =
@@ -181,7 +185,7 @@ module Semantics.C.Conversions where
   
   -- FIXME: this won't work if there's more than one declarator per declaration
   convertDeclarationToField :: CDeclaration -> SField
-  convertDeclarationToField d@(CDeclaration _ [((Just decl), _, size)]) = SField (fromJust $ nameOfDeclarator decl) (fromJust $ convertDeclarationToType d) (convert <$> size)
+  convertDeclarationToField d@(CDeclaration _ [DeclInfo {contents=(Just decl), initVal, size}]) = SField (fromJust $ nameOfDeclarator decl) (fromJust $ convertDeclarationToType d) (convert <$> size)
   
   -- FIXME: increasing doesn't work in the case of {FOO, BAR=5, BAZ} (baz should == 6)
   convertEnumeration :: [Enumerator] -> [(Name, Expression)]

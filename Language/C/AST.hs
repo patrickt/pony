@@ -145,20 +145,22 @@ module Language.C.AST
   data CAttribute = CAttribute [CExpr]
     deriving (Eq, Show, Typeable, Data)
   
+  data DeclInfo = DeclInfo {
+    contents :: Maybe CDeclarator,
+    initVal :: Maybe Initializer,
+    size :: Maybe CExpr
+  } deriving (Show, Eq, Typeable, Data)
+  
+  
   -- | C declarations (C99 6.7).
   -- Though this definition is rather byzantine in its structure, it has 
   -- distinct advantage in that it can encapsulate structure declarations,
   -- parameter declarations, and type names. This method of structuring declarations 
   -- was innovated by Benedikt Huber.
   data CDeclaration 
-    = CDeclaration [Specifier] [(Maybe CDeclarator, Maybe Initializer, Maybe CExpr)]
+    = CDeclaration [Specifier] [DeclInfo]
     deriving (Eq, Show, Typeable, Data)
-    
-  newtype TypeName    = TypeName CDeclaration deriving (Show, Eq, Typeable, Data)
-  newtype Parameter   = Parameter CDeclaration deriving (Show, Eq, Typeable, Data)
-  newtype VarDecl     = VarDecl CDeclaration deriving (Show, Eq, Typeable, Data)
-  newtype StructField = StructField CDeclaration deriving (Show, Eq, Typeable, Data)
-    
+  
   type AsmName = Maybe String
   
   -- | C declarators, both abstract and concrete (C99 6.7.5 and 6.7.6).
