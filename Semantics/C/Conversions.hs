@@ -142,7 +142,7 @@ module Semantics.C.Conversions where
     convert [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
     convert [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
     convert [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
-    convert [TTypedef n d]                  = Typedef n (fromJust $ convertDeclarationToType d) []
+    convert [TTypedef n d]                  = Typedef n (convert d) []
     convert [TBuiltin s]                    = SBuiltinType s []
     convert other                           = error ("unknown type " ++ show other)
   

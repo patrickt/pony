@@ -31,7 +31,7 @@ where
   checkTypedefs d@(CDeclaration (SSpec STypedef : rest) infos) = do
     let (Just declr) = contents $ head infos
     let (Just name) = nameOfDeclarator declr
-    updateState $ addTypeDef name (CDeclaration rest infos)
+    updateState $ addTypeDef name (CTypeName (CDeclaration rest infos))
     return d
   checkTypedefs x = return x
   

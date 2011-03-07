@@ -26,7 +26,7 @@ module Language.C.Parser
 
   
   data Internals = Internals 
-    { typedefs :: [(String, CDeclaration)]
+    { typedefs :: [(String, CTypeName)]
     , arithmeticOps :: [String]
     , comparativeOps :: [String]
     , bitwiseOps :: [String]
@@ -41,7 +41,7 @@ module Language.C.Parser
                              , logicalOps     = []
                              }
   
-  addTypeDef :: String -> CDeclaration -> Internals -> Internals
+  addTypeDef :: String -> CTypeName -> Internals -> Internals
   addTypeDef name decl record = record { typedefs = typedefs record ++ [(name, decl)]}
   
   type Parser = GenParser Char Internals

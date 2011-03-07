@@ -126,7 +126,7 @@ module Language.C.AST
      | TBuiltin String
      | TStructOrUnion (Maybe String) Bool [CField] [CAttribute]
      | TEnumeration (Maybe String) [Enumerator] [CAttribute]
-     | TTypedef String CDeclaration -- this should be TTypedef String CTypeName, I think
+     | TTypedef String CTypeName
      | TTypeOfExpr CExpr
      deriving (Eq, Show, Typeable, Data)
   
