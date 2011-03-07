@@ -1,19 +1,14 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, 
-  TypeSynonymInstances, FlexibleInstances, NamedFieldPuns, RecordWildCards #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, NamedFieldPuns, RecordWildCards #-}
 
 module Semantics.C.Conversions where
   
-  import Language.C.Parser
-  import Language.C.AST
-  import Language.C.Miscellany
+  import Language.C hiding (float)
   import Semantics.C.Nodes
+  import Semantics.C.Reifiable
   import Data.Maybe
   import Data.List (find)
   
-  class Syntax abstract semantic | abstract -> semantic where
-    convert :: abstract -> semantic
-    
-  instance Syntax CTranslationUnit Program where
+  instance Reifiable CTranslationUnit Program where
     convert = concatMap convert' where
       convert' :: CExternal -> [SGlobal]
       convert' (FunctionDecl f) = GFunction <$> [convert f]
@@ -32,7 +27,7 @@ module Semantics.C.Conversions where
       rtype = returnTypeOfFunction (CFunction specs contents undefined)
       isVariadic = False -- i am lazy
   
-  instance Syntax CFunction SFunction where
+  instance Reifiable CFunction SFunction where
     convert f@(CFunction spec decl (CompoundStmt body)) =
       let ftype = returnTypeOfFunction f
           name = fromJust $ nameOfDeclarator decl
@@ -40,11 +35,11 @@ module Semantics.C.Conversions where
           newBody = body >>= convert
           in SFunction ftype name args newBody (isFunctionVariadic f)
   
-  instance Syntax BlockItem FunctionBody where
+  instance Reifiable BlockItem FunctionBody where
     convert (Left declaration) = LDeclaration <$> convertDeclarationToVariables declaration
     convert (Right statement) = LStatement <$> [convert statement]
   
-  instance Syntax CStatement Statement where
+  instance Reifiable CStatement Statement where
     convert BreakStmt = Break
     convert (CaseStmt ex st) = Case (convertExpression ex) (convert st)
     convert (CompoundStmt bis) = Compound (bis >>= convert)
@@ -77,7 +72,7 @@ module Semantics.C.Conversions where
   convertDeclarationToLocal :: CDeclaration -> Maybe SLocal
   convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
   
-  instance Syntax CExpr Expression where
+  instance Reifiable CExpr Expression where
     convert (Constant l) = Literal l
     convert (Identifier i) = Ident i
     convert (Index l r) = Brackets (convert l) (convert r)
@@ -94,24 +89,24 @@ module Semantics.C.Conversions where
   convertAttribute :: CAttribute -> Attribute
   convertAttribute = error "convertAttribute = undefined"
   
-  instance Syntax StorageSpecifier Attribute where
+  instance Reifiable StorageSpecifier Attribute where
     convert SAuto = Auto
     convert SRegister = Register
     convert SStatic   = Static
     convert SExtern   = Extern
     
-  instance Syntax TypeQualifier Attribute where
+  instance Reifiable TypeQualifier Attribute where
     convert QConst    = Const
     convert QRestrict = Restrict
     convert QVolatile = Volatile
   
-  instance Syntax TypeSpecifier SType where
+  instance Reifiable TypeSpecifier SType where
     convert x = convert [x]
     
   -- TODO: Finish composite types, enumerations, and typedefs
   -- TOOD: Fill in the attributes for structs and enums
   -- This is where type aliases go, as defined in C99, 6.7.2.2
-  instance Syntax [TypeSpecifier] SType where
+  instance Reifiable [TypeSpecifier] SType where
     convert [TVoid]                         = void
     convert [TChar]                         = signedChar
     convert [TSigned, TChar]                = signedChar
@@ -151,7 +146,7 @@ module Semantics.C.Conversions where
     convert [TBuiltin s]                    = SBuiltinType s []
     convert other                           = error ("unknown type " ++ show other)
   
-  instance Syntax [Specifier] SType where
+  instance Reifiable [Specifier] SType where
     convert specs = setAttributes typ quals where
       (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
       typ = convert typeSpecs
@@ -163,7 +158,7 @@ module Semantics.C.Conversions where
   convertDerivedDeclarators (Array qs size) t = SArray t (convert <$> size) (map convert qs)
   convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t (convert <$> args) []
   
-  instance Syntax CTypeName SType where
+  instance Reifiable CTypeName SType where
     convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = convertComponents specs decl
     convert (CTypeName (CDeclaration specs _)) = convert specs
   
@@ -171,12 +166,12 @@ module Semantics.C.Conversions where
   convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
   convertDeclarationToType _ = Nothing
   
-  instance Syntax CField [SField] where
+  instance Reifiable CField [SField] where
     convert (CField (CDeclaration specs infos)) = map convert' infos where
       convert' :: DeclInfo -> SField
       convert' (DeclInfo {contents = (Just contents), size, ..}) = SField (fromJust $ nameOfDeclarator contents) (convertComponents specs contents) (convert <$> size) 
   
-  instance Syntax CParameter SParameter where
+  instance Reifiable CParameter SParameter where
     convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (nameOfDeclarator contents) (convertComponents specs contents)
     convert (CParameter (CDeclaration specs _)) = SParameter Nothing (convert specs)
   

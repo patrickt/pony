@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
 
-module Semantics.C.Pretty
+module Text.Pretty
   ( module Text.PrettyPrint.HughesPJ
   , semicolon
   , question

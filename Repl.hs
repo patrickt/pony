@@ -9,6 +9,7 @@ module Main where
   import Data.Generics
   import Data.Generics.Zipper
   import Language.Pony.Transformations
+  import Text.Pretty
   import System.IO.Unsafe
   
   func = "int main (int argc, char const *argv[]) { printf(\"Hello, world\"); return 0; }"

@@ -5,8 +5,7 @@ module Testing.HUnit.TypeNames
   import Test.Framework.Providers.HUnit
   import Test.HUnit hiding (Test)
   import Language.C
-  import Semantics.C.Conversions
-  import Semantics.C.Nodes
+  import Semantics.C
   import Data.Maybe (fromJust)
   
   tests :: [Test]
