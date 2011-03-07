@@ -1,13 +1,13 @@
 {-# LANGUAGE Rank2Types #-}
 
-module Language.Pony.Transformation where
+module Language.Pony.Transformations where
   
   import Data.Generics
-  import qualified Language.Pony.CheckMalloc as CM
-  import qualified Language.Pony.LogicalShift as LS
-  import qualified Language.Pony.SeparateDeclarations as SD
-  import qualified Language.Pony.HelloWorld as HW
-  import qualified Language.Pony.StringConcat as SC
+  import qualified Language.Pony.Transformations.Predefined.CheckMalloc as CM
+  import qualified Language.Pony.Transformations.Predefined.LogicalShift as LS
+  import qualified Language.Pony.Transformations.Predefined.SeparateDeclarations as SD
+  import qualified Language.Pony.Transformations.Predefined.HelloWorld as HW
+  import qualified Language.Pony.Transformations.Predefined.StringConcat as SC
   
   data Transformation = MkTrans String GenericT
   instance Show Transformation where

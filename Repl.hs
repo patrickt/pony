@@ -8,7 +8,7 @@ module Main where
   import Semantics.C
   import Data.Generics
   import Data.Generics.Zipper
-  import Language.Pony.Transformation
+  import Language.Pony.Transformations
   import System.IO.Unsafe
   
   func = "int main (int argc, char const *argv[]) { printf(\"Hello, world\"); return 0; }"

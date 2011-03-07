@@ -9,7 +9,7 @@ module Main where
   import System.Environment
   import Text.CSV
   import Text.Printf
-  import Language.Pony.Transformation
+  import Language.Pony.Transformations
   
   -- TODO: allow for multiple inputs (input :: [FilePath])
   data PonyOptions = PonyOptions {

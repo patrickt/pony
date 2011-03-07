@@ -1,4 +1,4 @@
-module Language.Pony.StringConcat where
+module Language.Pony.Transformations.Predefined.StringConcat where
   
   import Semantics.C
   import Data.Generics

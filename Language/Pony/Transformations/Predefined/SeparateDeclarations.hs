@@ -1,4 +1,4 @@
-module Language.Pony.SeparateDeclarations where
+module Language.Pony.Transformations.Predefined.SeparateDeclarations where
   
   import Data.Generics
   import Language.C

@@ -1,4 +1,4 @@
-module Language.Pony.CheckMalloc where
+module Language.Pony.Transformations.Predefined.CheckMalloc where
   
   import Control.Monad
   import Language.C

@@ -1,4 +1,4 @@
-module Language.Pony.HelloWorld where
+module Language.Pony.Transformations.Predefined.HelloWorld where
   
   import Semantics.C
   import Data.Generics

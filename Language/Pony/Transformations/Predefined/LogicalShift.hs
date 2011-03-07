@@ -1,4 +1,4 @@
-module Language.Pony.LogicalShift where
+module Language.Pony.Transformations.Predefined.LogicalShift where
   
   import Language.C
   import Semantics.C.Nodes
