@@ -5,7 +5,7 @@ module Language.C.Declarations where
   
   declaration :: Parser CDeclaration
   
-  sizedDeclaration :: Parser CDeclaration
+  sizedDeclaration :: Parser CField
   
   typeName :: Parser CTypeName
   

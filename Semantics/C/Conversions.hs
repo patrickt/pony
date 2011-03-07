@@ -171,6 +171,11 @@ module Semantics.C.Conversions where
   convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
   convertDeclarationToType _ = Nothing
   
+  instance Syntax CField [SField] where
+    convert (CField (CDeclaration specs infos)) = map convert' infos where
+      convert' :: DeclInfo -> SField
+      convert' (DeclInfo {contents = (Just contents), size, ..}) = SField (fromJust $ nameOfDeclarator contents) (convertComponents specs contents) (convert <$> size) 
+  
   instance Syntax CParameter SParameter where
     convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (nameOfDeclarator contents) (convertComponents specs contents)
     convert (CParameter (CDeclaration specs _)) = SParameter Nothing (convert specs)
@@ -192,7 +197,7 @@ module Semantics.C.Conversions where
   
   convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
   convertDeclarationToCompositeInfo (CDeclaration [TSpec (TStructOrUnion mN isStruct fields _)] _) =
-    CompositeInfo isStruct mN (convertDeclarationToField <$> fields)
+    CompositeInfo isStruct mN (concatMap convert fields)
   
   extractFunctionArguments :: CDeclarator -> [SParameter]
   extractFunctionArguments (CDeclarator n derived asm attributes) = map convert args
@@ -203,7 +208,7 @@ module Semantics.C.Conversions where
   
   -- FIXME: ignoring attributes here
   convertComposite :: TypeSpecifier -> CompositeInfo
-  convertComposite (TStructOrUnion n b decls _) = CompositeInfo b n (convertDeclarationToField <$> decls)
+  convertComposite (TStructOrUnion n b decls _) = CompositeInfo b n (concatMap convert decls)
   
   -- FIXME: this won't work if there's more than one declarator per declaration
   convertDeclarationToField :: CDeclaration -> SField

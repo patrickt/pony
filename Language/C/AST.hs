@@ -124,7 +124,7 @@ module Language.C.AST
      | TBool
      -- | Corresponds to the @__builtin_va_arg@ type.
      | TBuiltin String
-     | TStructOrUnion (Maybe String) Bool [CDeclaration] [CAttribute]
+     | TStructOrUnion (Maybe String) Bool [CField] [CAttribute]
      | TEnumeration (Maybe String) [Enumerator] [CAttribute]
      | TTypedef String CDeclaration -- this should be TTypedef String CTypeName, I think
      | TTypeOfExpr CExpr
@@ -159,6 +159,11 @@ module Language.C.AST
   -- one DeclInfo, which will contain a non-Nothing, possibly-named declarator
   -- and no initializer or size.
   newtype CParameter = CParameter CDeclaration deriving (Show, Eq, Typeable, Data)
+  
+  -- | Represents fields of structs or unions. There will be at least one specifier,
+  -- at least one DeclInfo, all of which will not have an initVal (but may be 
+  -- named, sized, named and sized, or unnamed and sized.)
+  newtype CField = CField CDeclaration deriving (Show, Eq, Typeable, Data)
   
   type AsmName = Maybe String
   

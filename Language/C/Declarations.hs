@@ -36,9 +36,9 @@ where
   checkTypedefs x = return x
   
   -- | Sized declarations can only appear in structure bodies.
-  sizedDeclaration :: Parser CDeclaration
-  sizedDeclaration = pure CDeclaration <*> some specifier
-                                       <*> L.commaSep sizedDeclarator <* L.semi
+  sizedDeclaration :: Parser CField
+  sizedDeclaration = CField <$> (pure CDeclaration <*> some specifier
+                                       <*> L.commaSep sizedDeclarator <* L.semi)
   
   parameter :: Parser CParameter
   parameter = pure declaration <*> some specifier <*> declarator where

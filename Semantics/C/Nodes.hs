@@ -10,7 +10,6 @@ module Semantics.C.Nodes where
   import Semantics.C.Pretty
   
   type Name = String
-  type SFields = ()
   
   -- | A semantic function has four components: its return type (a 'SType'),
   -- its name, its parameters (a list of 'SVariables'), and a boolean that 
@@ -113,6 +112,7 @@ module Semantics.C.Nodes where
     pretty (CompositeInfo False Nothing fields) =
       text "union " $+$ braces (vcat $ pretty <$> fields)
   
+  -- FIXME: fields can be unnamed, so Name should be (Maybe Name)
   data SField = SField Name SType (Maybe Expression)
     deriving (Show, Eq, Typeable, Data)
     
