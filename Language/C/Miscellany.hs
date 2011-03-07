@@ -19,6 +19,7 @@ module Language.C.Miscellany where
     isJust $ find isFunction derived where
       isFunction (Function _ _) = True
       isFunction _ = False
+  declarationIsFunctionPrototype _ = False
   
   nameOfDeclaration :: CDeclaration -> Maybe String
   nameOfDeclaration (CDeclaration _ [DeclInfo {contents, ..}]) = contents >>= nameOfDeclarator
