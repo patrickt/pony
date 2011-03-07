@@ -35,7 +35,7 @@ module Semantics.C.Nodes where
     deriving (Show, Typeable, Eq, Data)
   
   instance Pretty Signedness where
-    pretty Unsigned = text "u"
+    pretty Unsigned = text "unsigned"
     pretty Signed = empty
   
   data IntegerFlags 
@@ -74,7 +74,7 @@ module Semantics.C.Nodes where
     
   instance Pretty SType where
     pretty (SVoid _) = text "void"
-    pretty (SInt (IntegerFlags s w) _) = pretty s <> text "int" <> pretty w <> text "_t"
+    pretty (SInt (IntegerFlags s w) _) = text $ intTypeFromSize w
     pretty (SFloat FFloat _) = text "float"
     pretty (SFloat FDouble _) = text "double"
     pretty (SFloat FLongDouble _) = text "long double"
