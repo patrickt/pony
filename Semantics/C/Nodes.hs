@@ -117,15 +117,20 @@ module Semantics.C.Nodes where
     deriving (Show, Eq, Typeable, Data)
     
   instance Pretty SField where
-    pretty (SField n t Nothing) = pretty n <+> pretty t <> semicolon
-    pretty (SField n t (Just i)) = pretty n <+> pretty t <> colon <+> pretty i <> semicolon
+    -- stupid C and its stupid decision to put array sizes after the variable name
+    pretty (SField n (SArray t Nothing _) _) = pretty t <+> pretty n <> text "[]" <> semicolon
+    pretty (SField n (SArray t (Just size) _) _) = pretty t <+> pretty n <> brackets (pretty size) <> semicolon
+    pretty (SField n t Nothing) = pretty t <+> pretty n <> semicolon
+    pretty (SField n t (Just i)) = pretty t <+> pretty n <> colon <+> pretty i <> semicolon
     
   data SVariable = Variable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SVariable where
+    -- stupid C and its stupid decision to put array sizes after the variable name
+    pretty (Variable n (SArray t Nothing _) _) = pretty t <+> pretty n <> text "[]"
+    pretty (Variable n (SArray t (Just size) _) _) = pretty t <+> pretty n <> brackets (pretty size)
     pretty (Variable n t Nothing) = pretty t <+> pretty n
     pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
-    
   data SParameter = SParameter (Maybe Name) SType deriving (Show, Eq, Typeable, Data)
   
   instance Pretty SParameter where

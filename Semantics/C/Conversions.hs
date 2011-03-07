@@ -160,7 +160,7 @@ module Semantics.C.Conversions where
   -- TODO: remember to put in the array size when I have a handle on expressions
   convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
   convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
-  convertDerivedDeclarators (Array qs size) t = SArray t Nothing (map convert qs)
+  convertDerivedDeclarators (Array qs size) t = SArray t (convert <$> size) (map convert qs)
   convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t (convert <$> args) []
   
   instance Syntax CTypeName SType where
