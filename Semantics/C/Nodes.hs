@@ -5,7 +5,7 @@ module Semantics.C.Nodes where
   import Data.Generics
   import Language.Pony.MachineSizes
   import Control.Applicative ((<$>))
-  import Language.C.AST (CLiteral (..))
+  import Language.C.Literals
   import qualified Language.C.AST as AST
   import Semantics.C.Pretty
   
@@ -172,7 +172,7 @@ module Semantics.C.Nodes where
     pretty (While e s) = text "while" <+> parens (pretty e) <+> pretty s
     
   data Expression
-    = Literal AST.CLiteral
+    = Literal CLiteral
     | Ident Name
     | Brackets Expression Expression
     | FunctionCall Expression [Expression]
@@ -184,7 +184,7 @@ module Semantics.C.Nodes where
     | Builtin AST.BuiltinExpr
     deriving (Show, Eq, Typeable, Data)
     
-  instance Pretty AST.CLiteral where
+  instance Pretty CLiteral where
     pretty (CInteger i) = textS i
     pretty (CChar c) = textS c
     pretty (CFloat f) = textS f
@@ -248,6 +248,7 @@ module Semantics.C.Nodes where
     | GVariable SVariable
     | GFunctionPrototype SType Name [SParameter] Bool
     | GTypedef Name SType
+    | GEnumeration EnumerationInfo
     | GComposite CompositeInfo
     deriving (Show, Eq, Typeable, Data)
   

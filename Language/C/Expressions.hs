@@ -5,6 +5,7 @@ module Language.C.Expressions
   import Debug.Trace
   import Language.C.Parser
   import Language.C.AST
+  import Language.C.Literals
   import {-# SOURCE #-} Language.C.Declarations 
   import qualified Language.C.Lexer as L
   import Text.Parsec.Expr

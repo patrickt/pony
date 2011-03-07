@@ -6,6 +6,7 @@ module Language.C.AST
   
   import Data.Either
   import Data.Generics
+  import Language.C.Literals
   
   -- TODO: Add position information to all of the types, etc.
   -- TODO: Get some consistent naming structure up in here.
@@ -74,20 +75,6 @@ module Language.C.AST
     -- | Corresponds to @__builtin_va_arg(id, type)@.
     = BuiltinVaArg CExpr CTypeName
     deriving (Eq, Show, Typeable, Data)
-  
-  -- | C literals.
-  data CLiteral
-    = CInteger Integer
-    | CChar Char
-    | CFloat Double
-    | CString String
-    deriving (Eq, Typeable, Data)
-    
-  instance Show CLiteral where
-    show (CInteger i) = show i
-    show (CChar c) = show c
-    show (CFloat f) = show f
-    show (CString s) = s
   
   -- | Storage class specifiers (C99 6.7.1).
   -- As an extension, @__attribute__(())@ is considered a storage specifier.

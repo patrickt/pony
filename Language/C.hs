@@ -4,6 +4,7 @@ module Language.C
   , module Language.C.Declarations
   , module Language.C.Expressions
   , module Language.C.Functions
+  , module Language.C.Literals
   , module Language.C.Miscellany
   , module Language.C.Specifiers
   , module Language.C.Statements
@@ -18,6 +19,7 @@ module Language.C
   import Language.C.Declarations
   import Language.C.Expressions
   import Language.C.Functions
+  import Language.C.Literals
   import Language.C.Miscellany
   import Language.C.Specifiers
   import Language.C.Statements
