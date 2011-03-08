@@ -57,8 +57,8 @@ module Semantics.C.PrettyPrinter where
   
   instance Pretty SVariable where
     -- stupid C and its stupid decision to put array sizes after the variable name
-    pretty (Variable n (SArray t Nothing _) _) = pretty t <+> pretty n <> text "[]"
-    pretty (Variable n (SArray t (Just size) _) _) = pretty t <+> pretty n <> brackets (pretty size)
+    pretty (Variable n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
+    pretty (Variable n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size)
     pretty (Variable n t Nothing) = pretty t <+> pretty n
     pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
 
@@ -67,9 +67,11 @@ module Semantics.C.PrettyPrinter where
     pretty (SParameter (Just n) t) = pretty t <+> text n
   
   instance Pretty SField where
+    -- function pointer syntax is the devil, and when I say the devil, I actually mean
+    -- Satan. You know, the guy who lives in Hell.
+    pretty (SField n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
     -- stupid C and its stupid decision to put array sizes after the variable name
-    pretty (SField n (SArray t Nothing _) _) = pretty t <+> pretty n <> text "[]" <> semicolon
-    pretty (SField n (SArray t (Just size) _) _) = pretty t <+> pretty n <> brackets (pretty size) <> semicolon
+    pretty (SField n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size) <> semicolon
     pretty (SField n t Nothing) = pretty t <+> pretty n <> semicolon
     pretty (SField n t (Just i)) = pretty t <+> pretty n <> colon <+> pretty i <> semicolon
 

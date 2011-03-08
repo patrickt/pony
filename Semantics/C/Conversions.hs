@@ -154,6 +154,8 @@ module Semantics.C.Conversions where
   
   -- TODO: remember to put in the array size when I have a handle on expressions
   convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
+  -- the qualifiers are getting lost here, this needs a fix
+  convertDerivedDeclarators (Pointer qs) (SFunctionPointer t args attrs) = SFunctionPointer t args attrs
   convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
   convertDerivedDeclarators (Array qs size) t = SArray t (convert <$> size) (map convert qs)
   convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t (convert <$> args) []

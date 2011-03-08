@@ -4,6 +4,7 @@ module Text.Pretty
   ( module Text.PrettyPrint.HughesPJ
   , semicolon
   , question
+  , star
   , textS
   , Pretty (pretty)
   )
@@ -22,6 +23,13 @@ module Text.Pretty
   
   instance Pretty Int where
     pretty = textS
-    
+  
+  instance (Pretty a) => Pretty (Maybe a) where
+    pretty Nothing = empty
+    pretty (Just a) = pretty a
+  
+  semicolon, question, star :: Doc  
   semicolon = text ";"
   question = text "?"
+  star = text "*"
+  
