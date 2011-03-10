@@ -4,7 +4,6 @@ module Language.C.AST
   
   where
   
-  import Data.Either
   import Data.Generics
   import Language.C.Literals
   
