@@ -114,6 +114,7 @@ module Semantics.C.Nodes where
     | Static
     | Register
     | Volatile
+    | Custom [Expression]
     deriving (Show, Eq, Typeable, Data)
   
   void = SVoid []

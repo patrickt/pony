@@ -61,7 +61,7 @@ module Semantics.C.Conversions where
     convert (IfStmt e s mS) = case mS of
       (Just s') -> IfThenElse (convert e) (convert s) (convert s')
       Nothing -> IfThen (convert e) (convert s)
-    convert (LabeledStmt l attrs s) = Labeled l (convertAttribute <$> attrs) (convert s)
+    convert (LabeledStmt l attrs s) = Labeled l (convert <$> attrs) (convert s)
     convert (ReturnStmt mE) = Return (convert <$> mE)
     convert (SwitchStmt ex st) = Switch (convert ex) (convert st)
     convert (WhileStmt ex st) = While (convert ex) (convert st)
@@ -86,8 +86,8 @@ module Semantics.C.Conversions where
   
   convertExpression = convert
   
-  convertAttribute :: CAttribute -> Attribute
-  convertAttribute = error "convertAttribute = undefined"
+  instance Reifiable CAttribute Attribute where
+    convert (CAttribute e) = Custom (convert <$> e)
   
   instance Reifiable StorageSpecifier Attribute where
     convert SAuto = Auto
