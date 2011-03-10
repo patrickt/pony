@@ -60,7 +60,9 @@ module Semantics.C.Nodes where
   
   -- use Either instead of a Bool here.
   
-  data CompositeInfo = CompositeInfo Bool (Maybe Name) [SField]
+  data CompositeType = Struct | Union deriving (Show, Eq, Typeable, Data)
+  
+  data CompositeInfo = CompositeInfo CompositeType (Maybe Name) [SField]
     deriving (Show, Eq, Typeable, Data)
   
   -- FIXME: fields can be unnamed, so Name should be (Maybe Name)

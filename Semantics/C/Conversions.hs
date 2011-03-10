@@ -194,7 +194,10 @@ module Semantics.C.Conversions where
   
   convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
   convertDeclarationToCompositeInfo (CDeclaration [TSpec (TStructOrUnion mN isStruct fields _)] _) =
-    CompositeInfo isStruct mN (concatMap convert fields)
+    CompositeInfo (boolToCompositeType isStruct) mN (concatMap convert fields) where
+      boolToCompositeType True = Struct
+      boolToCompositeType False = Union
+      
   
   extractFunctionArguments :: CDeclarator -> [SParameter]
   extractFunctionArguments (CDeclarator n derived asm attributes) = map convert args
@@ -205,7 +208,9 @@ module Semantics.C.Conversions where
   
   -- FIXME: ignoring attributes here
   convertComposite :: TypeSpecifier -> CompositeInfo
-  convertComposite (TStructOrUnion n b decls _) = CompositeInfo b n (concatMap convert decls)
+  convertComposite (TStructOrUnion n b decls _) = CompositeInfo (boolToCompositeType b) n (concatMap convert decls) where
+    boolToCompositeType True = Struct
+    boolToCompositeType False = Union
   
   -- FIXME: this won't work if there's more than one declarator per declaration
   convertDeclarationToField :: CDeclaration -> SField

@@ -39,15 +39,15 @@ module Semantics.C.PrettyPrinter where
     pretty (SFunctionPointer t vs _) = parens (pretty t) <> parens (hsep $ punctuate comma (pretty <$> vs))
     -- pretty x = text ("undefined for " ++ show x)
   
+  instance Pretty CompositeType where
+    pretty Struct = text "struct"
+    pretty Union = text "union"
+  
   instance Pretty CompositeInfo where
-    pretty (CompositeInfo True (Just n) fields) = 
-      text "struct" <+> text n $+$ braces (vcat $ pretty <$> fields)
-    pretty (CompositeInfo True Nothing fields) =
-      text "struct " $+$ braces (vcat $ pretty <$> fields)
-    pretty (CompositeInfo False (Just n) fields) = 
-      text "union" <+> text n $+$ braces (vcat $ pretty <$> fields)
-    pretty (CompositeInfo False Nothing fields) =
-      text "union " $+$ braces (vcat $ pretty <$> fields)
+    pretty (CompositeInfo t (Just n) fields) = 
+      pretty t <+> text n $+$ braces (vcat $ pretty <$> fields)
+    pretty (CompositeInfo t Nothing fields) =
+      pretty t $+$ braces (vcat $ pretty <$> fields)
       
   instance Pretty EnumerationInfo where 
     pretty (EnumerationInfo n vals) =
