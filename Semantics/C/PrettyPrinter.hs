@@ -98,7 +98,7 @@ module Semantics.C.PrettyPrinter where
     pretty (CInteger i) = textS i
     pretty (CChar c) = textS c
     pretty (CFloat f) = textS f
-    pretty (CString s) = text $ show s 
+    pretty (CString s) = doubleQuotes $ text s
 
   instance Pretty Expression where
     pretty (Literal l) = pretty l
