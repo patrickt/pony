@@ -46,7 +46,7 @@ where
   parameter = pure declaration <*> some specifier <*> declarator where
     declaration s d = CParameter $ CDeclaration s [DeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
   
-  -- | Type names, used in cast operations.
+  -- | Type names, used in cast operations and typedefs.
   typeName :: Parser CTypeName
   typeName = pure declaration <*> some specifier <*> optional declarator where
     declaration s d = CTypeName $ CDeclaration s [DeclInfo {contents = d, initVal = Nothing, size = Nothing}]

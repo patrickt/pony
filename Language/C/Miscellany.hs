@@ -6,14 +6,17 @@ module Language.C.Miscellany where
   import Data.Maybe
   import Data.List (find)
   
+  -- | A declaration is a typedef iff its first specifier is an 'STypedef'.
   declarationIsTypedef :: CDeclaration -> Bool
   declarationIsTypedef (CDeclaration (SSpec STypedef : rest) _) = True
   declarationIsTypedef _ = False
   
+  -- A declaration is of a composite type if its first specifier is a 'TStructOrUnion'.
   declarationIsComposite :: CDeclaration -> Bool
   declarationIsComposite (CDeclaration (TSpec (TStructOrUnion _ _ _ _) : rest) _) = True
   declarationIsComposite _ = False
   
+  -- A declaration is a function or function prototype if its derived declarations
   declarationIsFunctionPrototype :: CDeclaration -> Bool
   declarationIsFunctionPrototype (CDeclaration _ (DeclInfo { contents = Just (CDeclarator (Just _) derived _ _), ..} : _)) = 
     isJust $ find isFunction derived where

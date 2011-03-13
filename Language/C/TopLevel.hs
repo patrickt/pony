@@ -7,7 +7,9 @@ module Language.C.TopLevel
   import Language.C.Declarations
   import Language.C.Functions
   
-  preprocessedC :: Parser [CExternal]
+  -- | A parser action that parses a translation unit. It will fail if it
+  -- finds any C-style comments, as the preprocessor removes them.
+  preprocessedC :: Parser CTranslationUnit
   preprocessedC = (L.whiteSpace *> many extern) <* eof where
     extern = try (ExternDecl <$> declaration) <|> (FunctionDecl <$> functionDefinition)
   
