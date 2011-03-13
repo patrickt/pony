@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Language.C.Parser 
   ( module Text.Parsec
   , module Control.Applicative
@@ -31,7 +33,7 @@ module Language.C.Parser
     , comparativeOps :: [String]
     , bitwiseOps :: [String]
     , logicalOps :: [String]
-    }
+    } deriving (Show, Eq, Typeable, Data)
   
   emptyInternals :: Internals
   emptyInternals = Internals { typedefs       = []

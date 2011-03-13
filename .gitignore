@@ -4,3 +4,5 @@ Language/Pony/MachineSizes.hs
 report.html
 ponytmp
 *.swp
+*.o
+*.hi
