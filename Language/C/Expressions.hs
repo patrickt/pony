@@ -1,4 +1,13 @@
 module Language.C.Expressions
+  ( expression
+  , constantExpression
+  , builtinExpression
+  , castExpression
+  , postfixExpression
+  , unaryExpression
+  , primaryExpression
+  , constant
+  )
   where 
   
   import Control.Monad
@@ -103,6 +112,7 @@ module Language.C.Expressions
   prefixInc = pure UnaryOp <*> pure "++" <*> (L.reservedOp "++" *> unaryExpression)
   prefixDec = pure UnaryOp <*> pure "--" <*> (L.reservedOp "--" *> unaryExpression)
   
+  unaryExpression :: Parser CExpr
   unaryExpression = try sizeofExpr <|> sizeofType <|> prefixInc <|> prefixDec <|> unaryOperator
   
   unaryOperator :: Parser CExpr

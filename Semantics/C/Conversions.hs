@@ -2,7 +2,7 @@
 
 module Semantics.C.Conversions where
   
-  import Language.C hiding (float, char)
+  import Language.C hiding (char)
   import Semantics.C.Nodes
   import Semantics.C.Reifiable
   import Data.Maybe

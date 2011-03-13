@@ -20,7 +20,7 @@ where
   import Language.C.Specifiers
   import Language.C.Miscellany
   
-  -- | C99 6.7 - declarations.
+  -- | C99 6.7 - abstract and concrete declarations.
   declaration :: Parser CDeclaration
   declaration = declaration' >>= checkTypedefs
     where declaration' = pure CDeclaration <*> some specifier <*> initDecls
@@ -35,15 +35,18 @@ where
     return d
   checkTypedefs x = return x
   
-  -- | Sized declarations can only appear in structure bodies.
+  -- | Sized declarations can only appear in the bodies of composite types.
   sizedDeclaration :: Parser CField
   sizedDeclaration = CField <$> (pure CDeclaration <*> some specifier
                                        <*> L.commaSep sizedDeclarator <* L.semi)
   
+  -- | Parameter declarations. Must have types, but may be anonymous if they appear
+  -- as a forward declaration.
   parameter :: Parser CParameter
   parameter = pure declaration <*> some specifier <*> declarator where
     declaration s d = CParameter $ CDeclaration s [DeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
   
+  -- | Type names, used in cast operations.
   typeName :: Parser CTypeName
   typeName = pure declaration <*> some specifier <*> optional declarator where
     declaration s d = CTypeName $ CDeclaration s [DeclInfo {contents = d, initVal = Nothing, size = Nothing}]
@@ -104,6 +107,7 @@ where
   asmName :: Parser String
   asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
   
+  -- | Abstract (unnamed) declarators.
   abstractDeclarator :: Parser CDeclarator
   abstractDeclarator = do
     ptrs <- many pointer
@@ -111,6 +115,7 @@ where
     let derived = ptrs ++ arrayOrFunction
     return $ CDeclarator Nothing derived Nothing []
   
+  -- Declarators (C99 6.7.5). May be named or unnamed.
   declarator :: Parser CDeclarator
   declarator = do
     ptrs <- many pointer

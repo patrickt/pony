@@ -184,7 +184,7 @@ module Language.C.AST
   newtype CParameter = CParameter CDeclaration deriving (Show, Eq, Typeable, Data)
   
   -- | Represents fields of structs or unions. There will be at least one specifier,
-  -- at least one DeclInfo, all of which will not have an initVal (but may be 
+  -- at least one 'DeclInfo', all of which will not have an initVal (but may be 
   -- named, sized, named and sized, or unnamed and sized.)
   newtype CField = CField CDeclaration deriving (Show, Eq, Typeable, Data)
   
