@@ -18,14 +18,6 @@ module Semantics.C.Conversions where
         | (declarationIsComposite d) && (not (declarationHasPointer d)) = [GComposite $ convertDeclarationToCompositeInfo d]
         | declarationIsFunctionPrototype d = [ functionPrototypeFromDeclaration d ]
         | otherwise = GVariable <$> convertDeclarationToVariables d
-        
-  functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
-  functionPrototypeFromDeclaration (CDeclaration specs [DeclInfo { contents = (Just contents), ..}]) 
-    = GFunctionPrototype rtype name params isVariadic where
-      (Just name) = nameOfDeclarator contents
-      params = extractFunctionArguments contents
-      rtype = returnTypeOfFunction (CFunction specs contents undefined)
-      isVariadic = False -- i am lazy
   
   instance Reifiable CFunction SFunction where
     convert f@(CFunction spec decl (CompoundStmt body)) =
@@ -65,12 +57,6 @@ module Semantics.C.Conversions where
     convert (ReturnStmt mE) = Return (convert <$> mE)
     convert (SwitchStmt ex st) = Switch (convert ex) (convert st)
     convert (WhileStmt ex st) = While (convert ex) (convert st)
-  
-  convertExpressionToLocal :: CExpr -> SLocal
-  convertExpressionToLocal e = LStatement $ ExpressionS $ convert e
-  
-  convertDeclarationToLocal :: CDeclaration -> Maybe SLocal
-  convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
   
   instance Reifiable CExpr Expression where
     convert (Constant l) = Literal l
@@ -140,8 +126,9 @@ module Semantics.C.Conversions where
     convert [TDouble]                       = double
     convert [TLong, TDouble]                = longDouble
     convert [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
-    convert [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convertEnumeration a)) []
-    convert [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convertEnumeration a)) []
+    -- this "unnamed" thing is a big hack
+    convert [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convert <$> a)) []
+    convert [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convert <$> a)) []
     convert [TTypedef n d]                  = Typedef n (convert d) []
     convert [TBuiltin s]                    = SBuiltinType s []
     convert other                           = error ("unknown type " ++ show other)
@@ -164,10 +151,6 @@ module Semantics.C.Conversions where
     convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = convertComponents specs decl
     convert (CTypeName (CDeclaration specs _)) = convert specs
   
-  convertDeclarationToType :: CDeclaration -> Maybe SType
-  convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
-  convertDeclarationToType _ = Nothing
-  
   instance Reifiable CField [SField] where
     convert (CField (CDeclaration specs infos)) = map convert' infos where
       convert' :: DeclInfo -> SField
@@ -176,6 +159,10 @@ module Semantics.C.Conversions where
   instance Reifiable CParameter SParameter where
     convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (nameOfDeclarator contents) (convertComponents specs contents)
     convert (CParameter (CDeclaration specs _)) = SParameter Nothing (convert specs)
+    
+  instance Reifiable Enumerator Enumeration where
+    convert (EnumIdent s) = Enumeration s Nothing
+    convert (EnumAssign s expr) = Enumeration s (Just (convert expr))
   
   -- TODO: Handle initializer lists here.
   convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
@@ -217,14 +204,6 @@ module Semantics.C.Conversions where
   convertDeclarationToField :: CDeclaration -> SField
   convertDeclarationToField d@(CDeclaration _ [DeclInfo {contents=(Just decl), initVal, size}]) = SField (nameOfDeclarator decl) (fromJust $ convertDeclarationToType d) (convert <$> size)
   
-  -- FIXME: increasing doesn't work in the case of {FOO, BAR=5, BAZ} (baz should == 6)
-  convertEnumeration :: [Enumerator] -> [(Name, Expression)]
-  convertEnumeration e = convert' 0 e [] where
-    convert' _ [] accum = accum
-    convert' i (e:es) accum = case e of
-      (EnumIdent n) -> convert' (i+1) es (accum ++ [(n, intToLiteral i)])
-      (EnumAssign n e) -> convert' (i+1) es (accum ++ [(n, convertExpression e)])
-  
   -- TODO: We're leaving storage specifiers out here, those should be included too.
   convertComponents :: [Specifier] -> CDeclarator -> SType
   convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convert typeSpecs) (storageAttrs ++ qualAttrs)) (reverse $ derivedPartsOfDeclarator decl) where
@@ -237,3 +216,20 @@ module Semantics.C.Conversions where
   returnTypeOfFunction :: CFunction -> SType
   returnTypeOfFunction (CFunction specs (CDeclarator n derived asm attrs) _) = convertComponents specs (CDeclarator n (init derived) asm attrs)
   
+  functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
+  functionPrototypeFromDeclaration (CDeclaration specs [DeclInfo { contents = (Just contents), ..}]) 
+    = GFunctionPrototype rtype name params isVariadic where
+      (Just name) = nameOfDeclarator contents
+      params = extractFunctionArguments contents
+      rtype = returnTypeOfFunction (CFunction specs contents undefined)
+      isVariadic = False -- i am lazy
+  
+  convertDeclarationToType :: CDeclaration -> Maybe SType
+  convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))
+  convertDeclarationToType _ = Nothing
+  
+  convertExpressionToLocal :: CExpr -> SLocal
+  convertExpressionToLocal e = LStatement $ ExpressionS $ convert e
+
+  convertDeclarationToLocal :: CDeclaration -> Maybe SLocal
+  convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d

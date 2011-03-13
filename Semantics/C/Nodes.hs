@@ -55,7 +55,10 @@ module Semantics.C.Nodes where
   setAttributes (Typedef n t _) a = Typedef n t a
   setAttributes (SBuiltinType n _) a = SBuiltinType n a
   
-  data EnumerationInfo = EnumerationInfo Name [(Name, Expression)]
+  data EnumerationInfo = EnumerationInfo Name [Enumeration]
+    deriving (Show, Eq, Typeable, Data)
+  
+  data Enumeration = Enumeration Name (Maybe Expression)
     deriving (Show, Eq, Typeable, Data)
   
   -- use Either instead of a Bool here.

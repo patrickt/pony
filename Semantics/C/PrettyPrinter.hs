@@ -24,7 +24,8 @@ module Semantics.C.PrettyPrinter where
   
   instance Pretty SType where
     pretty (SVoid _) = text "void"
-    pretty (SInt (IntegerFlags s w) _) = pretty s <+> (text $ intTypeFromSize w)
+    pretty (SInt (IntegerFlags Signed w) _) = text $ intTypeFromSize w
+    pretty (SInt (IntegerFlags Unsigned w) _) = (text "unsigned") <+> (text $ intTypeFromSize w)
     pretty (SFloat FFloat _) = text "float"
     pretty (SFloat FDouble _) = text "double"
     pretty (SFloat FLongDouble _) = text "long double"
@@ -49,11 +50,14 @@ module Semantics.C.PrettyPrinter where
     pretty (CompositeInfo t Nothing fields) =
       pretty t $+$ braces (vcat $ pretty <$> fields)
       
+  instance Pretty Enumeration where
+    pretty (Enumeration n (Just e)) = pretty n <+> equals <+> pretty e
+    pretty (Enumeration n Nothing)  = pretty n
+      
   instance Pretty EnumerationInfo where 
     pretty (EnumerationInfo n vals) =
       text "enum" <+> text n $+$ braces values where
-        values = vcat $ map pretty' vals
-        pretty' (n, e) = text n <+> equals <+> pretty e
+        values = vcat $ (pretty <$> vals)
   
   instance Pretty SVariable where
     pretty (Variable n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
