@@ -171,7 +171,7 @@ module Semantics.C.Conversions where
   instance Reifiable CField [SField] where
     convert (CField (CDeclaration specs infos)) = map convert' infos where
       convert' :: DeclInfo -> SField
-      convert' (DeclInfo {contents = (Just contents), size, ..}) = SField (fromJust $ nameOfDeclarator contents) (convertComponents specs contents) (convert <$> size) 
+      convert' (DeclInfo {contents = (Just contents), size, ..}) = SField (nameOfDeclarator contents) (convertComponents specs contents) (convert <$> size) 
   
   instance Reifiable CParameter SParameter where
     convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (nameOfDeclarator contents) (convertComponents specs contents)
@@ -215,7 +215,7 @@ module Semantics.C.Conversions where
   
   -- FIXME: this won't work if there's more than one declarator per declaration
   convertDeclarationToField :: CDeclaration -> SField
-  convertDeclarationToField d@(CDeclaration _ [DeclInfo {contents=(Just decl), initVal, size}]) = SField (fromJust $ nameOfDeclarator decl) (fromJust $ convertDeclarationToType d) (convert <$> size)
+  convertDeclarationToField d@(CDeclaration _ [DeclInfo {contents=(Just decl), initVal, size}]) = SField (nameOfDeclarator decl) (fromJust $ convertDeclarationToType d) (convert <$> size)
   
   -- FIXME: increasing doesn't work in the case of {FOO, BAR=5, BAZ} (baz should == 6)
   convertEnumeration :: [Enumerator] -> [(Name, Expression)]

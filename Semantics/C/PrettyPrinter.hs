@@ -69,7 +69,7 @@ module Semantics.C.PrettyPrinter where
   instance Pretty SField where
     -- function pointer syntax is the devil, and when I say the devil, I actually mean
     -- Satan. You know, the guy who lives in Hell.
-    pretty (SField n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
+    pretty (SField n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
     -- stupid C and its stupid decision to put array sizes after the variable name
     pretty (SField n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size) <> semicolon
     pretty (SField n t Nothing) = pretty t <+> pretty n <> semicolon

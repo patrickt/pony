@@ -65,8 +65,7 @@ module Semantics.C.Nodes where
   data CompositeInfo = CompositeInfo CompositeType (Maybe Name) [SField]
     deriving (Show, Eq, Typeable, Data)
   
-  -- FIXME: fields can be unnamed, so Name should be (Maybe Name)
-  data SField = SField Name SType (Maybe Expression)
+  data SField = SField (Maybe Name) SType (Maybe Expression)
     deriving (Show, Eq, Typeable, Data)
   
   data SVariable = Variable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
