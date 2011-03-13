@@ -2,7 +2,7 @@
 
 module Semantics.C.Conversions where
   
-  import Language.C hiding (float)
+  import Language.C hiding (float, char)
   import Semantics.C.Nodes
   import Semantics.C.Reifiable
   import Data.Maybe
@@ -15,7 +15,7 @@ module Semantics.C.Conversions where
       -- TODO: For the love of god, turn this into pattern matching
       convert' (ExternDecl d) 
         | declarationIsTypedef d = [GTypedef (fromJust $ nameOfDeclaration d) (fromJust $ convertDeclarationToType $ dropTypedef d)]
-        | declarationIsComposite d = [GComposite $ convertDeclarationToCompositeInfo d]
+        | (declarationIsComposite d) && (not (declarationHasPointer d)) = [GComposite $ convertDeclarationToCompositeInfo d]
         | declarationIsFunctionPrototype d = [ functionPrototypeFromDeclaration d ]
         | otherwise = GVariable <$> convertDeclarationToVariables d
         
@@ -108,7 +108,7 @@ module Semantics.C.Conversions where
   -- This is where type aliases go, as defined in C99, 6.7.2.2
   instance Reifiable [TypeSpecifier] SType where
     convert [TVoid]                         = void
-    convert [TChar]                         = signedChar
+    convert [TChar]                         = char
     convert [TSigned, TChar]                = signedChar
     convert [TUnsigned, TChar]              = unsignedChar
     convert [TShort]                        = shortSignedInt

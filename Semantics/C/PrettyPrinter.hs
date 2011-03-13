@@ -20,15 +20,15 @@ module Semantics.C.PrettyPrinter where
   
   instance Pretty Signedness where
     pretty Unsigned = text "unsigned"
-    pretty Signed = empty
+    pretty Signed = text "signed"
   
   instance Pretty SType where
     pretty (SVoid _) = text "void"
-    pretty (SInt (IntegerFlags s w) _) = text $ intTypeFromSize w
+    pretty (SInt (IntegerFlags s w) _) = pretty s <+> (text $ intTypeFromSize w)
     pretty (SFloat FFloat _) = text "float"
     pretty (SFloat FDouble _) = text "double"
     pretty (SFloat FLongDouble _) = text "long double"
-    pretty (SChar signedness _) = text "char"
+    pretty (SChar signedness _) = pretty signedness <+> text "char"
     pretty (SPointerTo t _) = pretty t <+> text "*"
     pretty (SArray t Nothing _) = pretty t <> text "[]"
     pretty (SArray t (Just e) _) = pretty t <> brackets (pretty e)
@@ -56,6 +56,8 @@ module Semantics.C.PrettyPrinter where
         pretty' (n, e) = text n <+> equals <+> pretty e
   
   instance Pretty SVariable where
+    pretty (Variable n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
+      pretty t <+> pretty n' <+> star <> pretty n
     -- stupid C and its stupid decision to put array sizes after the variable name
     pretty (Variable n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
     pretty (Variable n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size)
@@ -67,6 +69,8 @@ module Semantics.C.PrettyPrinter where
     pretty (SParameter (Just n) t) = pretty t <+> text n
   
   instance Pretty SField where
+    pretty (SField n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
+      pretty t <+> pretty n' <+> star <> pretty n <> semicolon
     -- function pointer syntax is the devil, and when I say the devil, I actually mean
     -- Satan. You know, the guy who lives in Hell.
     pretty (SField n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon

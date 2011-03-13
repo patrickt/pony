@@ -33,7 +33,7 @@ module Semantics.C.Nodes where
     = SVoid [Attribute]
     | SInt IntegerFlags [Attribute]
     | SFloat FloatFlags [Attribute]
-    | SChar Signedness [Attribute]
+    | SChar (Maybe Signedness) [Attribute]
     | SPointerTo SType [Attribute]
     | SFunctionPointer SType [SParameter] [Attribute]
     | SArray SType (Maybe Expression) [Attribute] 
@@ -119,8 +119,9 @@ module Semantics.C.Nodes where
     deriving (Show, Eq, Typeable, Data)
   
   void = SVoid []
-  signedChar = SChar Signed []
-  unsignedChar = SChar Unsigned []
+  char = SChar Nothing []
+  signedChar = SChar (Just Signed) []
+  unsignedChar = SChar (Just Unsigned) []
   shortSignedInt = SInt (IntegerFlags Signed sizeOfShort) []
   shortUnsignedInt = SInt (IntegerFlags Unsigned sizeOfShort) []
   signedInt = SInt (IntegerFlags Signed sizeOfInt) []

@@ -21,6 +21,17 @@ module Language.C.Miscellany where
       isFunction _ = False
   declarationIsFunctionPrototype _ = False
   
+  declarationHasPointer :: CDeclaration -> Bool
+  declarationHasPointer (CDeclaration _ infos) = isJust $ find hasPointer infos where
+    hasPointer :: DeclInfo -> Bool
+    hasPointer (DeclInfo {contents = Just decl, ..}) = declaratorIsPointer decl
+    
+  declaratorIsPointer :: CDeclarator -> Bool
+  declaratorIsPointer (CDeclarator _ derived _ _) = isJust $ find isPointer derived where
+    isPointer :: DerivedDeclarator -> Bool
+    isPointer (Pointer _) = True
+    isPointer _ = False
+  
   nameOfDeclaration :: CDeclaration -> Maybe String
   nameOfDeclaration (CDeclaration _ [DeclInfo {contents, ..}]) = contents >>= nameOfDeclarator
   nameOfDeclaration _ = Nothing
