@@ -7,3 +7,7 @@ Pony wouldn't exist without the help of others. I'd like to thank them here.
 * Benedikt Huber's [Language.C](http://trac.sivity.net/language_c/) project, which provided a wonderfully stable foundation for exploring how to parse C with Haskell. Without its excellent documentation, Pony's C parser would never have gotten off the ground.
 
 * Roman Redziejowski, whose parsing expression grammar for C99 provided me with much-needed help when writing the C parser.
+
+* Professor George Necula's [CIL](http://www.cs.berkeley.edu/~necula/cil/) project, which provided an excellent guide as to go about the daunting process of converting a C AST into a semantic tree.
+
+* My family and friends - Mom, Dad, Ruth, Colin, Phillip, Zach, Joalton, Jeremiah, Alex, and everyone else I missed.
