@@ -45,6 +45,7 @@ module Semantics.C.PrettyPrinter where
     pretty Union = text "union"
   
   instance Pretty CompositeInfo where
+    pretty (CompositeInfo t (Just n) []) = pretty t <+> text n
     pretty (CompositeInfo t (Just n) fields) = 
       pretty t <+> text n $+$ braces (vcat $ pretty <$> fields)
     pretty (CompositeInfo t Nothing fields) =
@@ -127,6 +128,7 @@ module Semantics.C.PrettyPrinter where
   instance Pretty SGlobal where
     pretty (GFunction g) = pretty g
     pretty (GVariable v) = pretty v <> semicolon
+    pretty (GTypedef n (SArray t size _)) = text "typedef" <+> pretty t <+> pretty n <> brackets (pretty size) <> semicolon
     pretty (GTypedef n t) = text "typedef" <+> pretty t <+> pretty n <> semicolon
     pretty (GComposite i) = pretty i <> semicolon
     pretty (GFunctionPrototype t n p _) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
