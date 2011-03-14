@@ -43,6 +43,16 @@ module Semantics.C.PrettyPrinter where
   instance Pretty CompositeType where
     pretty Struct = text "struct"
     pretty Union = text "union"
+    
+  instance Pretty Attribute where
+    pretty Auto = text "auto"
+    pretty Const = text "const"
+    pretty Extern = text "extern"
+    pretty Register = text "register"
+    pretty Restrict = text "restrict"
+    pretty Static = text "static"
+    pretty Volatile = text "volatile"
+    pretty (Custom es) = text "__attribute__" <> parens (parens (hsep $ punctuate comma (pretty <$> es)))
   
   instance Pretty CompositeInfo where
     pretty (CompositeInfo t (Just n) []) = pretty t <+> text n

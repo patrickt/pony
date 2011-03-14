@@ -114,9 +114,9 @@ module Semantics.C.Nodes where
     = Auto
     | Const 
     | Extern
+    | Register
     | Restrict
     | Static
-    | Register
     | Volatile
     | Custom [Expression]
     deriving (Show, Eq, Typeable, Data)
