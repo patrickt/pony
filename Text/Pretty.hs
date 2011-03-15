@@ -6,6 +6,8 @@ module Text.Pretty
   , question
   , star
   , textS
+  , hsep'
+  , parens'
   , Pretty (pretty)
   )
   where
@@ -27,6 +29,12 @@ module Text.Pretty
   instance (Pretty a) => Pretty (Maybe a) where
     pretty Nothing = empty
     pretty (Just a) = pretty a
+  
+  hsep' :: (Pretty a) => [a] -> Doc
+  hsep' xs = hsep (pretty `map` xs)
+  
+  parens' :: (Pretty a) => a -> Doc
+  parens' = parens . pretty
   
   semicolon, question, star :: Doc  
   semicolon = text ";"

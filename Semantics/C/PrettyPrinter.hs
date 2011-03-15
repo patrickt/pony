@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
 module Semantics.C.PrettyPrinter where
   
@@ -24,20 +24,20 @@ module Semantics.C.PrettyPrinter where
   
   instance Pretty SType where
     pretty (SVoid _) = text "void"
-    pretty (SInt (IntegerFlags Signed w) _) = text $ intTypeFromSize w
-    pretty (SInt (IntegerFlags Unsigned w) _) = (text "unsigned") <+> (text $ intTypeFromSize w)
-    pretty (SFloat FFloat _) = text "float"
-    pretty (SFloat FDouble _) = text "double"
-    pretty (SFloat FLongDouble _) = text "long double"
-    pretty (SChar signedness _) = pretty signedness <+> text "char"
-    pretty (SPointerTo t _) = pretty t <+> text "*"
+    pretty (SInt (IntegerFlags Signed w) attrs) = pretty attrs <+> (text $ intTypeFromSize w)
+    pretty (SInt (IntegerFlags Unsigned w) attrs) = pretty attrs <+> (text "unsigned") <+> (text $ intTypeFromSize w)
+    pretty (SFloat FFloat attrs) = pretty attrs <+> text "float"
+    pretty (SFloat FDouble attrs) = pretty attrs <+> text "double"
+    pretty (SFloat FLongDouble attrs) = pretty attrs <+> text "long double"
+    pretty (SChar signedness attrs) = pretty attrs <+> pretty signedness <+> text "char"
+    pretty (SPointerTo t attrs) = pretty t <+> pretty attrs <+> text "*"
     pretty (SArray t Nothing _) = pretty t <> text "[]"
     pretty (SArray t (Just e) _) = pretty t <> brackets (pretty e)
     pretty (SComposite i _) = pretty i
     pretty (SEnum i _) = pretty i
     pretty (Typedef s _ _) = text s
     pretty (SBuiltinType n _) = text n
-    pretty (SFunctionPointer t vs _) = parens (pretty t) <> parens (hsep $ punctuate comma (pretty <$> vs))
+    pretty (SFunctionPointer t vs _) = parens' t <> parens (hsep $ punctuate comma (pretty <$> vs))
     -- pretty x = text ("undefined for " ++ show x)
   
   instance Pretty CompositeType where
@@ -53,6 +53,9 @@ module Semantics.C.PrettyPrinter where
     pretty Static = text "static"
     pretty Volatile = text "volatile"
     pretty (Custom es) = text "__attribute__" <> parens (parens (hsep $ punctuate comma (pretty <$> es)))
+  
+  instance Pretty [Attribute] where
+    pretty = hsep'
   
   instance Pretty CompositeInfo where
     pretty (CompositeInfo t (Just n) []) = pretty t <+> text n
@@ -100,18 +103,18 @@ module Semantics.C.PrettyPrinter where
     pretty (Compound b) = lbrace $$ nest 2 (vcat (pretty <$> b)) $$ rbrace
     pretty Continue = text "continue"
     pretty (Default s) = text "default:" <+> pretty s
-    pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> parens (pretty e)
+    pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> parens' e
     pretty EmptyS = empty
     pretty (ExpressionS s) = pretty s
     pretty (For _ _ _ _) = text "for(TODO)"
     pretty (GoTo n) = text "goto" <+> pretty n
-    pretty (IfThen e s) = text "if" <+> parens (pretty e) <+> pretty s
-    pretty (IfThenElse e s s') = text "if" <+> parens (pretty e) <+> pretty s <+> text "else" <+> pretty s'
+    pretty (IfThen e s) = text "if" <+> parens' e <+> pretty s
+    pretty (IfThenElse e s s') = text "if" <+> parens' e <+> pretty s <+> text "else" <+> pretty s'
     pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
     pretty (Return Nothing) = text "return"
     pretty (Return (Just e)) = text "return" <+> pretty e
-    pretty (Switch e s) = text "switch" <+> parens (pretty e) <+> pretty s
-    pretty (While e s) = text "while" <+> parens (pretty e) <+> pretty s
+    pretty (Switch e s) = text "switch" <+> parens' e <+> pretty s
+    pretty (While e s) = text "while" <+> parens' e <+> pretty s
     
   instance Pretty CLiteral where
     pretty (CInteger i) = textS i
@@ -124,11 +127,11 @@ module Semantics.C.PrettyPrinter where
     pretty (Ident n) = text n
     pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
     pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
-    pretty (SCast t e) = parens $ pretty t <> pretty e
+    pretty (SCast t e) = parens' t <> pretty e
     pretty (Unary n e) = text n <> pretty e
-    pretty (Binary lhs op rhs) = parens $ pretty lhs <+> text op <+> pretty rhs
+    pretty (Binary lhs op rhs) = parens' lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
-    pretty (SizeOfSType t) = text "sizeof" <> parens (pretty t)
+    pretty (SizeOfSType t) = text "sizeof" <> parens' t
     pretty (Builtin b) = textS b
     
   instance Pretty SLocal where
