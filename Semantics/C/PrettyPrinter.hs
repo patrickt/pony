@@ -84,7 +84,9 @@ module Semantics.C.PrettyPrinter where
     pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
 
   instance Pretty SParameter where
+    pretty (SParameter Nothing (SFunctionPointer rt params _)) = pretty rt <+> parens (star) <> parens (hsep $ punctuate comma (pretty <$> params))
     pretty (SParameter Nothing t) = pretty t
+    pretty (SParameter (Just n) (SFunctionPointer rt params _)) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params))
     pretty (SParameter (Just n) (SArray t Nothing _)) = pretty t <+> text n <> text "[]"
     pretty (SParameter (Just n) t) = pretty t <+> text n
   
@@ -110,8 +112,8 @@ module Semantics.C.PrettyPrinter where
     pretty (ExpressionS s) = pretty s
     pretty (For _ _ _ _) = text "for(TODO)"
     pretty (GoTo n) = text "goto" <+> pretty n
-    pretty (IfThen e s) = text "if" <+> parens' e <+> pretty s
-    pretty (IfThenElse e s s') = text "if" <+> parens' e <+> pretty s <+> text "else" <+> pretty s'
+    pretty (IfThen e s) = text "if" <+> parens' e <+> (pretty s <> semicolon)
+    pretty (IfThenElse e s s') = text "if" <+> parens' e <+> (pretty s <> semicolon) <+> text "else" <+> (pretty s' <> semicolon)
     pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
     pretty (Return Nothing) = text "return"
     pretty (Return (Just e)) = text "return" <+> pretty e
@@ -130,6 +132,8 @@ module Semantics.C.PrettyPrinter where
     pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
     pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
     pretty (SCast t e) = parens' t <> pretty e
+    pretty (Unary "++ post" e) = pretty e <> text "++"
+    pretty (Unary "-- post" e) = pretty e <> text "--"
     pretty (Unary n e) = text n <> pretty e
     pretty (Binary lhs op rhs) = parens' lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
@@ -146,7 +150,8 @@ module Semantics.C.PrettyPrinter where
     pretty (GTypedef n (SArray t size _)) = text "typedef" <+> pretty t <+> pretty n <> brackets (pretty size) <> semicolon
     pretty (GTypedef n t) = text "typedef" <+> pretty t <+> pretty n <> semicolon
     pretty (GComposite i) = pretty i <> semicolon
-    pretty (GFunctionPrototype t n p _) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
+    pretty (GFunctionPrototype t n p False) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
+    pretty (GFunctionPrototype t n p True) = pretty t <+> pretty n <> parens ((hcat $ punctuate comma (pretty <$> p)) <> text ", ...") <> semicolon
     
   instance Pretty Program where
     pretty a = vcat $ pretty <$> a
