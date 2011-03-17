@@ -80,6 +80,7 @@ module Semantics.C.Conversions where
     convert SRegister = Register
     convert SStatic   = Static
     convert SExtern   = Extern
+    convert (SAttribute c) = convert c
     
   instance Reifiable TypeQualifier Attribute where
     convert QConst    = Const
