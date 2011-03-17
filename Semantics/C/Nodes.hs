@@ -114,6 +114,7 @@ module Semantics.C.Nodes where
     = Auto
     | Const 
     | Extern
+    | Inline
     | Register
     | Restrict
     | Static

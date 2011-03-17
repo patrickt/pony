@@ -85,6 +85,7 @@ module Semantics.C.Conversions where
     convert QConst    = Const
     convert QRestrict = Restrict
     convert QVolatile = Volatile
+    convert FInline = Inline
   
   instance Reifiable TypeSpecifier SType where
     convert x = convert [x]
@@ -222,7 +223,7 @@ module Semantics.C.Conversions where
       (Just name) = nameOfDeclarator contents
       params = extractFunctionArguments contents
       rtype = returnTypeOfFunction (CFunction specs contents undefined)
-      isVariadic = False -- i am lazy
+      isVariadic = doesDeclaratorContainVariadicSpecifier contents
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
   convertDeclarationToType (CDeclaration specs [info]) = Just (convertComponents specs (fromJust $ contents info))

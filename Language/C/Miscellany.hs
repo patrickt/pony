@@ -48,6 +48,11 @@ module Language.C.Miscellany where
   derivedPartsOfDeclarator :: CDeclarator -> [DerivedDeclarator]
   derivedPartsOfDeclarator (CDeclarator _ ds _ _) = ds
   
+  doesDeclaratorContainVariadicSpecifier :: CDeclarator -> Bool
+  doesDeclaratorContainVariadicSpecifier d = isJust $ find variadicFunction (derivedPartsOfDeclarator d) where
+    variadicFunction (Function _ True) = True
+    variadicFunction _ = False
+  
   -- this is buggy
   isFunctionVariadic :: CFunction -> Bool
   isFunctionVariadic (CFunction _ (CDeclarator _ (Function _ b : _) _ _) _) = b

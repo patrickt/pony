@@ -48,6 +48,7 @@ module Semantics.C.PrettyPrinter where
     pretty Auto = text "auto"
     pretty Const = text "const"
     pretty Extern = text "extern"
+    pretty Inline = text "inline"
     pretty Register = text "register"
     pretty Restrict = text "restrict"
     pretty Static = text "static"
@@ -84,6 +85,7 @@ module Semantics.C.PrettyPrinter where
 
   instance Pretty SParameter where
     pretty (SParameter Nothing t) = pretty t
+    pretty (SParameter (Just n) (SArray t Nothing _)) = pretty t <+> text n <> text "[]"
     pretty (SParameter (Just n) t) = pretty t <+> text n
   
   instance Pretty SField where
