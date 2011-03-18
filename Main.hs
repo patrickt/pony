@@ -64,7 +64,7 @@ module Main where
   getOperators :: (MonadError CPError m, MonadIO m) => ConfigParser -> String -> m [Field]
   getOperators cp name = do
     arith <- get cp "operators" name
-    case (parseCSV ".ponyproj" (arith :: String)) of
+    case parseCSV ".ponyproj" (arith :: String) of
       (Left e) -> throwError (ParseError (show e), "in CSV parsing")
       (Right csv) -> return $ head csv
   

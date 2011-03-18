@@ -15,7 +15,7 @@ module Semantics.C.Conversions where
       -- TODO: For the love of god, turn this into pattern matching
       convert' (ExternDecl d) 
         | declarationIsTypedef d = [GTypedef (fromJust $ nameOfDeclaration d) (fromJust $ convertDeclarationToType $ dropTypedef d)]
-        | (declarationIsComposite d) && (not (declarationHasPointer d)) = [GComposite $ convertDeclarationToCompositeInfo d]
+        | declarationIsComposite d && not (declarationHasPointer d) = [GComposite $ convertDeclarationToCompositeInfo d]
         | declarationIsFunctionPrototype d = [ functionPrototypeFromDeclaration d ]
         | otherwise = GVariable <$> convertDeclarationToVariables d
   

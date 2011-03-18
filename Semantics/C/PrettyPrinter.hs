@@ -24,8 +24,8 @@ module Semantics.C.PrettyPrinter where
   
   instance Pretty SType where
     pretty (SVoid _) = text "void"
-    pretty (SInt (IntegerFlags Signed w) attrs) = pretty attrs <+> (text $ intTypeFromSize w)
-    pretty (SInt (IntegerFlags Unsigned w) attrs) = pretty attrs <+> (text "unsigned") <+> (text $ intTypeFromSize w)
+    pretty (SInt (IntegerFlags Signed w) attrs) = pretty attrs <+> text (intTypeFromSize w)
+    pretty (SInt (IntegerFlags Unsigned w) attrs) = pretty attrs <+> text "unsigned" <+> text (intTypeFromSize w)
     pretty (SFloat FFloat attrs) = pretty attrs <+> text "float"
     pretty (SFloat FDouble attrs) = pretty attrs <+> text "double"
     pretty (SFloat FLongDouble attrs) = pretty attrs <+> text "long double"
@@ -72,7 +72,7 @@ module Semantics.C.PrettyPrinter where
   instance Pretty EnumerationInfo where 
     pretty (EnumerationInfo n vals) =
       text "enum" <+> text n $+$ braces values where
-        values = vcat $ (pretty <$> vals)
+        values = vcat (pretty <$> vals)
   
   instance Pretty SVariable where
     pretty (Variable n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
@@ -84,7 +84,7 @@ module Semantics.C.PrettyPrinter where
     pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
 
   instance Pretty SParameter where
-    pretty (SParameter Nothing (SFunctionPointer rt params _)) = pretty rt <+> parens (star) <> parens (hsep $ punctuate comma (pretty <$> params))
+    pretty (SParameter Nothing (SFunctionPointer rt params _)) = pretty rt <+> parens star <> parens (hsep $ punctuate comma (pretty <$> params))
     pretty (SParameter Nothing t) = pretty t
     pretty (SParameter (Just n) (SFunctionPointer rt params _)) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params))
     pretty (SParameter (Just n) (SArray t Nothing _)) = pretty t <+> text n <> text "[]"
@@ -151,7 +151,7 @@ module Semantics.C.PrettyPrinter where
     pretty (GTypedef n t) = text "typedef" <+> pretty t <+> pretty n <> semicolon
     pretty (GComposite i) = pretty i <> semicolon
     pretty (GFunctionPrototype t n p False) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
-    pretty (GFunctionPrototype t n p True) = pretty t <+> pretty n <> parens ((hcat $ punctuate comma (pretty <$> p)) <> text ", ...") <> semicolon
+    pretty (GFunctionPrototype t n p True) = pretty t <+> pretty n <> parens (hcat (punctuate comma (pretty <$> p)) <> text ", ...") <> semicolon
     
   instance Pretty Program where
     pretty a = vcat $ pretty <$> a

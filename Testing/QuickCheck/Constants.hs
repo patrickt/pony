@@ -18,29 +18,29 @@ module Testing.QuickCheck.Constants
           ]
 
   prop_decimalIntegers :: Integer -> Bool
-  prop_decimalIntegers n = case (parseConstant (show n)) of
-      (Right (Constant (CInteger i)))               -> (i == n)
-      (Right (UnaryOp "-" (Constant (CInteger i)))) -> (i == negate n)
+  prop_decimalIntegers n = case parseConstant (show n) of
+      (Right (Constant (CInteger i)))               -> i == n
+      (Right (UnaryOp "-" (Constant (CInteger i)))) -> i == negate n
       (Left _)                                      -> False
     
   prop_floatingPoint :: Double -> Bool
-  prop_floatingPoint f = case (parseConstant (show f)) of
-    (Right (Constant (CFloat f')))               -> (f == f')
-    (Right (UnaryOp "-" (Constant (CFloat f')))) -> (f == negate f')
+  prop_floatingPoint f = case parseConstant (show f) of
+    (Right (Constant (CFloat f')))               -> f == f'
+    (Right (UnaryOp "-" (Constant (CFloat f')))) -> f == negate f'
     (Left _)                                     -> False
 
   prop_characters :: Char -> Bool
-  prop_characters c = case (parseConstant (show c)) of
-    (Right (Constant (CChar c'))) -> (c == c')
+  prop_characters c = case parseConstant (show c) of
+    (Right (Constant (CChar c'))) -> c == c'
     (Left _) -> False    
 
   prop_strings :: String -> Bool
-  prop_strings s = case (parseConstant (show s)) of
-    (Right (Constant (CString s'))) -> (s == s')
+  prop_strings s = case parseConstant (show s) of
+    (Right (Constant (CString s'))) -> s == s'
     (Left _) -> False
   
   prop_spaceSeparatedStrings :: [String] -> Bool
-  prop_spaceSeparatedStrings s = case (parseConstant separated) of
-    (Right (Constant (CString s'))) -> (concat s == s')
-    (Left _) -> (s == [])
+  prop_spaceSeparatedStrings s = case parseConstant separated of
+    (Right (Constant (CString s'))) -> concat s == s'
+    (Left _) -> s == []
     where separated = unwords $ map show s

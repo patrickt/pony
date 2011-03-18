@@ -72,7 +72,7 @@ where
       lookupTypedef = do
         defs <- getState
         ident <- identifier
-        case (lookup ident (typedefs defs)) of
+        case lookup ident (typedefs defs) of
           (Just specs) -> return (TTypedef ident specs)
           Nothing -> fail "could not find typedef"
 
