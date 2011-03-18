@@ -129,8 +129,7 @@ module Semantics.C.Conversions where
     convert [TLong, TDouble]                = longDouble
     convert [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
     -- this "unnamed" thing is a big hack
-    convert [TEnumeration Nothing a _]      = SEnum (EnumerationInfo "unnamed" (convert <$> a)) []
-    convert [TEnumeration (Just n) a _]     = SEnum (EnumerationInfo n (convert <$> a)) []
+    convert [TEnumeration n a _]            = SEnum (EnumerationInfo n (convert <$> a)) []
     convert [TTypedef n d]                  = Typedef n (convert d) []
     convert [TBuiltin s]                    = SBuiltinType s []
     convert other                           = error ("unknown type " ++ show other)

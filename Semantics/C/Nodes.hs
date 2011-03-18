@@ -55,7 +55,7 @@ module Semantics.C.Nodes where
   setAttributes (Typedef n t _) a = Typedef n t a
   setAttributes (SBuiltinType n _) a = SBuiltinType n a
   
-  data EnumerationInfo = EnumerationInfo Name [Enumeration]
+  data EnumerationInfo = EnumerationInfo (Maybe String) [Enumeration]
     deriving (Show, Eq, Typeable, Data)
   
   data Enumeration = Enumeration Name (Maybe Expression)

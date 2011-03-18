@@ -71,8 +71,8 @@ module Semantics.C.PrettyPrinter where
       
   instance Pretty EnumerationInfo where 
     pretty (EnumerationInfo n vals) =
-      text "enum" <+> text n $+$ braces values where
-        values = vcat (pretty <$> vals)
+      text "enum" <+> pretty n <+> braces values where
+        values = commaSep vals
   
   instance Pretty SVariable where
     pretty (Variable n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
