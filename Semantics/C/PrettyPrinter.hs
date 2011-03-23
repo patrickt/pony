@@ -23,7 +23,7 @@ module Semantics.C.PrettyPrinter where
     pretty Signed = text "signed"
   
   instance Pretty SType where
-    pretty (SVoid _) = text "void"
+    pretty (SVoid attrs) = pretty attrs <+> text "void"
     pretty (SInt (IntegerFlags Signed w) attrs) = pretty attrs <+> text (intTypeFromSize w)
     pretty (SInt (IntegerFlags Unsigned w) attrs) = pretty attrs <+> text "unsigned" <+> text (intTypeFromSize w)
     pretty (SFloat FFloat attrs) = pretty attrs <+> text "float"
@@ -61,7 +61,8 @@ module Semantics.C.PrettyPrinter where
   instance Pretty CompositeInfo where
     pretty (CompositeInfo t (Just n) []) = pretty t <+> text n
     pretty (CompositeInfo t (Just n) fields) = 
-      pretty t <+> text n $+$ braces (vcat $ pretty <$> fields)
+      pretty t <+> text n <+> lbrace $$ body $$ rbrace where
+        body = nest 2 (vcat $ pretty <$> fields)
     pretty (CompositeInfo t Nothing fields) =
       pretty t $+$ braces (vcat $ pretty <$> fields)
       
