@@ -25,7 +25,7 @@ Cabal-version:       >=1.2.3
 Executable test
   Main-is:             Testing/Main.hs
   
-  Build-depends:       QuickCheck >= 2.0,
+  Build-depends:       QuickCheck >= 2.3,
                        HUnit == 1.2.2.3,
                        test-framework == 0.3.3,
                        test-framework-quickcheck2 == 0.2.7,
