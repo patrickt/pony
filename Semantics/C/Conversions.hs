@@ -33,7 +33,7 @@ module Semantics.C.Conversions where
   
   instance Reifiable CStatement Statement where
     convert BreakStmt = Break
-    convert (CaseStmt ex st) = Case (convertExpression ex) (convert st)
+    convert (CaseStmt ex st) = Case (convert ex) (convert st)
     convert (CompoundStmt bis) = Compound (bis >>= convert)
     convert ContinueStmt = Continue
     convert (DefaultStmt st) = Default (convert st)
@@ -128,7 +128,6 @@ module Semantics.C.Conversions where
     convert [TDouble]                       = double
     convert [TLong, TDouble]                = longDouble
     convert [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
-    -- this "unnamed" thing is a big hack
     convert [TEnumeration n a _]            = SEnum (EnumerationInfo n (convert <$> a)) []
     convert [TTypedef n d]                  = Typedef n (convert d) []
     convert [TBuiltin s]                    = SBuiltinType s []
@@ -169,7 +168,7 @@ module Semantics.C.Conversions where
   convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
   convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
                                                              , initVal = Just (InitExpression e)
-                                                             , size = Nothing}]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression e)))
+                                                             , size = Nothing}]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convert e)))
   convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
                                                              , initVal = Nothing
                                                              , size = Nothing }]) = Just (Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing)
@@ -177,7 +176,7 @@ module Semantics.C.Conversions where
   
   convertDeclarationToVariables :: CDeclaration -> [SVariable]
   convertDeclarationToVariables (CDeclaration specs infos) = map convert infos where
-    convert (DeclInfo {contents = Just decl, initVal, size = Just size}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression size))
+    convert (DeclInfo {contents = Just decl, initVal, size = (Just size)}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression size))
     convert (DeclInfo {contents = Just decl, initVal = Nothing, size = Nothing}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) Nothing
     convert (DeclInfo {contents = Just decl, initVal = Just (InitExpression init), size = Nothing}) = Variable (fromJust $ nameOfDeclarator decl) (convertComponents specs decl) (Just (convertExpression init))
   
