@@ -25,7 +25,7 @@ module Semantics.C.Conversions where
           name = fromJust $ nameOfDeclarator decl
           args = extractFunctionArguments decl
           newBody = body >>= convert
-          in SFunction ftype name args newBody (isFunctionVariadic f)
+          in SFunction [] ftype name args newBody (isFunctionVariadic f)
   
   instance Reifiable BlockItem FunctionBody where
     convert (Left declaration) = LDeclaration <$> convertDeclarationToVariables declaration

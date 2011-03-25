@@ -9,8 +9,8 @@ module Semantics.C.PrettyPrinter where
   import Text.Pretty
   
   instance Pretty SFunction where
-    pretty (SFunction retType name params body isVariadic) = 
-      pretty retType <+> pretty name <> parens (parameters <> ellipsis) 
+    pretty (SFunction attrs retType name params body isVariadic) = 
+      pretty attrs <+> pretty retType <+> pretty name <> parens (parameters <> ellipsis) 
       <+> lbrace 
         $$ bodyContents 
       $$ rbrace

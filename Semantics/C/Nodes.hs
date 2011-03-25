@@ -9,11 +9,11 @@ module Semantics.C.Nodes where
   
   type Name = String
   
-  -- | A semantic function has four components: its return type (a 'SType'),
+  -- | A semantic function has five components: its attributes, its return type (a 'SType'),
   -- its name, its parameters (a list of 'SVariables'), and a boolean that 
   -- determines whether it is variadic or not.
   data SFunction 
-    = SFunction SType Name [SParameter] [SLocal] Bool
+    = SFunction [Attribute] SType Name [SParameter] [SLocal] Bool
     deriving (Show, Eq, Typeable, Data)
   
   data Signedness 
