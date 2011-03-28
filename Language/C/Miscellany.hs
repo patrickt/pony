@@ -11,10 +11,11 @@ module Language.C.Miscellany where
   declarationIsTypedef (CDeclaration (SSpec STypedef : rest) _) = True
   declarationIsTypedef _ = False
   
-  -- A declaration is of a composite type if its first specifier is a 'TStructOrUnion'.
+  -- A declaration is of a composite type if it contains a 'TStructOrUnion' specifier.
   declarationIsComposite :: CDeclaration -> Bool
-  declarationIsComposite (CDeclaration (TSpec (TStructOrUnion _ _ _ _) : rest) _) = True
-  declarationIsComposite _ = False
+  declarationIsComposite (CDeclaration specs _) = isJust $ find isComposite specs where
+    isComposite (TSpec (TStructOrUnion _ _ _ _)) = True
+    isComposite _ = False
   
   -- A declaration is a function or function prototype if its derived declarations
   declarationIsFunctionPrototype :: CDeclaration -> Bool
