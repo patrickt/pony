@@ -125,7 +125,7 @@ module Semantics.C.PrettyPrinter where
     pretty (CInteger i) = textS i
     pretty (CChar c) = textS c
     pretty (CFloat f) = textS f
-    pretty (CString s) = doubleQuotes $ text s
+    pretty (CString s) = textS s
 
   instance Pretty Expression where
     pretty (Literal l) = pretty l
@@ -136,7 +136,7 @@ module Semantics.C.PrettyPrinter where
     pretty (Unary "++ post" e) = pretty e <> text "++"
     pretty (Unary "-- post" e) = pretty e <> text "--"
     pretty (Unary n e) = text n <> pretty e
-    pretty (Binary lhs op rhs) = parens' lhs <+> text op <+> pretty rhs
+    pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
     pretty (SizeOfSType t) = text "sizeof" <> parens' t
     pretty (Builtin b) = textS b
