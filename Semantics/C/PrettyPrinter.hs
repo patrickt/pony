@@ -135,8 +135,10 @@ module Semantics.C.PrettyPrinter where
     pretty (SCast t e) = parens' t <> pretty e
     pretty (Unary "++ post" e) = pretty e <> text "++"
     pretty (Unary "-- post" e) = pretty e <> text "--"
+    -- terrible hack pending workaround
+    pretty (Unary "sizeof" e) = pretty "sizeof" <> parens' e
     pretty (Unary n e) = text n <> pretty e
-    pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
+    pretty (Binary lhs op rhs) = pretty lhs <> text op <> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
     pretty (SizeOfSType t) = text "sizeof" <> parens' t
     pretty (Builtin b) = textS b

@@ -56,7 +56,7 @@ module Language.C.Miscellany where
   
   -- this is buggy
   isFunctionVariadic :: CFunction -> Bool
-  isFunctionVariadic (CFunction _ (CDeclarator _ (Function _ b : _) _ _) _) = b
+  isFunctionVariadic (CFunction _ d _) = doesDeclaratorContainVariadicSpecifier d
   
   -- There is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
