@@ -8,6 +8,7 @@ module Language.Pony.Transformations where
   import qualified Language.Pony.Transformations.Predefined.SeparateDeclarations as SD
   import qualified Language.Pony.Transformations.Predefined.HelloWorld as HW
   import qualified Language.Pony.Transformations.Predefined.StringConcat as SC
+  import qualified Language.Pony.Transformations.Predefined.PreciseGC as PGC
   
   data Transformation = MkTrans String GenericT
   instance Show Transformation where
@@ -28,6 +29,9 @@ module Language.Pony.Transformations where
   stringConcat :: Transformation
   stringConcat = MkTrans "StringConcat" SC.concatT
   
+  preciseGC :: Transformation
+  preciseGC = MkTrans "PreciseGC" PGC.gcT
+  
   instance Read Transformation where
     readsPrec _ s = case s of
       "CheckMalloc" -> [(checkMalloc, "")]
@@ -35,4 +39,5 @@ module Language.Pony.Transformations where
       "SeparateDeclarations" -> [(separateDeclarations, "")]
       "HelloWorld" -> [(helloWorld, "")]
       "StringConcat" -> [(stringConcat, "")]
+      "PreciseGC" -> [(preciseGC, "")]
       other -> []
