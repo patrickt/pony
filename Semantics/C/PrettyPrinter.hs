@@ -151,6 +151,8 @@ module Semantics.C.PrettyPrinter where
     pretty (GFunction g) = pretty g
     pretty (GVariable v) = pretty v <> semicolon
     pretty (GTypedef n (SArray t size _)) = text "typedef" <+> pretty t <+> pretty n <> brackets (pretty size) <> semicolon
+    pretty (GTypedef n (SFunctionPointer rt params _)) = text "typedef" <+> pretty rt <+> name <> parens (commaSep params) <> semicolon where
+      name = parens (star <> text n)
     pretty (GTypedef n t) = text "typedef" <+> pretty t <+> pretty n <> semicolon
     pretty (GComposite i) = pretty i <> semicolon
     pretty (GFunctionPrototype t n p False) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon

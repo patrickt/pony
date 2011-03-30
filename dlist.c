@@ -1,3 +1,8 @@
+#include <stdio.h>
+
+void *malloc(size_t size);
+void free(void* ptr);
+
 typedef enum {
 	LIST, VALUE
 } tag_t;
@@ -33,16 +38,24 @@ list_t *rest(list_t *list) {
 }
 
 void del(list_t *list) {
-	if (list_t != nil) {
+	if (list != nil) {
 		list_t *next = rest(list);
 		free(list);
 		del(next);
 	}
 }
 
+void print(list_t *list) {
+	printf("%p ", list->c.value);
+	if (rest(list) != nil) {
+		print(rest(list));
+	}
+}
+
 int main (int argc, char const *argv[])
 {
 	list_t *l = cons((void*)1, nil);
-	list_t *l2 = cons((void*)2, l2);
+	list_t *l2 = cons((void*)2, l);
+	print(l2);
 	return 0;
 }
