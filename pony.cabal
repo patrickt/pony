@@ -24,7 +24,7 @@ Cabal-version:       >=1.2.3
 
 Executable test
   Main-is:             Testing/Main.hs
-  
+  LD-Options:          -w
   Build-depends:       QuickCheck >= 2.3,
                        HUnit == 1.2.2.3,
                        test-framework == 0.3.3,
@@ -33,7 +33,7 @@ Executable test
 
 Executable pony
   Main-is:             Main.hs
-  
+  LD-Options:          -w
   Extensions:          DeriveDataTypeable,
                        NamedFieldPuns,
                        Rank2Types,
