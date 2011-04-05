@@ -13,6 +13,11 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   countWhere :: (a -> Bool) -> [a] -> Int
   countWhere pred x = length $ filter pred x
   
+  ref_list_type = (CompositeInfo Struct (Just "ref_list_s") 
+    [SField (Just "parent") (SPointerTo (SComposite forward_ref_list_type []) []) Nothing])
+  
+  forward_ref_list_type = (CompositeInfo Struct (Just "ref_list_s") [])
+  
   -- Avert your gaze!
   list_type = (SPointerTo (Typedef "list_t" (SComposite (CompositeInfo 
     Struct (Just "list_s") [SField (Just "next") (SPointerTo 
@@ -31,22 +36,34 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   insertGCList x = 
     let 
       gc_list = GVariable (Variable "all_lists" list_type (Just sNull))
-      free_list = GVariable (Variable "marked" (SPointerTo signedInt []) (Just sNull))
-      convert nil@(GVariable (Variable "nil" _ _)) = [nil, gc_list, free_list]
+      ref_list_decl = GComposite $ ref_list_type
+      ref_list_instance = GVariable (Variable "referenced_list" (SPointerTo (SComposite forward_ref_list_type []) []) (Just sNull))
+      marked = GVariable (Variable "marked" (SPointerTo signedInt []) (Just sNull))
+      convert nil@(GVariable (Variable "nil" _ _)) = [nil, gc_list, marked, ref_list_decl, ref_list_instance]
       convert x = [x]
     in 
       if (elem gc_list x) then x else concatMap convert x
       
   referencedListCount :: SFunction -> Int
   referencedListCount (SFunction _ _ _ params locals _) = countParams params + countLocals locals where
-    countParams p = countWhere isListParameter p
+    countParams = countWhere isListParameter
     isListParameter (SParameter _ t) = t == list_type
-    countLocals _ = 0
+    countLocals = countWhere isLocalList
+    isLocalList (LDeclaration (Variable _ t _)) = t == list_type 
+    isLocalList _ = False
     
-  addParameterCount :: SFunction -> SFunction
-  addParameterCount f@(SFunction attrs typ name params locals isVariadic) = 
-    SFunction attrs typ name params (pcount : locals) isVariadic where
+  addGC :: SFunction -> SFunction
+  addGC f@(SFunction attrs typ name params locals isVariadic)
+    | name == "__sputc" = f
+    | name == "main" = f
+    | otherwise = 
+    SFunction attrs typ name params (pcount : reflist : a1 : ((init locals) ++ [reset] ++ [last locals])) isVariadic where
       pcount = LDeclaration $ Variable "parameter_count" signedInt (Just <$> intToLiteral $ referencedListCount f)
+      reflist = LDeclaration $ Variable "rl" (SComposite forward_ref_list_type []) (Nothing)
+      a1 = LStatement $ ExpressionS $ Binary (Binary "rl" "." "parent") "=" "referenced_list"
+      reset = LStatement $ ExpressionS $ Binary "referenced_list" "=" (Binary "rl" "." "parent")
+      
+      
   
   modifyMain :: SFunction -> SFunction
   modifyMain (SFunction attrs typ "main" params locals isVariadic) = 
@@ -62,4 +79,4 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   precise x = x
   
   gcT :: GenericT
-  gcT = mkT precise `extT` insertGCList `extT` modifyMain `extT` addParameterCount
+  gcT = mkT precise `extT` insertGCList `extT` modifyMain `extT` addGC
