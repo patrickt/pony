@@ -197,12 +197,20 @@ module Language.C.AST
    = CDeclarator (Maybe String) [DerivedDeclarator] AsmName [CAttribute]
    deriving (Eq, Show, Typeable, Data)
   
+  -- | C designators, i.e. that which can appear inside compound initialization statements.
+  data CDesignator 
+    = ArrayDesignator CExpr
+    | MemberDesignator String
+    deriving (Show, Eq, Typeable, Data)
+  
   -- | C initializers (C99 6.7.8). Initialization types can contain one 
   -- expression or a bracketed list of initializers.
   data Initializer 
     = InitExpression CExpr
-    | InitList [Initializer]
+    | InitList CInitList
     deriving (Eq, Show, Typeable, Data)
+  
+  type CInitList = [([CDesignator], Initializer)]
   
   -- | Indirectly derived declarators used inside the 'CDeclarator' type.
   -- In the future, Apple's extension for blocks (declared with @^@) may be added.

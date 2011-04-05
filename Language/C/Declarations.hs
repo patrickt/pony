@@ -1,10 +1,4 @@
 module Language.C.Declarations
-  ( declaration
-  , abstractDeclarator
-  , sizedDeclaration
-  , typeName
-  , declarator
-  , parameter )
 where
   
   -- Lasciate ogne speranza, voi ch'intrate.
@@ -15,7 +9,7 @@ where
   import Debug.Trace
   import Language.C.AST
   import Language.C.Expressions
-  import Language.C.Lexer as L
+  import qualified Language.C.Lexer as L hiding (integer)
   import Language.C.Parser
   import Language.C.Specifiers
   import Language.C.Miscellany
@@ -90,9 +84,20 @@ where
   sizedDeclarator = pure DeclInfo <*> Just <$> declarator
                                   <*> pure Nothing
                                   <*> optional (L.colon *> expression)
+                                  
+  designator :: Parser CDesignator
+  designator =  pure ArrayDesignator <*> L.brackets constant
+            <|> pure MemberDesignator <*> (L.dot *> L.identifier)
+  
+  initlist :: Parser CInitList
+  initlist = L.braces (L.commaSep1 initList') <?> "initializer list" where
+    initList' = do
+      desigs <- many designator
+      init <- (L.reservedOp "=" *> initializer)
+      return $ (desigs, init)
   
   initializer :: Parser Initializer
-  initializer = (InitList <$> L.braces (L.commaSep1 initializer)) <|> (InitExpression <$> expression)
+  initializer = (InitList <$> initlist) <|> (InitExpression <$> expression)
 
   -- hack hack hack
   data DirectDeclarator 
