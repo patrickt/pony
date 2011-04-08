@@ -5,6 +5,8 @@ module Text.Pretty
   , semicolon
   , question
   , star
+  , dot
+  , arrow
   , textS
   , hsep'
   , parens'
@@ -40,8 +42,10 @@ module Text.Pretty
   commaSep :: (Pretty a) => [a] -> Doc
   commaSep p = hsep $ punctuate comma (pretty `map` p) 
   
-  semicolon, question, star :: Doc  
+  semicolon, question, star, dot, arrow :: Doc  
   semicolon = text ";"
   question = text "?"
   star = text "*"
+  dot = text "."
+  arrow = text "->"
   

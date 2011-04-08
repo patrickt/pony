@@ -113,7 +113,7 @@ module Semantics.C.PrettyPrinter where
     pretty (ExpressionS s) = pretty s
     pretty (For _ _ _ _) = text "for(TODO)"
     pretty (GoTo n) = text "goto" <+> pretty n
-    pretty (IfThen e s) = text "if" <+> parens' e <+> (pretty s <> semicolon)
+    pretty (IfThen e s) = text "if" <+> parens' e <+> pretty s
     pretty (IfThenElse e s s') = text "if" <+> parens' e <+> (pretty s <> semicolon) <+> text "else" <+> (pretty s' <> semicolon)
     pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
     pretty (Return Nothing) = text "return"
@@ -138,7 +138,9 @@ module Semantics.C.PrettyPrinter where
     -- terrible hack pending workaround
     pretty (Unary "sizeof" e) = pretty "sizeof" <> parens' e
     pretty (Unary n e) = text n <> pretty e
-    pretty (Binary lhs op rhs) = pretty lhs <> text op <> pretty rhs
+    pretty (Binary lhs "." rhs) = pretty lhs <> dot <> pretty rhs
+    pretty (Binary lhs "->" rhs) = pretty lhs <> arrow <> pretty rhs
+    pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
     pretty (SizeOfSType t) = text "sizeof" <> parens' t
     pretty (Builtin b) = textS b
