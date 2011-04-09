@@ -32,7 +32,7 @@ module Language.C.Expressions
     let arithTable' = arithTable ++ [map mkInfixL (arithmeticOps st)]
     let compTable' = compTable ++ [map mkInfixL (comparativeOps st)]
     let bitwiseTable' = bitwiseTable ++ [map mkInfixL (bitwiseOps st)]
-    let logicTable' = logicTable ++ [map mkInfixL (logicalOps st)]
+    let logicTable' = logicTable ++ [map mkInfixR (logicalOps st)]
     buildChainedParser [ (arithTable', "arithmetic expression")
                        , (compTable', "comparative expression")
                        , (bitwiseTable', "bitwise operation")
@@ -86,6 +86,7 @@ module Language.C.Expressions
       , mkInfixL ">>" ] ]
   
   mkInfixL name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocLeft
+  mkInfixR name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocRight
   
   builtinExpression :: Parser CExpr
   builtinExpression = CBuiltin <$> builtinVaArg

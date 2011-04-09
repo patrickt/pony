@@ -73,6 +73,10 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
       a1 = LStatement $ ExpressionS $ Binary (Binary "rl" "." "parent") "=" "referenced_list"
       reset = LStatement $ ExpressionS $ Binary "referenced_list" "=" (Binary "rl" "." "parent")  
   
+  rewriteConsOperator :: Expression -> Expression
+  rewriteConsOperator (Binary lhs "::" rhs) = FunctionCall "cons" [SCast (pointerTo void) lhs, rhs]
+  rewriteConsOperator x = x
+  
   -- make `del` a no-op
   removeDelete :: SFunction -> SFunction
   removeDelete (SFunction attrs typ "del" params _ isVariadic) = 
@@ -80,5 +84,5 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   precise x = x
   
   gcT :: GenericT
-  gcT = mkT redefineList `extT` insertGCList `extT` addGC
+  gcT = mkT redefineList `extT` insertGCList `extT` addGC `extT` rewriteConsOperator
   
