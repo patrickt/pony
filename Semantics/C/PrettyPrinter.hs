@@ -98,6 +98,9 @@ module Semantics.C.PrettyPrinter where
     -- Satan. You know, the guy who lives in Hell.
     pretty (SField n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
     -- stupid C and its stupid decision to put array sizes after the variable name
+    -- HACK HACK HACK
+    pretty (SField n (SArray (SPointerTo (SPointerTo t _) _) size _) _) = pretty t <+> parens (star <> star <> pretty n) <> brackets (pretty size) <> semicolon
+    pretty (SField n (SArray (SPointerTo t _) size _) _) = pretty t <+> parens (star <> pretty n) <> brackets (pretty size) <> semicolon
     pretty (SField n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size) <> semicolon
     pretty (SField n t Nothing) = pretty t <+> pretty n <> semicolon
     pretty (SField n t (Just i)) = pretty t <+> pretty n <> colon <+> pretty i <> semicolon

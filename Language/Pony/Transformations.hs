@@ -11,6 +11,7 @@ module Language.Pony.Transformations where
   import qualified Language.Pony.Transformations.Predefined.PreciseGC as PGC
   
   data Transformation = MkTrans String GenericT
+  
   instance Show Transformation where
     show (MkTrans s _) = s ++ "Trans"
   

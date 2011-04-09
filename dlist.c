@@ -21,7 +21,7 @@ typedef struct list_s {
 list_t *nil = NULL;
 
 list_t *cons(void *val, list_t *existing) {
-	list_t *new = malloc(sizeof(list_t));
+	list_t *new = calloc(sizeof(list_t));
 	new->next = existing;
 	new->tag = VALUE;
 	new->c.value = val;
