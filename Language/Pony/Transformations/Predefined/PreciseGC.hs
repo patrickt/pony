@@ -3,6 +3,7 @@
 module Language.Pony.Transformations.Predefined.PreciseGC where
   
   import Language.Pony.Transformations.Utilities
+  import Language.Pony.Transformations.Predefined.SeparateDeclarations
   import Semantics.C
   import Data.Generics
   import Data.List
@@ -12,7 +13,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   refList = struct "ref_list_s" 
     [ field "parent" (pointerTo forwardRefList)
     , field "nptrs" signedInt
-    , field "ref_lists" (sizedArray (pointerTo listPointer) 0)
+    , field "ref_lists" (sizedArray listPointer 16)
     ]
   
   forwardRefList :: SType
@@ -51,8 +52,13 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
       if gcList `elem` x then x else concatMap convert x
       
   referencedListCount :: SFunction -> Int
-  referencedListCount (SFunction _ _ _ params locals _) 
-    = countWhere isListParameter params + countWhere isLocalList locals where
+  referencedListCount f = length $ referencedLists f 
+      
+  referencedLists :: SFunction -> [String]
+  referencedLists (SFunction _ _ _ params locals _) =
+    (paramName <$> filter isListParameter params) ++ (localName <$> filter isLocalList locals) where
+      paramName (SParameter (Just n) _) = n
+      localName (LDeclaration (Variable n _ _)) = n
       isListParameter (SParameter _ t) = t == oldList
       isLocalList (LDeclaration (Variable _ t _)) = t == oldList
       isLocalList _ = False
@@ -67,10 +73,14 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
     | name == "main" = f
     | name == "del" = removeDelete f
     | otherwise = 
-    SFunction attrs typ name params (pcount : reflist : a1 : ((init locals) ++ [reset] ++ [last locals])) isVariadic where
-      pcount = LDeclaration $ Variable "parameter_count" signedInt (Just <$> intToLiteral $ referencedListCount f)
-      reflist = LDeclaration $ Variable "rl" forwardRefList (Nothing)
+    SFunction attrs typ name params (reflist : a1 : a2 : a3 :  (declarations ++ boilerplate ++ (init assignments) ++ [reset] ++ [last assignments])) isVariadic where
+      (declarations, assignments) = partitionLocals locals
+      toAssignment (str,n) = LStatement $ ExpressionS $ Binary (Brackets (Binary "rl" "." "reflists") (intToLiteral n)) "=" (Unary "&" (Ident str))
+      boilerplate = toAssignment <$> (zip (referencedLists f) [0..(referencedListCount f)])
+      reflist = LDeclaration $ Variable "rl" forwardRefList Nothing
       a1 = LStatement $ ExpressionS $ Binary (Binary "rl" "." "parent") "=" "referenced_list"
+      a2 = LStatement $ ExpressionS $ Binary (Binary "rl" "." "nptrs") "=" (intToLiteral $ referencedListCount f)
+      a3 = LStatement $ ExpressionS $ Binary "referenced_list" "=" (Unary "&" "rl")
       reset = LStatement $ ExpressionS $ Binary "referenced_list" "=" (Binary "rl" "." "parent")  
   
   rewriteConsOperator :: Expression -> Expression

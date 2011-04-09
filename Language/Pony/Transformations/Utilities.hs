@@ -39,6 +39,9 @@ module Language.Pony.Transformations.Utilities where
   globalVar :: String -> SType -> Expression -> SGlobal
   globalVar n t v = GVariable (Variable n t (Just v))
   
+  (.=.) :: Expression -> Expression -> Expression
+  a .=. b = Binary a "=" b
+  
   enum :: [String] -> SType
   enum vals = SEnum info [] where
     info = EnumerationInfo Nothing $ toCEnum <$> vals
