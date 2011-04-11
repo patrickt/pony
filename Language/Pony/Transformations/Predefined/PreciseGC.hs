@@ -75,13 +75,13 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
     | otherwise = 
     SFunction attrs typ name params (reflist : a1 : a2 : a3 :  (declarations ++ boilerplate ++ (init assignments) ++ [reset] ++ [last assignments])) isVariadic where
       (declarations, assignments) = partitionLocals locals
-      toAssignment (str,n) = LStatement $ ExpressionS $ Binary (Brackets (Binary "rl" "." "reflists") (intToLiteral n)) "=" (Unary "&" (Ident str))
+      toAssignment (str,n) = stmt $ Binary (Brackets (Binary "rl" "." "reflists") (intToLiteral n)) "=" (Unary "&" (Ident str))
       boilerplate = toAssignment <$> (zip (referencedLists f) [0..(referencedListCount f)])
       reflist = LDeclaration $ Variable "rl" forwardRefList Nothing
-      a1 = LStatement $ ExpressionS $ Binary (Binary "rl" "." "parent") "=" "referenced_list"
-      a2 = LStatement $ ExpressionS $ Binary (Binary "rl" "." "nptrs") "=" (intToLiteral $ referencedListCount f)
-      a3 = LStatement $ ExpressionS $ Binary "referenced_list" "=" (Unary "&" "rl")
-      reset = LStatement $ ExpressionS $ Binary "referenced_list" "=" (Binary "rl" "." "parent")  
+      a1 = stmt $ (Binary "rl" "." "parent") .=. "referenced_list"
+      a2 = stmt $ (Binary "rl" "." "nptrs") .=. (intToLiteral $ referencedListCount f)
+      a3 = stmt $ "referenced_list" .=. (Unary "&" "rl")
+      reset = stmt $ "referenced_list" .=. (Binary "rl" "." "parent")  
   
   rewriteConsOperator :: Expression -> Expression
   rewriteConsOperator (Binary lhs "::" rhs) = FunctionCall "cons" [SCast (pointerTo void) lhs, rhs]

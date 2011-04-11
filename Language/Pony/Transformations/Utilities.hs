@@ -42,6 +42,9 @@ module Language.Pony.Transformations.Utilities where
   (.=.) :: Expression -> Expression -> Expression
   a .=. b = Binary a "=" b
   
+  stmt :: Expression -> SLocal
+  stmt = LStatement . ExpressionS
+  
   enum :: [String] -> SType
   enum vals = SEnum info [] where
     info = EnumerationInfo Nothing $ toCEnum <$> vals
