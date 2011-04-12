@@ -2,6 +2,7 @@
 
 void *malloc(size_t size);
 void *calloc(size_t size, size_t count);
+void *memset(void *b, int c, size_t len);
 void free(void* ptr);
 
 typedef enum {
@@ -47,7 +48,7 @@ void del(list_t *list) {
 }
 
 void print(list_t *list) {
-	printf("%p ", list->c.value);
+	printf("%s ", (char*)list->c.value);
 	if (rest(list) != nil) {
 		print(rest(list));
 	} else {
@@ -56,7 +57,7 @@ void print(list_t *list) {
 }
 
 void set_rest(list_t *list) {
-	list_t *new = cons((void*)5, cons((void*)6, nil));
+	list_t *new = cons((void*)"Natalie: 555-5000", cons("Krista: 555-6000", nil));
 	list->next = new;
 }
 
@@ -64,8 +65,8 @@ void set_rest(list_t *list) {
 
 int main (int argc, char const *argv[])
 {
-	list_t *l = cons((void*)1, nil);
-	list_t *l2 = cons((void*)2, l);
+	list_t *l = cons("Joalton: 555-1000", nil);
+	list_t *l2 = cons("Jeremiah: 555-2000", cons("Alex: 555-3000", cons("Nate: 555-4000", l)));
 	print(l2);
 	set_rest(l2);
 	print(l2);

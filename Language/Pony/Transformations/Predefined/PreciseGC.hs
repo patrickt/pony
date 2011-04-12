@@ -66,16 +66,29 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   redefineList :: SGlobal -> SGlobal
   redefineList (GTypedef "list_t" _) = GTypedef "list_t" newList
   redefineList x = x
+  
+  modifyMain :: SFunction -> SFunction
+  modifyMain (SFunction attrs typ "main" params locals iv) =
+    SFunction attrs typ "main" params (inits ++ locals) iv where
+      inits = [ stmt $ "all_lists" .=. "malloc(sizeof(list_t))"
+              , stmt $ FunctionCall "memset" ["all_lists", (intToLiteral 0), "sizeof(all_lists)"]
+              ]
     
   addGC :: SFunction -> SFunction
   addGC f@(SFunction attrs typ name params locals isVariadic)
-    | name == "__sputc" = f
-    | name == "main" = f
+    | name `elem` ["__sputc", "mark", "sweep", "__mark_list"] = f
+    | name == "main" = modifyMain f
     | name == "del" = removeDelete f
     | otherwise = 
-    SFunction attrs typ name params (reflist : a1 : a2 : a3 :  (declarations ++ boilerplate ++ (init assignments) ++ [reset] ++ [last assignments])) isVariadic where
+    SFunction attrs typ name params (reflist : a1 : a2 : a3 :  (declarations ++ boilerplate ++ (init assignments >>= expandCallocs) ++ [reset] ++ [last assignments])) isVariadic where
       (declarations, assignments) = partitionLocals locals
       toAssignment (str,n) = stmt $ Binary (Brackets (Binary "rl" "." "ref_lists") (intToLiteral n)) "=" (Ident str)
+      expandCallocs a@(LStatement (ExpressionS (Binary n "=" (FunctionCall "calloc" _)))) 
+        = [ a
+          , stmt $ ("all_lists" .->. "next") .=. "all_lists"
+          , stmt $ ("all_lists" .->. "tag") .=. "LIST"
+          , stmt $ ("all_lists" .->. "c.list") .=. n ]
+      expandCallocs x = [x]
       boilerplate = toAssignment <$> (zip (referencedLists f) [0..(referencedListCount f)])
       reflist = LDeclaration $ Variable "rl" forwardRefList Nothing
       a1 = stmt $ (Binary "rl" "." "parent") .=. "referenced_list"
