@@ -3,7 +3,7 @@
 module Language.Pony.Transformations.Predefined.PreciseGC where
   
   import Language.Pony.Transformations.Utilities
-  import Language.Pony.Transformations.Predefined.SeparateDeclarations
+  import Language.Pony.Transformations.Predefined.SeparateDeclarations (partitionLocals)
   import Semantics.C
   import Data.Generics
   import Data.List
@@ -75,7 +75,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
     | otherwise = 
     SFunction attrs typ name params (reflist : a1 : a2 : a3 :  (declarations ++ boilerplate ++ (init assignments) ++ [reset] ++ [last assignments])) isVariadic where
       (declarations, assignments) = partitionLocals locals
-      toAssignment (str,n) = stmt $ Binary (Brackets (Binary "rl" "." "reflists") (intToLiteral n)) "=" (Unary "&" (Ident str))
+      toAssignment (str,n) = stmt $ Binary (Brackets (Binary "rl" "." "ref_lists") (intToLiteral n)) "=" (Ident str)
       boilerplate = toAssignment <$> (zip (referencedLists f) [0..(referencedListCount f)])
       reflist = LDeclaration $ Variable "rl" forwardRefList Nothing
       a1 = stmt $ (Binary "rl" "." "parent") .=. "referenced_list"

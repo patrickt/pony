@@ -98,29 +98,27 @@ module Semantics.C.PrettyPrinter where
     -- Satan. You know, the guy who lives in Hell.
     pretty (SField n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
     -- stupid C and its stupid decision to put array sizes after the variable name
-    -- HACK HACK HACK
-    pretty (SField n (SArray (SPointerTo (SPointerTo t _) _) size _) _) = pretty t <+> parens (star <> star <> pretty n) <> brackets (pretty size) <> semicolon
-    pretty (SField n (SArray (SPointerTo t _) size _) _) = pretty t <+> parens (star <> pretty n) <> brackets (pretty size) <> semicolon
     pretty (SField n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size) <> semicolon
     pretty (SField n t Nothing) = pretty t <+> pretty n <> semicolon
     pretty (SField n t (Just i)) = pretty t <+> pretty n <> colon <+> pretty i <> semicolon
 
   instance Pretty Statement where
-    pretty Break = text "break"
+    pretty Break = text "break;" 
     pretty (Case e s) = text "case" <+> pretty e <> colon <+> pretty s
     pretty (Compound b) = lbrace $$ nest 2 (vcat (pretty <$> b)) $$ rbrace
-    pretty Continue = text "continue"
-    pretty (Default s) = text "default:" <+> pretty s
+    pretty Continue = text "continue;"
+    pretty (Default s) = text "default:" <+> pretty s <> semicolon
     pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> parens' e
     pretty EmptyS = empty
-    pretty (ExpressionS s) = pretty s
-    pretty (For _ _ _ _) = text "for(TODO)"
-    pretty (GoTo n) = text "goto" <+> pretty n
+    pretty (ExpressionS s) = pretty s <> semicolon
+    pretty (For a b c s) = text "for" <> parens contents <+> pretty s where
+      contents = pretty a <+> pretty b <> semicolon <+> pretty c
+    pretty (GoTo n) = text "goto" <+> pretty n <> semicolon
     pretty (IfThen e s) = text "if" <+> parens' e <+> pretty s
-    pretty (IfThenElse e s s') = text "if" <+> parens' e <+> (pretty s <> semicolon) <+> text "else" <+> (pretty s' <> semicolon)
+    pretty (IfThenElse e s s') = text "if" <+> parens' e <+> pretty s <+> text "else" <+> pretty s'
     pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
-    pretty (Return Nothing) = text "return"
-    pretty (Return (Just e)) = text "return" <+> pretty e
+    pretty (Return Nothing) = text "return;" 
+    pretty (Return (Just e)) = text "return" <+> pretty e <> semicolon
     pretty (Switch e s) = text "switch" <+> parens' e <+> pretty s
     pretty (While e s) = text "while" <+> parens' e <+> pretty s
     
@@ -149,7 +147,7 @@ module Semantics.C.PrettyPrinter where
     pretty (Builtin b) = textS b
     
   instance Pretty SLocal where
-    pretty (LStatement s) = pretty s <> semicolon
+    pretty (LStatement s) = pretty s
     pretty (LDeclaration d) = pretty d <> semicolon
     
   instance Pretty SGlobal where

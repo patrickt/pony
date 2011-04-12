@@ -3,16 +3,16 @@ void __mark_list(list_t *l) {
   
   l->marked = 1;
   if (l->tag != VALUE) {
-    __mark_list(l->d.list);
+    __mark_list(l->c.list);
   }
-  mark_list(l->next);
+  __mark_list(l->next);
 }
 
-void mark(struct ref_list_s *rl) {
-  for (int ii=0; ii<rl->nptrs; ii++) {
-    __mark_list(&rl_lists[ii]);
+void mark(struct ref_list_s *ref) {
+  for (int ii=0; ii<ref->nptrs; ii++) {
+    __mark_list(ref->ref_lists[ii]);
   }
-  if (rl->parent) mark(rl->parent);
+  if (ref->parent) mark(ref->parent);
 }
 
 void sweep() {

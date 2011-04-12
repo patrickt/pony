@@ -1,11 +1,28 @@
 #include <stdio.h>
-#include "dlist.h"
 
 void *malloc(size_t size);
+void *calloc(size_t size, size_t count);
 void free(void* ptr);
 
+typedef enum {
+	LIST, VALUE
+} tag_t;
+
+union ldata {
+	void *value;
+	struct list_s *list;
+};
+
+typedef struct list_s {
+	struct list_s *next;
+	tag_t tag;
+	union ldata c;
+} list_t;
+
+list_t *nil = NULL;
+
 list_t *cons(void *val, list_t *existing) {
-	list_t *new = calloc(sizeof(list_t));
+	list_t *new = calloc(sizeof(list_t), 1);
 	new->next = existing;
 	new->tag = VALUE;
 	new->c.value = val;
@@ -33,13 +50,24 @@ void print(list_t *list) {
 	printf("%p ", list->c.value);
 	if (rest(list) != nil) {
 		print(rest(list));
+	} else {
+		printf("\n");
 	}
 }
 
+void set_rest(list_t *list) {
+	list_t *new = cons((void*)5, cons((void*)6, nil));
+	list->next = new;
+}
+
+#include "gc.h"
+
 int main (int argc, char const *argv[])
 {
-	list_t *l = 1 :: 2 :: nil;
-	list_t *l2 = 2 :: l;
+	list_t *l = cons((void*)1, nil);
+	list_t *l2 = cons((void*)2, l);
+	print(l2);
+	set_rest(l2);
 	print(l2);
 	return 0;
 }

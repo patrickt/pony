@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 void *malloc(size_t size);
+void *calloc(size_t size, size_t count);
 void free(void* ptr);
 
 typedef enum {
@@ -21,7 +22,7 @@ typedef struct list_s {
 list_t *nil = NULL;
 
 list_t *cons(void *val, list_t *existing) {
-	list_t *new = calloc(sizeof(list_t));
+	list_t *new = calloc(sizeof(list_t), 1);
 	new->next = existing;
 	new->tag = VALUE;
 	new->c.value = val;
@@ -49,13 +50,22 @@ void print(list_t *list) {
 	printf("%p ", list->c.value);
 	if (rest(list) != nil) {
 		print(rest(list));
+	} else {
+		printf("\n");
 	}
+}
+
+void set_rest(list_t *list, list_t *new) {
+	list->next = new;
 }
 
 int main (int argc, char const *argv[])
 {
 	list_t *l = cons((void*)1, nil);
 	list_t *l2 = cons((void*)2, l);
+	list_t *l3 = cons((void*)3, nil);
+	print(l2);
+	set_rest(l2, l3);
 	print(l2);
 	return 0;
 }
