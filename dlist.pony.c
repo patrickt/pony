@@ -57,7 +57,7 @@ void print(list_t *list) {
 }
 
 void set_rest(list_t *list) {
-	list_t *new = cons((void*)"Natalie: 555-5000", cons("Krista: 555-6000", nil));
+	list_t *new = "Natalie: 555-5000" :: "Krista: 555-6000" :: nil;
 	list->next = new;
 }
 
@@ -65,8 +65,8 @@ void set_rest(list_t *list) {
 
 int main (int argc, char const *argv[])
 {
-	list_t *l = cons("Joalton: 555-1000", nil);
-	list_t *l2 = cons("Jeremiah: 555-2000", cons("Alex: 555-3000", cons("Nate: 555-4000", l)));
+	list_t *l = "Joalton: 555-1000" :: nil;
+	list_t *l2 = "Jeremiah: 555-2000" :: "Alex: 555-3000" :: "Nate: 555-4000" :: l;
 	print(l2);
 	set_rest(l2);
 	print(l2);

@@ -1,5 +1,5 @@
 Name:                pony
-Version:             0.0.2
+Version:             0.0.3
 Synopsis:            a modular, extensible source transformer for systems programming
 
 Description:         Pony is a tool intended for programmers of low-level systems. Code authors will write code in standard C99, then specify a set of  high-level transformations that they wish to add to their code, such as garbage collection, closures, and new operators. Pony will apply these transformations, ensure that the generated code is correct, and emit C99.
@@ -52,7 +52,6 @@ Executable pony
                        ConfigFile == 1.0.6, 
                        language-c == 0.3.2, 
                        syb >= 0.1,
-                       syz >= 0.2,
                        process > 1.0,
                        pretty >= 1.0
 

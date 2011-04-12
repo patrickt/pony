@@ -42,7 +42,7 @@ module Main where
         &= typFile
         &= argPos 0 
   } &= program "pony"
-    &= summary "pony 0.0.2, (c) George Washington University 2010-2011"
+    &= summary "pony 0.0.3, (c) George Washington University 2010-2011"
     
   
   getInternals [] = return emptyInternals
@@ -73,7 +73,7 @@ module Main where
     inrnls <- getInternals ponyproj
     result <- preprocessAndParse preprocessedC input inrnls
     case result of
-      (Left parseError) -> writeFile output (show parseError)
+      (Left parseError) -> print parseError
       Right externs -> do
         let converted = convert externs
         let (MkTrans n t) = read trans :: Transformation
