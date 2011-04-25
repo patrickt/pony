@@ -2,12 +2,13 @@
 
 module Language.Pony.Transformations.Predefined.PreciseGC where
   
-  import Language.Pony.Transformations.Utilities
-  import Language.Pony.Transformations.Predefined.SeparateDeclarations (partitionLocals)
-  import Semantics.C
+  import Control.Applicative
   import Data.Generics
   import Data.List
-  import Control.Applicative
+  import Language.Pony.Transformations.Predefined.SeparateDeclarations (partitionLocals)
+  import Language.Pony.Transformations.Utilities
+  import Semantics.C
+
   
   refList :: SType
   refList = struct "ref_list_s" 
