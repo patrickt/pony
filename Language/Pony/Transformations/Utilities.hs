@@ -3,6 +3,9 @@
 module Language.Pony.Transformations.Utilities where
   
   import Control.Applicative
+  import Control.Monad
+  import Data.List
+  import Data.Maybe
   import GHC.Exts ( IsString(..) )
   import Semantics.C
   
@@ -47,6 +50,27 @@ module Language.Pony.Transformations.Utilities where
   
   stmt :: Expression -> SLocal
   stmt = LStatement . ExpressionS
+  
+  namesInGlobalScope :: Program -> [Name]
+  namesInGlobalScope p = nub $ p >>= nameOf where
+    nameOf (GFunction (SFunction _ _ n _ _ _)) = [n]
+    nameOf (GVariable (Variable n _ _)) = [n]
+    nameOf (GFunctionPrototype _ n _ _) = [n]
+    nameOf _ = []
+  
+  namesInLocalScope :: Program -> SFunction -> [Name]
+  namesInLocalScope p (SFunction _ _ n pms ls _) =  namesInGlobalScope p 
+                                                 ++ (catMaybes $ paramNames <$> pms) 
+                                                 ++ (localNames =<< ls) where
+    paramNames (SParameter n _) = n
+    localNames (LDeclaration (Variable n _ _)) = [n]
+    localNames _ = []
+    
+  makeHygenicName :: Name -> Program -> SFunction -> Name
+  makeHygenicName n p f 
+    = if n `elem` (namesInLocalScope p f)
+      then makeHygenicName ("__pony" ++ n) p f
+      else n
   
   enum :: [String] -> SType
   enum vals = SEnum info [] where

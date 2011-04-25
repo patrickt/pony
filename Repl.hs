@@ -9,13 +9,14 @@ module Main where
   import Data.Generics
   import Data.Generics.Zipper
   import Language.Pony.Transformations
+  import Language.Pony.Transformations.Utilities
   import Text.Pretty
   import System.IO.Unsafe
   
-  func = "int main (int argc, char const *argv[]) { printf(\"Hello, world\"); return 0; }"
+  f = "int main (int argc, char const *argv[]) { printf(\"Hello, world\"); return 0; }"
   prog = "struct __darwin_pthread_handler_rec { void (*__routine)(void *); void *__arg; struct __darwin_pthread_handler_rec *__next; };"
   
-  ast = parseUnsafe preprocessedC prog
+  ast = parseUnsafe preprocessedC f
   
   st = convert ast
   

@@ -215,7 +215,6 @@ module Semantics.C.Conversions where
   convertDeclarationToField :: CDeclaration -> SField
   convertDeclarationToField d@(CDeclaration _ [DeclInfo {contents=(Just decl), initVal, size}]) = let (Just typ) = convertDeclarationToType d 
                                                                                                   in SField (nameOfDeclarator decl) typ (convert <$> size)
-  
   -- TODO: We're leaving storage specifiers out here, those should be included too.
   convertComponents :: [Specifier] -> CDeclarator -> SType
   convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convert typeSpecs) (storageAttrs ++ qualAttrs)) (reverse $ derivedPartsOfDeclarator decl) where
