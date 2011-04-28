@@ -94,7 +94,7 @@ where
     initList' = do
       desigs <- many designator
       init <- (L.reservedOp "=" *> initializer)
-      return $ (desigs, init)
+      return (desigs, init)
   
   initializer :: Parser Initializer
   initializer = (InitList <$> initlist) <|> (InitExpression <$> expression)

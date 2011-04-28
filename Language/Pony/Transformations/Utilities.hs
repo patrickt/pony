@@ -59,9 +59,7 @@ module Language.Pony.Transformations.Utilities where
     nameOf _ = []
   
   namesInLocalScope :: Program -> SFunction -> [Name]
-  namesInLocalScope p (SFunction _ _ n pms ls _) =  namesInGlobalScope p 
-                                                 ++ (catMaybes $ paramNames <$> pms) 
-                                                 ++ (localNames =<< ls) where
+  namesInLocalScope p (SFunction _ _ n pms ls _) =  nub (namesInGlobalScope p ++ (catMaybes $ paramNames <$> pms) ++ (localNames =<< ls)) where
     paramNames (SParameter n _) = n
     localNames (LDeclaration (Variable n _ _)) = [n]
     localNames _ = []

@@ -23,7 +23,6 @@ module Language.Pony.Transformations.Predefined.SeparateDeclarations where
         partition rest (a ++ [declare n t], 
                         b ++ [Ident n .=. e])
   
-  
   separate :: [SLocal] -> [SLocal]
   separate xs = a ++ b where (a, b) = partitionLocals xs
   

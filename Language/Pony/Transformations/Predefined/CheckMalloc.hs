@@ -5,7 +5,6 @@ module Language.Pony.Transformations.Predefined.CheckMalloc where
   import Semantics.C.Nodes
   import Data.List
   import Data.Generics
-  import Data.Generics.Zipper
   import Data.Maybe
   import Debug.Trace
   
