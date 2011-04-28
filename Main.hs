@@ -76,9 +76,10 @@ module Main where
       (Left parseError) -> print parseError
       Right externs -> do
         let converted = convert externs
-        let (MkTrans n t) = read trans :: Transformation
-        let transformed = everywhere t converted
-        writeFile output (show $ pretty transformed)
+        let (MkTrans n direction t) = read trans :: Transformation
+        case direction of 
+          TopDown -> writeFile output (show $ everywhere t converted)
+          BottomUp -> writeFile output (show $ everywhere' t converted)
     
   main :: IO ()
   main = cmdArgs ponyOptions >>= parsePony

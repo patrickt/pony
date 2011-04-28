@@ -10,28 +10,30 @@ module Language.Pony.Transformations where
   import qualified Language.Pony.Transformations.Predefined.StringConcat as SC
   import qualified Language.Pony.Transformations.Predefined.PreciseGC as PGC
   
-  data Transformation = MkTrans String GenericT
+  data Direction = TopDown | BottomUp
+  
+  data Transformation = MkTrans String Direction GenericT
   
   instance Show Transformation where
-    show (MkTrans s _) = s ++ "Trans"
+    show (MkTrans s _ _) = s ++ "Trans"
   
   checkMalloc :: Transformation
-  checkMalloc = MkTrans "CheckMalloc" CM.checkMalloc
+  checkMalloc = MkTrans "CheckMalloc" TopDown CM.checkMalloc
   
   logicalShift :: Transformation
-  logicalShift = MkTrans "LogicalShift" LS.logicalShift
+  logicalShift = MkTrans "LogicalShift" TopDown LS.logicalShift
   
   separateDeclarations :: Transformation
-  separateDeclarations = MkTrans "SeparateDeclarations" SD.separateT
+  separateDeclarations = MkTrans "SeparateDeclarations" TopDown SD.separateT
   
   helloWorld :: Transformation
-  helloWorld = MkTrans "HelloWorld" HW.helloT
+  helloWorld = MkTrans "HelloWorld" TopDown HW.helloT
   
   stringConcat :: Transformation
-  stringConcat = MkTrans "StringConcat" SC.concatT
+  stringConcat = MkTrans "StringConcat" TopDown SC.concatT
   
   preciseGC :: Transformation
-  preciseGC = MkTrans "PreciseGC" PGC.gcT
+  preciseGC = MkTrans "PreciseGC" TopDown PGC.gcT
   
   instance Read Transformation where
     readsPrec _ s = case s of
