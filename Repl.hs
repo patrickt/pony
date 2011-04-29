@@ -7,7 +7,6 @@ module Main where
   import Language.C.Lexer as L
   import Semantics.C
   import Data.Generics
-  import Data.Generics.Zipper
   import Language.Pony.Transformations
   import Language.Pony.Transformations.Utilities
   import Text.Pretty

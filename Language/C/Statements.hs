@@ -28,35 +28,39 @@ whether it can consume input before failing.
                      , expressionStmt
                      , selectionStmt
                      , iterationStmt
-                     ]
+                     ] <?> "C statement"
   
   labeledStmt :: Parser CStatement
   labeledStmt = choice [ caseStmt
                        , defaultStmt
                        , labelStmt
-                       ] where
+                       ] <?> "labeled statement" where
     caseStmt    = pure CaseStmt    <*> (L.reserved "case" *> expression) <*> (L.colon *> statement)
     defaultStmt = pure DefaultStmt <*> (L.reserved "default" *> L.colon *> statement)
     labelStmt   = pure LabeledStmt <*> (L.identifier <* L.colon) <*> many attribute <*> statement 
   
   compoundStmt :: Parser CStatement
-  compoundStmt = L.braces $ pure CompoundStmt <*> many blockItem
+  compoundStmt = (L.braces $ pure CompoundStmt <*> many blockItem) <?> "compound statement"
   
   blockItem :: Parser BlockItem
-  blockItem = try (Left <$> declaration) <|> (Right <$> statement)
+  blockItem  =  try (pure Left <*> declaration) 
+            <|> (pure Right <*> statement) 
+            <?> "declaration or C statement"
   
   expressionStmt :: Parser CStatement
-  expressionStmt = do
-    expr <- optional expression
-    L.semi
-    return $ maybe EmptyStmt ExpressionStmt expr
+  expressionStmt = e <?> "expression" where 
+    -- Can't figure out how to express this in applicative form
+    e = do { expr <- optional expression; L.semi; return $ maybe EmptyStmt ExpressionStmt expr }
   
   selectionStmt :: Parser CStatement
   selectionStmt = ifStmt <|> switch where
     ifStmt = pure IfStmt <*> (L.reserved "if" *> L.parens expression)
                          <*> statement
-                         <*> optional (L.reserved "else" *> statement)
-    switch = pure SwitchStmt <*> (L.reserved "switch" *> L.parens expression) <*> statement
+                         <*> optional (L.reserved "else" *> statement) 
+                         <?> "if statement"
+    switch = pure SwitchStmt <*> (L.reserved "switch" *> L.parens expression) 
+                             <*> statement 
+                             <?> "switch statement"
   
   iterationStmt :: Parser CStatement
   iterationStmt = choice [ while
@@ -64,9 +68,12 @@ whether it can consume input before failing.
                          , try newFor
                          , oldFor 
                          ] where
-    while = pure WhileStmt <*> (L.reserved "while" *> L.parens expression) <*> statement
+    while   = pure WhileStmt <*> (L.reserved "while" *> L.parens expression) 
+                             <*> statement 
+                             <?> "while statement"
     doWhile = pure DoWhileStmt <*> (L.reserved "do" *> statement)
                                <*> (L.reserved "while" *> (L.parens expression <* L.semi))
+                               <?> "do-while statement"
     oldFor = do
       L.reserved "for"
       (a, b, c) <- L.parens oldForExprs
@@ -86,8 +93,8 @@ whether it can consume input before failing.
   
   jumpStmt :: Parser CStatement
   jumpStmt = choice [ goto, continue, break', return' ] where
-    goto = GotoStmt <$> (L.reserved "goto" >> L.identifier)
-    continue = L.reserved "continue" >> return ContinueStmt
-    break' = L.reserved "break" >> return BreakStmt
-    return' = ReturnStmt <$> (L.reserved "return" >> (optionMaybe expression <* L.semi))
+    goto     = pure GotoStmt     <*>  (L.reserved "goto" *> L.identifier)
+    continue = pure ContinueStmt <*   L.reserved "continue"
+    break'   = pure BreakStmt    <*   L.reserved "break"
+    return'  = pure ReturnStmt   <*>  (L.reserved "return" *> (optional expression <* L.semi))
     
