@@ -23,7 +23,7 @@ There are six built-in transformations that you can play with. Pass these names 
 * `LogicalShift` - introduces the `>>>` operator for right logical shift, as in Java.
 * `CheckMalloc` - ensures that all calls to `malloc(3)` are checked for NULL.
 * `SeparateDeclarations` - moves all variable declarations in a given function to the top of the function, as in old-style C.
-* `PreciseGC` - adds shadow-stack garbage collection. The provided example is somewhat of a work in progress.
+* `PreciseGC` - adds shadow-stack garbage collection. The provided example is somewhat of a work in progress and currently only works on the `examples/gc/dlist.pony.c` example.
 
 Please read the LICENSE file for the terms under which Pony is distributed, and please read the CREDITS file to read acknowledgments. 
 
