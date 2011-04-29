@@ -16,7 +16,7 @@ module Language.Pony.Transformations.Utilities where
   
   -- | The post-processed representation of NULL
   sNull :: Expression
-  sNull = SCast (SPointerTo (SVoid []) []) (intToLiteral 0)
+  sNull = Cast (SPointerTo (SVoid []) []) (intToLiteral 0)
   
   emptyStruct :: String -> SType
   emptyStruct s = SComposite (CompositeInfo Struct (Just s) []) []

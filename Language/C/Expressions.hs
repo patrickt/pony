@@ -105,7 +105,7 @@ module Language.C.Expressions
   castExpression = do
 	  types <- many $ try (L.parens typeName)
 	  expr <- unaryExpression
-	  return $ foldl (flip Cast) expr types
+	  return $ foldl (flip CCast) expr types
   
   sizeofExpr = pure UnaryOp <*> pure "sizeof" <*> (L.reservedOp "sizeof" *> unaryExpression)
   sizeofType = pure SizeOfType <*> (L.reservedOp "sizeof" *> L.parens typeName)

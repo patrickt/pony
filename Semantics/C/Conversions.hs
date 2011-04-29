@@ -67,7 +67,7 @@ module Semantics.C.Conversions where
     convert (Identifier i) = Ident i
     convert (Index l r) = Brackets (convert l) (convert r)
     convert (Call f args) = FunctionCall (convert f) (convert <$> args)
-    convert (Cast tn arg) = SCast (convert tn) (convert arg)
+    convert (CCast tn arg) = Cast (convert tn) (convert arg)
     convert (UnaryOp n arg) = Unary n (convert arg)
     convert (BinaryOp n lhs rhs) = Binary (convert lhs) n (convert rhs)
     convert (TernaryOp a b c) = Ternary (convert a) (convert b) (convert c)
@@ -130,8 +130,8 @@ module Semantics.C.Conversions where
     convert [TFloat]                        = float
     convert [TDouble]                       = double
     convert [TLong, TDouble]                = longDouble
-    convert [t@(TStructOrUnion _ _ _ _)]    = SComposite (convertComposite t) []
-    convert [TEnumeration n a _]            = SEnum (EnumerationInfo n (convert <$> a)) []
+    convert [t@(TStructOrUnion _ _ _ attrs)]    = SComposite (convertComposite t) (convert <$> attrs)
+    convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
     convert [TTypedef n d]                  = Typedef n (convert d) []
     convert [TBuiltin s]                    = SBuiltinType s []
     convert other                           = error ("unknown type " ++ show other)

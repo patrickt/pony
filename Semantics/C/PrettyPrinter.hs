@@ -133,7 +133,7 @@ module Semantics.C.PrettyPrinter where
     pretty (Ident n) = text n
     pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
     pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
-    pretty (SCast t e) = parens' t <> pretty e
+    pretty (Cast t e) = parens' t <> pretty e
     pretty (Unary "++ post" e) = pretty e <> text "++"
     pretty (Unary "-- post" e) = pretty e <> text "--"
     -- terrible hack pending workaround

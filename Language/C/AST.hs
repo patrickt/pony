@@ -85,7 +85,7 @@ module Language.C.AST
     | Identifier String
     | Index CExpr CExpr
     | Call CExpr [CExpr]
-    | Cast CTypeName CExpr
+    | CCast CTypeName CExpr
     | UnaryOp String CExpr
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr

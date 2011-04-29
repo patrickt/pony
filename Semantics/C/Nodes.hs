@@ -55,13 +55,11 @@ module Semantics.C.Nodes where
   setAttributes (Typedef n t _) a = Typedef n t a
   setAttributes (SBuiltinType n _) a = SBuiltinType n a
   
-  data EnumerationInfo = EnumerationInfo (Maybe String) [Enumeration]
+  data EnumerationInfo = EnumerationInfo (Maybe Name) [Enumeration]
     deriving (Show, Eq, Typeable, Data)
   
   data Enumeration = Enumeration Name (Maybe Expression)
     deriving (Show, Eq, Typeable, Data)
-  
-  -- use Either instead of a Bool here.
   
   data CompositeType = Struct | Union deriving (Show, Eq, Typeable, Data)
   
@@ -99,7 +97,7 @@ module Semantics.C.Nodes where
     | Ident Name
     | Brackets Expression Expression
     | FunctionCall Expression [Expression]
-    | SCast SType Expression
+    | Cast SType Expression
     | Unary Name Expression
     | Binary Expression Name Expression
     | Ternary Expression Expression Expression

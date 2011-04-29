@@ -1,4 +1,6 @@
-module Language.C.Statements where
+module Language.C.Statements 
+  ( statement, compoundStmt )
+  where
   
   import Language.C.Parser
   import Language.C.Expressions
@@ -21,6 +23,7 @@ where the boolean indicates whether the use of the `try` combinator is necessary
 whether it can consume input before failing.
 -}
   
+  -- | A C statement. (C99 6.8.*)
   statement :: Parser CStatement
   statement = choice [ try labeledStmt 
                      , compoundStmt 
@@ -39,8 +42,9 @@ whether it can consume input before failing.
     defaultStmt = pure DefaultStmt <*> (L.reserved "default" *> L.colon *> statement)
     labelStmt   = pure LabeledStmt <*> (L.identifier <* L.colon) <*> many attribute <*> statement 
   
+  -- | A compound statement, enclosed by braces. (C99 6.8.2)
   compoundStmt :: Parser CStatement
-  compoundStmt = (L.braces $ pure CompoundStmt <*> many blockItem) <?> "compound statement"
+  compoundStmt = L.braces (pure CompoundStmt <*> many blockItem) <?> "compound statement"
   
   blockItem :: Parser BlockItem
   blockItem  =  try (pure Left <*> declaration) 
@@ -92,7 +96,11 @@ whether it can consume input before failing.
                             <*> optional expression
   
   jumpStmt :: Parser CStatement
-  jumpStmt = choice [ goto, continue, break', return' ] where
+  jumpStmt = choice [ goto
+                    , continue
+                    , break'
+                    , return' 
+                    ] where
     goto     = pure GotoStmt     <*>  (L.reserved "goto" *> L.identifier)
     continue = pure ContinueStmt <*   L.reserved "continue"
     break'   = pure BreakStmt    <*   L.reserved "break"

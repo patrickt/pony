@@ -98,7 +98,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
       reset = stmt $ "referenced_list" .=. (Binary "rl" "." "parent")  
   
   rewriteConsOperator :: Expression -> Expression
-  rewriteConsOperator (Binary lhs "::" rhs) = FunctionCall "cons" [SCast (pointerTo void) lhs, rhs]
+  rewriteConsOperator (Binary lhs "::" rhs) = FunctionCall "cons" [Cast (pointerTo void) lhs, rhs]
   rewriteConsOperator x = x
   
   -- make `del` a no-op
