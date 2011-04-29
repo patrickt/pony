@@ -1,0 +1,13 @@
+cabal install parsec-3.1.1
+cabal install mtl
+cabal install cmdargs-0.6.1
+cabal install ConfigFile-1.0.6
+cabal install csv
+cabal install pretty
+cabal install process
+cabal install syb
+cabal install QuickCheck
+cabal install HUnit
+cabal install test-framework
+cabal install test-framework-quickcheck2
+cabal install test-framework-hunit
