@@ -94,8 +94,6 @@ module Semantics.C.Conversions where
   instance Reifiable TypeSpecifier SType where
     convert x = convert [x]
     
-  -- TODO: Finish composite types, enumerations, and typedefs
-  -- TOOD: Fill in the attributes for structs and enums
   -- This is where type aliases go, as defined in C99, 6.7.2.2
   instance Reifiable [TypeSpecifier] SType where
     convert [TVoid]                         = void
@@ -130,7 +128,7 @@ module Semantics.C.Conversions where
     convert [TFloat]                        = float
     convert [TDouble]                       = double
     convert [TLong, TDouble]                = longDouble
-    convert [t@(TStructOrUnion _ _ _ attrs)]    = SComposite (convertComposite t) (convert <$> attrs)
+    convert [t@(TStructOrUnion _ _ _ as)]   = SComposite (convertComposite t) (convert <$> as)
     convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
     convert [TTypedef n d]                  = Typedef n (convert d) []
     convert [TBuiltin s]                    = SBuiltinType s []

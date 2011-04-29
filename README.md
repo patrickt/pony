@@ -2,8 +2,6 @@ Hello. Welcome to Pony.
 
 I wrote Pony in order to help make C programming suck less. Real-world C code, especially code written for embedded systems, usually focuses on irrelevances and minutae; with Pony's power to abstract over both the syntax and semantics of C, you can bring an end to boilerplate and irrelevant code. Pony's power goes even beyond automatically generating code; you can also transform your code arbitrarily, perhaps to implement garbage collection or dynamic dispatch. There's very little you can't do with Pony.
 
-Pony includes a parser and pretty-printer for C99, a
-
 Installation
 ============
 
