@@ -230,10 +230,10 @@ module Semantics.C.Conversions where
   functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
   functionPrototypeFromDeclaration (CDeclaration specs [DeclInfo { contents = (Just contents), ..}]) 
     = GFunctionPrototype rtype name params isVariadic where
-      (Just name) = nameOfDeclarator contents
-      params = extractFunctionArguments contents
-      rtype = returnTypeOfFunction (CFunction specs contents undefined)
-      isVariadic = doesDeclaratorContainVariadicSpecifier contents
+        (Just name) = nameOfDeclarator contents
+        params = extractFunctionArguments contents
+        rtype = returnTypeOfFunction (CFunction specs contents undefined)
+        isVariadic = doesDeclaratorContainVariadicSpecifier contents
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
   convertDeclarationToType (CDeclaration specs [info]) = let (Just contents') = contents info 
