@@ -5,7 +5,9 @@ I wrote Pony in order to help make C programming suck less. Real-world C code, e
 Installation
 ============
 
-Pony has been tested under GHC 7.0.3 on Mac OS 10.6. Theoretically, it should work on any POSIX platform. To compile and run Pony, perform the following steps.
+Pony has been tested under GHC 7.0.3 on Mac OS 10.6. Theoretically, it should work on any POSIX platform. If you do not already have a working installation of GHC and Cabal, I recommend that you install the Haskell Platform. 
+
+To compile and run Pony, perform the following steps.
 
     ./bootstrap.sh # only needs to be run once
     cabal configure

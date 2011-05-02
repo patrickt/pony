@@ -42,7 +42,7 @@ module Main where
         &= typFile
         &= argPos 0 
   } &= program "pony"
-    &= summary "pony 0.0.3, (c) George Washington University 2010-2011"
+    &= summary "pony 0.1.0, (c) George Washington University 2010-2011"
     
   
   getInternals [] = return emptyInternals
