@@ -78,8 +78,8 @@ module Main where
         let converted = convert externs
         let (MkTrans n direction t) = read trans :: Transformation
         case direction of 
-          TopDown -> writeFile output (show $ everywhere t converted)
-          BottomUp -> writeFile output (show $ everywhere' t converted)
+          TopDown -> writeFile output (show $ pretty $ everywhere t converted)
+          BottomUp -> writeFile output (show $ pretty $ everywhere' t converted)
     
   main :: IO ()
   main = cmdArgs ponyOptions >>= parsePony

@@ -13,25 +13,25 @@ module Language.C.Miscellany where
   
   -- A declaration is of a composite type if it contains a 'TStructOrUnion' specifier.
   declarationIsComposite :: CDeclaration -> Bool
-  declarationIsComposite (CDeclaration specs _) = isJust $ find isComposite specs where
+  declarationIsComposite (CDeclaration specs _) = any isComposite specs where
     isComposite (TSpec (TStructOrUnion _ _ _ _)) = True
     isComposite _ = False
   
   -- A declaration is a function or function prototype if its derived declarations
   declarationIsFunctionPrototype :: CDeclaration -> Bool
   declarationIsFunctionPrototype (CDeclaration _ (DeclInfo { contents = Just (CDeclarator (Just _) derived _ _), ..} : _)) = 
-    isJust $ find isFunction derived where
+    any isFunction derived where
       isFunction (Function _ _) = True
       isFunction _ = False
   declarationIsFunctionPrototype _ = False
   
   declarationHasPointer :: CDeclaration -> Bool
-  declarationHasPointer (CDeclaration _ infos) = isJust $ find hasPointer infos where
+  declarationHasPointer (CDeclaration _ infos) = any hasPointer infos where
     hasPointer :: DeclInfo -> Bool
     hasPointer (DeclInfo {contents = Just decl, ..}) = declaratorIsPointer decl
     
   declaratorIsPointer :: CDeclarator -> Bool
-  declaratorIsPointer (CDeclarator _ derived _ _) = isJust $ find isPointer derived where
+  declaratorIsPointer (CDeclarator _ derived _ _) = any isPointer derived where
     isPointer :: DerivedDeclarator -> Bool
     isPointer (Pointer _) = True
     isPointer _ = False
@@ -50,7 +50,7 @@ module Language.C.Miscellany where
   derivedPartsOfDeclarator (CDeclarator _ ds _ _) = ds
   
   doesDeclaratorContainVariadicSpecifier :: CDeclarator -> Bool
-  doesDeclaratorContainVariadicSpecifier d = isJust $ find variadicFunction (derivedPartsOfDeclarator d) where
+  doesDeclaratorContainVariadicSpecifier d = any variadicFunction (derivedPartsOfDeclarator d) where
     variadicFunction (Function _ True) = True
     variadicFunction _ = False
   
