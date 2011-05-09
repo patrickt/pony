@@ -74,7 +74,8 @@ module Semantics.C.Nodes where
   data SParameter = SParameter (Maybe Name) SType deriving (Show, Eq, Typeable, Data)
   
   data Statement
-    = Break
+    = Asm Bool Expression (Maybe Expression) (Maybe Expression) (Maybe Expression)
+    | Break
     | Case Expression Statement
     | Compound [SLocal]
     | Continue

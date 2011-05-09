@@ -103,6 +103,8 @@ module Semantics.C.PrettyPrinter where
     pretty (SField n t (Just i)) = pretty t <+> pretty n <> colon <+> pretty i <> semicolon
 
   instance Pretty Statement where
+    pretty (Asm True a b c d) = text "asm volatile" <> parens (pretty a <:> pretty b <:> pretty c <:> pretty d)
+    pretty (Asm False a b c d) = text "asm" <> parens (pretty a <:> pretty b <:> pretty c <:> pretty d) 
     pretty Break = text "break;" 
     pretty (Case e s) = text "case" <+> pretty e <> colon <+> pretty s
     pretty (Compound b) = lbrace $$ nest 2 (vcat (pretty <$> b)) $$ rbrace

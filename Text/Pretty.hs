@@ -11,6 +11,7 @@ module Text.Pretty
   , hsep'
   , parens'
   , commaSep
+  , (<:>)
   , Pretty (pretty)
   )
   where
@@ -41,6 +42,9 @@ module Text.Pretty
   
   commaSep :: (Pretty a) => [a] -> Doc
   commaSep p = hsep $ punctuate comma (pretty `map` p) 
+  
+  (<:>) :: Doc -> Doc -> Doc
+  a <:> b = a <> text ":" <> b
   
   semicolon, question, star, dot, arrow :: Doc  
   semicolon = text ";"

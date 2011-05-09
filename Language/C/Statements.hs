@@ -1,5 +1,5 @@
 module Language.C.Statements 
-  ( statement, compoundStmt )
+  ( statement, compoundStmt, asmStmt )
   where
   
   import Language.C.Parser
@@ -25,7 +25,8 @@ whether it can consume input before failing.
   
   -- | A C statement. (C99 6.8.*)
   statement :: Parser CStatement
-  statement = choice [ try labeledStmt 
+  statement = choice [ try labeledStmt
+                     , asmStmt
                      , compoundStmt 
                      , jumpStmt 
                      , expressionStmt
@@ -50,6 +51,15 @@ whether it can consume input before failing.
   blockItem  =  try (pure Left <*> declaration) 
             <|> (pure Right <*> statement) 
             <?> "declaration or C statement"
+            
+  asmStmt :: Parser CStatement
+  asmStmt  =  (L.reserved "asm" *> pure AsmStmt) 
+          <*> optional volatile
+          <*> (L.symbol "(" *> stringLiteral)
+          <*> (L.symbol ":" *> optional stringLiteral)
+          <*> (L.symbol ":" *> optional stringLiteral)
+          <*> ((L.symbol ":" *> optional stringLiteral) <* L.symbol ")") where
+            volatile = pure QVolatile <* L.reserved "volatile"
   
   expressionStmt :: Parser CStatement
   expressionStmt = e <?> "expression" where 

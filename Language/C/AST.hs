@@ -24,8 +24,10 @@ module Language.C.AST
   -- @break@ and @continue@ may only appear inside @for@/@while@ loops) are 
   -- not enforced by the parser, but will fail to compile in any modern C compiler.
   data CStatement
+    -- | The GCC syntax for inline assembly.
+    = AsmStmt (Maybe TypeQualifier) CExpr (Maybe CExpr) (Maybe CExpr) (Maybe CExpr)
     -- | The @break@ statement. Should only appear inside loop constructs.
-    = BreakStmt 
+    | BreakStmt 
     -- | The @case@ statement, taking the form of @case expr: statement@.
     -- Should only appear inside the bodies of @switch@ statements.
     | CaseStmt CExpr CStatement

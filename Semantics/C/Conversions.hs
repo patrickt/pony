@@ -36,6 +36,8 @@ module Semantics.C.Conversions where
     convert (Right statement) = LStatement <$> [convert statement]
   
   instance Reifiable CStatement Statement where
+    convert (AsmStmt tq asm in' out clobber) 
+      = Asm (isJust tq) (convert asm) (convert <$> in') (convert <$> out) (convert <$> clobber) 
     convert BreakStmt = Break
     convert (CaseStmt ex st) = Case (convert ex) (convert st)
     convert (CompoundStmt bis) = Compound (bis >>= convert)
