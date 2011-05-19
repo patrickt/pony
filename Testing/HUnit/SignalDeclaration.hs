@@ -14,5 +14,5 @@ module Testing.HUnit.SignalDeclaration
   testSignal :: Assertion
   testSignal = assertEqual "signal(3)" practice theory
     where theory = convert $ parseUnsafe preprocessedC "void (*signal(int sig, void (*func)(int)))(int);"
-          practice = [GVariable $ Variable "signal" (SFunctionPointer void [(SParameter (Just "sig") signedInt), 
-                                                                           (SParameter (Just "func") (SFunctionPointer void [(SParameter Nothing signedInt)] []))] []) Nothing]
+          practice = [GVariable $ Variable "signal" (SFunctionPointer void [SParameter (Just "sig") signedInt, 
+                                                                           SParameter (Just "func") (SFunctionPointer void [SParameter Nothing signedInt] [])] []) Nothing]

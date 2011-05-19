@@ -56,7 +56,7 @@ whether it can consume input before failing.
   asmStmt =  pure AsmStmt 
          <*> (L.reserved "asm" *> optional volatile)
          <*> L.parens asmOperand where
-           volatile = (L.reserved "volatile" *> pure QVolatile)
+           volatile = L.reserved "volatile" *> pure QVolatile
             
   asmOperand :: Parser AsmOperand
   asmOperand = try simple <|> complex where

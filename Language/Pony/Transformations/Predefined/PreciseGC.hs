@@ -33,7 +33,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   newList :: SType
   newList = struct "list_s" 
     [ field "next" $ pointerTo $ emptyStruct "list_s"
-    , field "tag" $ tagType
+    , field "tag" tagType
     , field "marked" signedInt
     , field "c" $ emptyUnion "ldata"
     ]
@@ -72,7 +72,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   modifyMain (SFunction attrs typ "main" params locals iv) =
     SFunction attrs typ "main" params (inits ++ locals) iv where
       inits = [ stmt $ "all_lists" .=. "malloc(sizeof(list_t))"
-              , stmt $ FunctionCall "memset" ["all_lists", (intToLiteral 0), "sizeof(all_lists)"]
+              , stmt $ FunctionCall "memset" ["all_lists", intToLiteral 0, "sizeof(all_lists)"]
               ]
     
   addGC :: SFunction -> SFunction
@@ -90,12 +90,12 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
           , stmt $ ("all_lists" .->. "tag") .=. "LIST"
           , stmt $ ("all_lists" .->. "c.list") .=. n ]
       expandCallocs x = [x]
-      boilerplate = toAssignment <$> (zip (referencedLists f) [0..(referencedListCount f)])
+      boilerplate = toAssignment <$> zip (referencedLists f) [0..(referencedListCount f)]
       reflist = LDeclaration $ Variable "rl" forwardRefList Nothing
-      a1 = stmt $ (Binary "rl" "." "parent") .=. "referenced_list"
-      a2 = stmt $ (Binary "rl" "." "nptrs") .=. (intToLiteral $ referencedListCount f)
-      a3 = stmt $ "referenced_list" .=. (Unary "&" "rl")
-      reset = stmt $ "referenced_list" .=. (Binary "rl" "." "parent")  
+      a1 = stmt $ Binary "rl" "." "parent" .=. "referenced_list"
+      a2 = stmt $ Binary "rl" "." "nptrs" .=. (intToLiteral $ referencedListCount f)
+      a3 = stmt $ "referenced_list" .=. Unary "&" "rl"
+      reset = stmt $ "referenced_list" .=. Binary "rl" "." "parent"
   
   rewriteConsOperator :: Expression -> Expression
   rewriteConsOperator (Binary lhs "::" rhs) = FunctionCall "cons" [Cast (pointerTo void) lhs, rhs]
