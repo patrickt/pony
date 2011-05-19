@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances, OverloadedStrings #-}
 
 module Text.Pretty
   ( module Text.PrettyPrint.HughesPJ
@@ -13,10 +13,14 @@ module Text.Pretty
   , commaSep
   , (<:>)
   , Pretty (pretty)
+  , IsString (..)
   )
   where
   
+  import GHC.Exts ( IsString(..) )
   import Text.PrettyPrint.HughesPJ hiding (char, int, integer, float, double)
+  
+  instance IsString Doc where fromString = text
   
   textS :: (Show a) => a -> Doc
   textS = text . show

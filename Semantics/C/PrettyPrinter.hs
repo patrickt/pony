@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings #-}
 
 module Semantics.C.PrettyPrinter where
   
@@ -16,44 +16,44 @@ module Semantics.C.PrettyPrinter where
       $$ rbrace
         where parameters = hsep $ punctuate comma (pretty <$> params)
               bodyContents = nest 2 (vcat $ pretty <$> body)
-              ellipsis = if isVariadic then text ", ..." else empty
+              ellipsis = if isVariadic then ", ..." else empty
   
   instance Pretty Signedness where
-    pretty Unsigned = text "unsigned"
-    pretty Signed = text "signed"
+    pretty Unsigned = "unsigned"
+    pretty Signed = "signed"
   
   instance Pretty SType where
-    pretty (SVoid attrs) = pretty attrs <+> text "void"
+    pretty (SVoid attrs) = pretty attrs <+> "void"
     pretty (SInt (IntegerFlags Signed w) attrs) = pretty attrs <+> text (intTypeFromSize w)
-    pretty (SInt (IntegerFlags Unsigned w) attrs) = pretty attrs <+> text "unsigned" <+> text (intTypeFromSize w)
-    pretty (SFloat FFloat attrs) = pretty attrs <+> text "float"
-    pretty (SFloat FDouble attrs) = pretty attrs <+> text "double"
-    pretty (SFloat FLongDouble attrs) = pretty attrs <+> text "long double"
-    pretty (SChar signedness attrs) = pretty attrs <+> pretty signedness <+> text "char"
-    pretty (SPointerTo t attrs) = pretty t <+> pretty attrs <+> text "*"
-    pretty (SArray t Nothing _) = pretty t <> text "[]"
+    pretty (SInt (IntegerFlags Unsigned w) attrs) = pretty attrs <+> "unsigned" <+> text (intTypeFromSize w)
+    pretty (SFloat FFloat attrs) = pretty attrs <+> "float"
+    pretty (SFloat FDouble attrs) = pretty attrs <+> "double"
+    pretty (SFloat FLongDouble attrs) = pretty attrs <+> "long double"
+    pretty (SChar signedness attrs) = pretty attrs <+> pretty signedness <+> "char"
+    pretty (SPointerTo t attrs) = pretty t <+> pretty attrs <+> "*"
+    pretty (SArray t Nothing _) = pretty t <> "[]"
     pretty (SArray t (Just e) _) = pretty t <> brackets (pretty e)
     pretty (SComposite i _) = pretty i
     pretty (SEnum i _) = pretty i
     pretty (Typedef s _ _) = text s
     pretty (SBuiltinType n _) = text n
     pretty (SFunctionPointer t vs _) = parens' t <> parens (hsep $ punctuate comma (pretty <$> vs))
-    -- pretty x = text ("undefined for " ++ show x)
+    -- pretty x = ("undefined for " ++ show x)
   
   instance Pretty CompositeType where
-    pretty Struct = text "struct"
-    pretty Union = text "union"
+    pretty Struct = "struct"
+    pretty Union = "union"
     
   instance Pretty Attribute where
-    pretty Auto = text "auto"
-    pretty Const = text "const"
-    pretty Extern = text "extern"
-    pretty Inline = text "inline"
-    pretty Register = text "register"
-    pretty Restrict = text "restrict"
-    pretty Static = text "static"
-    pretty Volatile = text "volatile"
-    pretty (Custom es) = text "__attribute__" <> parens (parens (hsep $ punctuate comma (pretty <$> es)))
+    pretty Auto = "auto"
+    pretty Const = "const"
+    pretty Extern = "extern"
+    pretty Inline = "inline"
+    pretty Register = "register"
+    pretty Restrict = "restrict"
+    pretty Static = "static"
+    pretty Volatile = "volatile"
+    pretty (Custom es) = "__attribute__" <> parens (parens (hsep $ punctuate comma (pretty <$> es)))
   
   instance Pretty [Attribute] where
     pretty = hsep'
@@ -72,7 +72,7 @@ module Semantics.C.PrettyPrinter where
       
   instance Pretty EnumerationInfo where 
     pretty (EnumerationInfo n vals) =
-      text "enum" <+> pretty n <+> braces values where
+      "enum" <+> pretty n <+> braces values where
         values = commaSep vals
   
   instance Pretty SVariable where
@@ -88,7 +88,7 @@ module Semantics.C.PrettyPrinter where
     pretty (SParameter Nothing (SFunctionPointer rt params _)) = pretty rt <+> parens star <> parens (hsep $ punctuate comma (pretty <$> params))
     pretty (SParameter Nothing t) = pretty t
     pretty (SParameter (Just n) (SFunctionPointer rt params _)) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params))
-    pretty (SParameter (Just n) (SArray t Nothing _)) = pretty t <+> text n <> text "[]"
+    pretty (SParameter (Just n) (SArray t Nothing _)) = pretty t <+> text n <> "[]"
     pretty (SParameter (Just n) t) = pretty t <+> text n
   
   instance Pretty SField where
@@ -103,32 +103,32 @@ module Semantics.C.PrettyPrinter where
     pretty (SField n t (Just i)) = pretty t <+> pretty n <> colon <+> pretty i <> semicolon
 
   instance Pretty Statement where
-    pretty (Asm True a b c d) = text "asm volatile" <> parens (pretty a <:> pretty b <:> pretty c <:> pretty d)
-    pretty (Asm False a b c d) = text "asm" <> parens (pretty a <:> pretty b <:> pretty c <:> pretty d) 
-    pretty Break = text "break;" 
-    pretty (Case e s) = text "case" <+> pretty e <> colon <+> pretty s
+    pretty (Asm True a b c d) = "asm volatile" <> parens (pretty a <:> pretty b <:> pretty c <:> pretty d)
+    pretty (Asm False a b c d) = "asm" <> parens (pretty a <:> pretty b <:> pretty c <:> pretty d) 
+    pretty Break = "break;" 
+    pretty (Case e s) = "case" <+> pretty e <> colon <+> pretty s
     pretty (Compound b) = lbrace $$ nest 2 (vcat (pretty <$> b)) $$ rbrace
-    pretty Continue = text "continue;"
-    pretty (Default s) = text "default:" <+> pretty s <> semicolon
-    pretty (DoWhile s e) = text "do" <+> pretty s <+> text "while" <+> parens' e
+    pretty Continue = "continue;"
+    pretty (Default s) = "default:" <+> pretty s <> semicolon
+    pretty (DoWhile s e) = "do" <+> pretty s <+> "while" <+> parens' e
     pretty EmptyS = empty
     pretty (ExpressionS s) = pretty s <> semicolon
-    pretty (For a b c s) = text "for" <> parens contents <+> pretty s where
+    pretty (For a b c s) = "for" <> parens contents <+> pretty s where
       contents = pretty a <+> pretty b <> semicolon <+> pretty c
-    pretty (GoTo n) = text "goto" <+> pretty n <> semicolon
-    pretty (IfThen e s) = text "if" <+> parens' e <+> pretty s
-    pretty (IfThenElse e s s') = text "if" <+> parens' e <+> pretty s <+> text "else" <+> pretty s'
+    pretty (GoTo n) = "goto" <+> pretty n <> semicolon
+    pretty (IfThen e s) = "if" <+> parens' e <+> pretty s
+    pretty (IfThenElse e s s') = "if" <+> parens' e <+> pretty s <+> "else" <+> pretty s'
     pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
-    pretty (Return Nothing) = text "return;" 
-    pretty (Return (Just e)) = text "return" <+> pretty e <> semicolon
-    pretty (Switch e s) = text "switch" <+> parens' e <+> pretty s
-    pretty (While e s) = text "while" <+> parens' e <+> pretty s
+    pretty (Return Nothing) = "return;" 
+    pretty (Return (Just e)) = "return" <+> pretty e <> semicolon
+    pretty (Switch e s) = "switch" <+> parens' e <+> pretty s
+    pretty (While e s) = "while" <+> parens' e <+> pretty s
     
   instance Pretty CLiteral where
     pretty (CInteger i) = textS i
     pretty (CChar c) = textS c
     pretty (CFloat f) = textS f
-    pretty (CString s) = textS s
+    pretty (CString s) = textS   s
 
   instance Pretty Expression where
     pretty (Literal l) = pretty l
@@ -136,16 +136,16 @@ module Semantics.C.PrettyPrinter where
     pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
     pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
     pretty (Cast t e) = parens' t <> pretty e
-    pretty (Unary "++ post" e) = pretty e <> text "++"
-    pretty (Unary "-- post" e) = pretty e <> text "--"
+    pretty (Unary "++ post" e) = pretty e <> "++"
+    pretty (Unary "-- post" e) = pretty e <> "--"
     -- terrible hack pending workaround
-    pretty (Unary "sizeof" e) = pretty "sizeof" <> parens' e
+    pretty (Unary "sizeof" e) = "sizeof" <> parens' e
     pretty (Unary n e) = text n <> pretty e
     pretty (Binary lhs "." rhs) = pretty lhs <> dot <> pretty rhs
     pretty (Binary lhs "->" rhs) = pretty lhs <> arrow <> pretty rhs
     pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
-    pretty (SizeOfSType t) = text "sizeof" <> parens' t
+    pretty (SizeOfSType t) = "sizeof" <> parens' t
     pretty (Builtin b) = textS b
     
   instance Pretty SLocal where
@@ -155,13 +155,13 @@ module Semantics.C.PrettyPrinter where
   instance Pretty SGlobal where
     pretty (GFunction g) = pretty g
     pretty (GVariable v) = pretty v <> semicolon
-    pretty (GTypedef n (SArray t size _)) = text "typedef" <+> pretty t <+> pretty n <> brackets (pretty size) <> semicolon
-    pretty (GTypedef n (SFunctionPointer rt params _)) = text "typedef" <+> pretty rt <+> name <> parens (commaSep params) <> semicolon where
+    pretty (GTypedef n (SArray t size _)) = "typedef" <+> pretty t <+> pretty n <> brackets (pretty size) <> semicolon
+    pretty (GTypedef n (SFunctionPointer rt params _)) = "typedef" <+> pretty rt <+> name <> parens (commaSep params) <> semicolon where
       name = parens (star <> text n)
-    pretty (GTypedef n t) = text "typedef" <+> pretty t <+> pretty n <> semicolon
+    pretty (GTypedef n t) = "typedef" <+> pretty t <+> pretty n <> semicolon
     pretty (GComposite i) = pretty i <> semicolon
     pretty (GFunctionPrototype t n p False) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
-    pretty (GFunctionPrototype t n p True) = pretty t <+> pretty n <> parens (hcat (punctuate comma (pretty <$> p)) <> text ", ...") <> semicolon
+    pretty (GFunctionPrototype t n p True) = pretty t <+> pretty n <> parens (hcat (punctuate comma (pretty <$> p)) <> ", ...") <> semicolon
     
   instance Pretty Program where
     pretty a = vcat $ pretty <$> a
