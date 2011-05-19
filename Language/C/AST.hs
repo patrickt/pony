@@ -25,7 +25,7 @@ module Language.C.AST
   -- not enforced by the parser, but will fail to compile in any modern C compiler.
   data CStatement
     -- | The GCC syntax for inline assembly.
-    = AsmStmt (Maybe TypeQualifier) CExpr (Maybe CExpr) (Maybe CExpr) (Maybe CExpr)
+    = AsmStmt (Maybe TypeQualifier) AsmOperand
     -- | The @break@ statement. Should only appear inside loop constructs.
     | BreakStmt 
     -- | The @case@ statement, taking the form of @case expr: statement@.
@@ -66,6 +66,11 @@ module Language.C.AST
     -- | The @while@ statement, of the form @while expr statement@.
     | WhileStmt CExpr CStatement
     deriving (Eq, Show, Typeable, Data)
+    
+  data AsmOperand 
+    = Simple CExpr
+    | GCCAsm CExpr (Maybe CExpr) (Maybe CExpr) (Maybe CExpr)
+    deriving (Show, Eq, Typeable, Data)
   
   -- | A C function (C99 6.9.1).
   -- Invariant: The final 'CStatement' will always be a 'CompoundStmt', and the 

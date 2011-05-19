@@ -53,13 +53,19 @@ whether it can consume input before failing.
             <?> "declaration or C statement"
             
   asmStmt :: Parser CStatement
-  asmStmt  =  (L.reserved "asm" *> pure AsmStmt) 
-          <*> optional volatile
-          <*> (L.symbol "(" *> stringLiteral)
-          <*> (L.symbol ":" *> optional stringLiteral)
-          <*> (L.symbol ":" *> optional stringLiteral)
-          <*> ((L.symbol ":" *> optional stringLiteral) <* L.symbol ")") where
-            volatile = pure QVolatile <* L.reserved "volatile"
+  asmStmt =  pure AsmStmt 
+         <*> (L.reserved "asm" *> optional volatile)
+         <*> L.parens asmOperand where
+           volatile = (L.reserved "volatile" *> pure QVolatile)
+            
+  asmOperand :: Parser AsmOperand
+  asmOperand = try simple <|> complex where
+    simple = pure Simple <*> (stringLiteral <* notFollowedBy L.colon)
+    complex =  pure GCCAsm 
+           <*> stringLiteral 
+           <*> (L.colon *> optional stringLiteral)
+           <*> (L.colon *> optional stringLiteral)
+           <*> (L.colon *> optional stringLiteral)
   
   expressionStmt :: Parser CStatement
   expressionStmt = e <?> "expression" where 
