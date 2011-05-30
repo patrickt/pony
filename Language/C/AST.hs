@@ -23,7 +23,7 @@ module Language.C.AST
   -- Unless specified otherwise, the semantics of statements (e.g. that 
   -- @break@ and @continue@ may only appear inside @for@/@while@ loops) are 
   -- not enforced by the parser, but will fail to compile in any modern C compiler.
-  data CStatement
+  data CStatement 
     -- | The GCC syntax for inline assembly.
     = AsmStmt (Maybe TypeQualifier) AsmOperand
     -- | The @break@ statement. Should only appear inside loop constructs.
@@ -70,6 +70,10 @@ module Language.C.AST
   data AsmOperand 
     = Simple CExpr
     | GCCAsm CExpr (Maybe CExpr) (Maybe CExpr) (Maybe CExpr)
+    deriving (Show, Eq, Typeable, Data)
+    
+  data AsmArgument 
+    = AsmArgument (Maybe Ident) CExpr CExpr
     deriving (Show, Eq, Typeable, Data)
   
   -- | A C function (C99 6.9.1).
