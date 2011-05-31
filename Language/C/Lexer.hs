@@ -24,6 +24,9 @@ module Language.C.Lexer
   , semiSep1
   , commaSep
   , commaSep1
+  , cHex
+  , cOctal
+  , decimal
   ) 
   
   where
@@ -53,12 +56,12 @@ module Language.C.Lexer
     , T.commentLine = "#"
     }
 
-  cOctal = do { try (char '0');
-                liftM (fst . head . readOct) (many1 octDigit) 
-                <|> return 0 }
-  cHex = do { try (char '0' >> oneOf "xX");
-              liftM (fst . head. readHex) (many1 hexDigit) 
-              <|> return 0 }
+  cOctal = char '0' >>
+           many1 octDigit >>= 
+           return . fst . head . readOct           
+  cHex = char '0' >> oneOf "xX" >>
+         many1 hexDigit >>=
+         return . fst . head . readHex
   
   lexer = T.makeTokenParser ponyCDef
 
@@ -69,7 +72,7 @@ module Language.C.Lexer
   reservedOp = T.reservedOp lexer
   charLiteral = T.charLiteral lexer
   stringLiteral = T.stringLiteral lexer
-  natural = cHex <|> cOctal <|> (T.decimal lexer)
+  natural = try cHex <|> try cOctal <|> (T.decimal lexer)
   float = T.float lexer
   decimal = T.decimal lexer
   symbol = T.symbol lexer
