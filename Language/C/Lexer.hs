@@ -37,7 +37,7 @@ module Language.C.Lexer
     { T.reservedOpNames = ["->", "++", "--", "&", "*", "+", "-", "~", "!", "/", "%", "<<", ">>", 
                           "/", "%", "<<", ">>", "<", ">", "<=", ">=", "==", "!=", "^", "|", "&&", 
                           "?", ":", ";", "...", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", 
-                          "&=", "^=", "|=", ",", "#", "##", "[", "]"]    
+                          "&=", "^=", "|=", ",", "#", "##", "[", "]", "?:"]    
     , T.reservedNames = ["asm", "auto", "break", "case", "char", "const", "continue", "default", "do", 
                         "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", 
                         "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
