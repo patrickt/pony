@@ -3,6 +3,7 @@
 module Data.Coproduct 
   ( Co (..)
   , (:+:)
+  , (:<:)
   )
   where
   
@@ -28,18 +29,15 @@ module Data.Coproduct
     inj :: sub a -> sup a
     prj :: sup a -> Maybe (sub a) -- partial inverse of inj
   
-  -- Reflexive
   instance (Functor f) => f :<: f where
     inj = id
     prj = Just
   
-  -- Below, we're defining a "smart constructor" for Inl
   instance (Functor f, Functor g) => f :<: (f :+: g) where
     inj = Inl
     prj (Inl x) = Just x
     prj (Inr _) = Nothing
   
-  -- Define a smart constructor for Inr, in a round-a-bout fashion
   -- This allows us to inject f into a larger h:+:g when f is already a part of g. Since g is on the right of the coproduct, so is f, but it requires slightly more hoops to jump through since f is sub g.
   instance (Functor f, Functor g, Functor h, f :<: g) => f :<: (h :+: g) where
     inj = Inr . inj
