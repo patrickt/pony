@@ -57,7 +57,8 @@ module Language.C.Expressions
   logicTable =
     [ [mkInfixL "&&"]
     , [mkInfixL "||"]
-    , [Postfix ternaryOp] ]
+    , [Postfix ternaryOp]
+    , [mkInfixL "?:"] ]
     where
       ternaryOp = do
         then' <- L.reservedOp "?" >> expression
