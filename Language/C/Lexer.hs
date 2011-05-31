@@ -28,7 +28,6 @@ module Language.C.Lexer
   
   where
   
-  import Control.Monad (liftM)
   import Data.Char (isSpace)
   import Numeric (readOct, readHex)
   import Text.Parsec
