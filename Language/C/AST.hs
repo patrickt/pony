@@ -175,7 +175,7 @@ module Language.C.AST
   -- | Record type that wraps the various fields a declaration may have.
   data DeclInfo = DeclInfo {
     contents :: Maybe CDeclarator,
-    initVal :: Maybe Initializer,
+    initVal :: Maybe CInitializer,
     size :: Maybe CExpr
   } deriving (Show, Eq, Typeable, Data)
   
@@ -218,12 +218,12 @@ module Language.C.AST
   
   -- | C initializers (C99 6.7.8). Initialization types can contain one 
   -- expression or a bracketed list of initializers.
-  data Initializer 
-    = InitExpression CExpr
-    | InitList CInitList
+  data CInitializer 
+    = CInitExpression CExpr
+    | CInitList IList
     deriving (Eq, Show, Typeable, Data)
   
-  type CInitList = [([CDesignator], Initializer)]
+  type IList = [([CDesignator], CInitializer)]
   
   -- | Indirectly derived declarators used inside the 'CDeclarator' type.
   -- In the future, Apple's extension for blocks (declared with @^@) may be added.

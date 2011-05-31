@@ -104,8 +104,25 @@ module Semantics.C.Nodes where
     | Ternary Expression Expression Expression
     | SizeOfSType SType
     | Builtin AST.BuiltinExpr
+    -- | Initializers can *only* appear on the right hand side of an assignment expression.
+    -- Woe betide you if you do not abide by this rule.
+    | InitializerList InitList
+    deriving (Show, Eq, Typeable, Data)
+  
+  data Designator 
+    = ArrayDesignator Expression
+    | MemberDesignator Name
     deriving (Show, Eq, Typeable, Data)
     
+  data Initializer 
+    = InitExpression Expression
+    | Composite InitList
+    deriving (Show, Eq, Typeable, Data)
+  
+  data InitList = InitList [([Designator], Initializer)]
+    deriving (Show, Eq, Typeable, Data)
+  
+  
   intToLiteral :: Int -> Expression
   intToLiteral i = Literal (CInteger (toInteger i))
   

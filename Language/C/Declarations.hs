@@ -89,15 +89,15 @@ where
   designator =  pure ArrayDesignator <*> L.brackets constant
             <|> pure MemberDesignator <*> (L.dot *> L.identifier)
   
-  initlist :: Parser CInitList
+  initlist :: Parser IList
   initlist = L.braces (L.commaSep1 initList') <?> "initializer list" where
     initList' = do
       desigs <- many designator
       init <- (L.reservedOp "=" *> initializer)
       return (desigs, init)
   
-  initializer :: Parser Initializer
-  initializer = (InitList <$> initlist) <|> (InitExpression <$> expression)
+  initializer :: Parser CInitializer
+  initializer = (CInitList <$> initlist) <|> (CInitExpression <$> expression)
 
   -- hack hack hack
   data DirectDeclarator 
