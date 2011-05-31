@@ -9,7 +9,7 @@ where
   import Debug.Trace
   import Language.C.AST
   import Language.C.Expressions
-  import qualified Language.C.Lexer as L hiding (integer)
+  import qualified Language.C.Lexer as L
   import Language.C.Parser
   import Language.C.Specifiers
   import Language.C.Miscellany

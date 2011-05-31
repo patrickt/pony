@@ -1,3 +1,5 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
+
 module Language.C.Lexer 
   ( identifier
   , whiteSpace
@@ -7,7 +9,6 @@ module Language.C.Lexer
   , charLiteral
   , stringLiteral
   , natural
-  , integer
   , float
   , symbol
   , lexeme
@@ -27,7 +28,9 @@ module Language.C.Lexer
   
   where
   
+  import Control.Monad (liftM)
   import Data.Char (isSpace)
+  import Numeric (readOct, readHex)
   import Text.Parsec
   import Text.Parsec.Language
   import qualified Text.Parsec.Token as T
@@ -49,6 +52,13 @@ module Language.C.Lexer
     -- have facilities for //, /* and */. Tee-hee.
     , T.commentLine = "#"
     }
+
+  cOctal = do { try (char '0');
+                liftM (fst . head . readOct) (many1 octDigit) 
+                <|> return 0 }
+  cHex = do { try (char '0' >> oneOf "xX");
+              liftM (fst . head. readHex) (many1 hexDigit) 
+              <|> return 0 }
   
   lexer = T.makeTokenParser ponyCDef
 
@@ -59,13 +69,9 @@ module Language.C.Lexer
   reservedOp = T.reservedOp lexer
   charLiteral = T.charLiteral lexer
   stringLiteral = T.stringLiteral lexer
-  natural = T.natural lexer
-  integer = T.integer lexer
+  natural = cHex <|> cOctal <|> (T.decimal lexer)
   float = T.float lexer
-  naturalOrFloat = T.naturalOrFloat lexer
   decimal = T.decimal lexer
-  hexadecimal = T.hexadecimal lexer
-  octal = T.octal lexer
   symbol = T.symbol lexer
   lexeme = T.lexeme lexer
   parens = T.parens lexer
