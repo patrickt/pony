@@ -21,25 +21,26 @@ module Data.Coproduct
     fmap f (Inl e1) = Inl (fmap f e1)
     fmap f (Inr e2) = Inr (fmap f e2)
   
-  -- This injection function defines a mapping from one half of the coproduct
+  -- This injection typeclass defines a mapping from one half of the coproduct
   -- (sub) to the the full coproduct (sup). See the instances below.
-  -- XXX Do we need these to be Functor constrained? compdata does not, DALC does.
+  -- XXX Do we need these to be Functor constrained? compdata does not; DALC does.
   class (Functor sub, Functor sup) => sub :<: sup where
     inj :: sub a -> sup a
     prj :: sup a -> Maybe (sub a) -- partial inverse of inj
   
+  -- Reflexive
   instance (Functor f) => f :<: f where
     inj = id
     prj = Just
   
-  -- In this way, we're defining a smart constructor for Inl
+  -- Below, we're defining a "smart constructor" for Inl
   instance (Functor f, Functor g) => f :<: (f :+: g) where
     inj = Inl
     prj (Inl x) = Just x
     prj (Inr _) = Nothing
   
-  -- A roundabout way to define a smart constructor for Inr
-  -- It allows us to inject f into a larger h when f is already a part of g
+  -- Define a smart constructor for Inr, in a round-a-bout fashion
+  -- This allows us to inject f into a larger h:+:g when f is already a part of g. Since g is on the right of the coproduct, so is f, but it requires slightly more hoops to jump through since f is sub g.
   instance (Functor f, Functor g, Functor h, f :<: g) => f :<: (h :+: g) where
     inj = Inr . inj
     prj (Inr x) = prj x
