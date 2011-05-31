@@ -174,7 +174,7 @@ module Semantics.C.Conversions where
   -- TODO: Handle initializer lists here.
   convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
   convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
-                                                             , initVal = Just (InitExpression e)
+                                                             , initVal = Just (CInitExpression e)
                                                              , size = Nothing}]) = 
                                                                let (Just name) = nameOfDeclarator decl
                                                                in Just (Variable name (convertComponents specs decl) (Just (convert e)))
@@ -191,7 +191,7 @@ module Semantics.C.Conversions where
                                                                              in Variable name (convertComponents specs decl) (Just (convert size))
     convert' (DeclInfo {contents = Just decl, initVal = Nothing, size = Nothing}) = let (Just name) = nameOfDeclarator decl 
                                                                              in Variable name (convertComponents specs decl) Nothing
-    convert' (DeclInfo {contents = Just decl, initVal = Just (InitExpression init), size = Nothing}) = let (Just name) = nameOfDeclarator decl 
+    convert' (DeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) = let (Just name) = nameOfDeclarator decl 
                                                                                                        in Variable name (convertComponents specs decl) (Just (convert init))
                                                                                                        
   

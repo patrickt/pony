@@ -9,7 +9,7 @@ Pony has been tested under GHC 7.0.3 on Mac OS 10.6. Theoretically, it should wo
 
 To compile and run Pony, perform the following steps.
 
-    ./bootstrap.sh # only needs to be run once
+    cabal install --only-dependencies # only needs to be run once
     cabal configure
     cabal build
     ./runpony --ponyproj=<your .ponyproj> --trans=<a transformation> --output=<output file> [filename]
