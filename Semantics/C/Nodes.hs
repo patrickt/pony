@@ -133,6 +133,8 @@ module Semantics.C.Nodes where
   longUnsignedInt = SInt (IntegerFlags Unsigned sizeOfLong) []
   longLongSignedInt = SInt (IntegerFlags Signed sizeOfLongLong) []
   longlongUnsignedInt = SInt (IntegerFlags Unsigned sizeOfLongLong) []
+  int128 = SInt (IntegerFlags Signed sizeOfInt128) []
+  uint128 = SInt (IntegerFlags Unsigned sizeOfInt128) []
   float = SFloat FFloat []
   double = SFloat FDouble []
   longDouble = SFloat FLongDouble []

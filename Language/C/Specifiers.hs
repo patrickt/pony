@@ -42,6 +42,8 @@ where
     , "short" `as` TShort
     , "int" `as` TInt
     , "long" `as` TLong
+    , "__int128_t" `as` TInt128
+    , "__uint128_t" `as` TUInt128
     , "float" `as` TFloat
     , "double" `as` TDouble
     , "signed" `as` TSigned

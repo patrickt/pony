@@ -31,6 +31,9 @@ int main (int argc, char const *argv[])
   fprintf(hask, "sizeOfLongLong :: Int\n");
   fprintf(hask, "sizeOfLongLong = %lu\n\n", sizeof(long long int) * 8);
   
+  fprintf(hask, "sizeOfInt128 :: Int\n");
+  fprintf(hask, "sizeOfInt128 = %lu\n\n", sizeof(__int128_t) * 8); // Hopefully 128 bits wide!
+  
   fprintf(hask, "sizeOfFloat :: Int\n");
   fprintf(hask, "sizeOfFloat = %lu\n\n", sizeof(float) * 8);
   

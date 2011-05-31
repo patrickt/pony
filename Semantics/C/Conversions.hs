@@ -129,6 +129,8 @@ module Semantics.C.Conversions where
     convert [TSigned, TLong, TLong, TInt]   = longLongSignedInt
     convert [TUnsigned, TLong, TLong]       = longLongSignedInt
     convert [TUnsigned, TLong, TLong, TInt] = longLongSignedInt
+    convert [TInt128]                       = int128
+    convert [TUInt128]                      = uint128
     convert [TFloat]                        = float
     convert [TDouble]                       = double
     convert [TLong, TDouble]                = longDouble

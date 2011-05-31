@@ -73,7 +73,7 @@ module Language.C.AST
     deriving (Show, Eq, Typeable, Data)
     
   data AsmArgument 
-    = AsmArgument (Maybe Ident) CExpr CExpr
+    = AsmArgument (Maybe CExpr) CExpr CExpr
     deriving (Show, Eq, Typeable, Data)
   
   -- | A C function (C99 6.9.1).
@@ -153,6 +153,8 @@ module Language.C.AST
      | TShort
      | TInt
      | TLong
+     | TInt128
+     | TUInt128
      | TFloat
      | TDouble
      | TSigned

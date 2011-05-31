@@ -43,7 +43,7 @@ module Language.C.Lexer
                         "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
                         "static", "struct", "switch", "typedef", "union", "unsigned", "void", 
                         "volatile", "while", "...", "__asm", "__attribute__", "__inline", "__inline__",
-                        "__typeof__", "__builtin_va_arg" ]
+                        "__typeof__", "__builtin_va_arg", "__int128_t", "__uint128_t"]
     , T.identStart = letter <|> char '_'
     -- Since the C preprocessor removes comments, there is no need to 
     -- have facilities for //, /* and */. Tee-hee.

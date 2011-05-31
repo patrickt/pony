@@ -24,8 +24,11 @@ module Semantics.C.PrettyPrinter where
   
   instance Pretty SType where
     pretty (SVoid attrs) = pretty attrs <+> "void"
-    pretty (SInt (IntegerFlags Signed w) attrs) = pretty attrs <+> text (intTypeFromSize w)
-    pretty (SInt (IntegerFlags Unsigned w) attrs) = pretty attrs <+> "unsigned" <+> text (intTypeFromSize w)
+    pretty (SInt (IntegerFlags s w) attrs) 
+        | (w == sizeOfInt128) && (s == Signed)   = pretty attrs <+> "__int128_t"
+        | (w == sizeOfInt128) && (s == Unsigned) = pretty attrs <+> "__uint128_t"
+        | s == Signed                         = pretty attrs <+> text (intTypeFromSize w)
+        | s == Unsigned                       = pretty attrs <+> "unsigned" <+> text (intTypeFromSize w)
     pretty (SFloat FFloat attrs) = pretty attrs <+> "float"
     pretty (SFloat FDouble attrs) = pretty attrs <+> "double"
     pretty (SFloat FLongDouble attrs) = pretty attrs <+> "long double"
