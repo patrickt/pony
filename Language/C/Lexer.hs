@@ -24,9 +24,6 @@ module Language.C.Lexer
   , semiSep1
   , commaSep
   , commaSep1
-  , cHex
-  , cOctal
-  , decimal
   ) 
   
   where
@@ -74,7 +71,6 @@ module Language.C.Lexer
   stringLiteral = T.stringLiteral lexer
   natural = try cHex <|> try cOctal <|> (T.decimal lexer)
   float = T.float lexer
-  decimal = T.decimal lexer
   symbol = T.symbol lexer
   lexeme = T.lexeme lexer
   parens = T.parens lexer
