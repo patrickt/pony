@@ -37,20 +37,14 @@ module Language.C.Miscellany where
     isPointer _ = False
   
   nameOfDeclaration :: CDeclaration -> Maybe String
-  nameOfDeclaration (CDeclaration _ [DeclInfo {contents, ..}]) = contents >>= nameOfDeclarator
+  nameOfDeclaration (CDeclaration _ [DeclInfo {contents, ..}]) = contents >>= declName
   nameOfDeclaration _ = Nothing
   
   dropTypedef :: CDeclaration -> CDeclaration
   dropTypedef (CDeclaration (SSpec STypedef : rest) it) = CDeclaration rest it
   
-  nameOfDeclarator :: CDeclarator -> Maybe String
-  nameOfDeclarator (CDeclarator s _ _ _) = s
-  
-  derivedPartsOfDeclarator :: CDeclarator -> [DerivedDeclarator]
-  derivedPartsOfDeclarator (CDeclarator _ ds _ _) = ds
-  
   doesDeclaratorContainVariadicSpecifier :: CDeclarator -> Bool
-  doesDeclaratorContainVariadicSpecifier d = any variadicFunction (derivedPartsOfDeclarator d) where
+  doesDeclaratorContainVariadicSpecifier d = any variadicFunction (derived d) where
     variadicFunction (Function _ True) = True
     variadicFunction _ = False
   
@@ -58,9 +52,8 @@ module Language.C.Miscellany where
   isFunctionVariadic :: CFunction -> Bool
   isFunctionVariadic (CFunction _ d _) = doesDeclaratorContainVariadicSpecifier d
   
-  -- There is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
-  partitionSpecifiers them = (typeQuals, typeSpecs, storageSpecs) where 
+  partitionSpecifiers them = (typeSpecs, typeQuals, storageSpecs) where 
     typeQuals = [ a | (TQual a) <- them ]
     typeSpecs = [ a | (TSpec a) <- them ]
     storageSpecs = [ a | (SSpec a) <- them ]

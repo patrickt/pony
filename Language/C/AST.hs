@@ -206,9 +206,13 @@ module Language.C.AST
   type AsmName = Maybe String
   
   -- | C declarators, both abstract and concrete (C99 6.7.5 and 6.7.6).
-  data CDeclarator
-   = CDeclarator (Maybe String) [DerivedDeclarator] AsmName [CAttribute]
-   deriving (Eq, Show, Typeable, Data)
+  data CDeclarator 
+   = CDeclarator {
+      declName :: Maybe String,
+      derived :: [DerivedDeclarator],
+      asmName :: AsmName,
+      declAttributes :: [CAttribute]
+   } deriving (Eq, Show, Typeable, Data)
   
   -- | C designators, i.e. that which can appear inside compound initialization statements.
   data CDesignator 

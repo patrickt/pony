@@ -1,4 +1,9 @@
 module Language.C.Declarations
+  ( declaration
+  , sizedDeclaration
+  , typeName
+  , declarator 
+  )
 where
   
   -- Lasciate ogne speranza, voi ch'intrate.
@@ -7,7 +12,7 @@ where
   import Data.Either
   import Data.Maybe
   import Debug.Trace
-  import Language.C.AST
+  import Language.C.AST hiding (asmName)
   import Language.C.Expressions
   import qualified Language.C.Lexer as L
   import Language.C.Parser
@@ -24,7 +29,7 @@ where
   checkTypedefs :: CDeclaration -> Parser CDeclaration
   checkTypedefs d@(CDeclaration (SSpec STypedef : rest) infos) = do
     let (Just declr) = contents $ head infos
-    let (Just name) = nameOfDeclarator declr
+    let (Just name) = declName declr
     updateState $ addTypeDef name (CTypeName (CDeclaration rest infos))
     return d
   checkTypedefs x = return x
