@@ -17,6 +17,10 @@ module Data.Coproduct
   data (f :+: g) e = Inl (f e) | Inr (g e)
   infixr 6 :+:
   
+  -- Multiply-recursive coproducts.
+  data (f :++: g) a b = Mnl (f a b) | Mnr (g a b)
+  infixr 6 :++:
+  
   -- The coproduct of two functors is a functor.
   instance (Functor f, Functor g) => Functor (f :+: g) where
     fmap f (Inl e1) = Inl (fmap f e1)

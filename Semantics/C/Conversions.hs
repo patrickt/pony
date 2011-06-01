@@ -26,7 +26,7 @@ module Semantics.C.Conversions where
   instance Reifiable CFunction SFunction where
     convert f@(CFunction spec decl (CompoundStmt body)) =
       let ftype = returnTypeOfFunction f
-          (Just name) = nameOfDeclarator decl
+          (Just name) = declName decl
           args = extractFunctionArguments decl
           newBody = body >>= convert
           in SFunction [] ftype name args newBody (isFunctionVariadic f)
@@ -161,10 +161,10 @@ module Semantics.C.Conversions where
   instance Reifiable CField [SField] where
     convert (CField (CDeclaration specs infos)) = map convert' infos where
       convert' :: DeclInfo -> SField
-      convert' (DeclInfo {contents = (Just contents), size, ..}) = SField (nameOfDeclarator contents) (convertComponents specs contents) (convert <$> size) 
+      convert' (DeclInfo {contents = (Just contents), size, ..}) = SField (declName contents) (convertComponents specs contents) (convert <$> size) 
   
   instance Reifiable CParameter SParameter where
-    convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (nameOfDeclarator contents) (convertComponents specs contents)
+    convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (declName contents) (convertComponents specs contents)
     convert (CParameter (CDeclaration specs _)) = SParameter Nothing (convert specs)
     
   instance Reifiable Enumerator Enumeration where
@@ -176,22 +176,22 @@ module Semantics.C.Conversions where
   convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
                                                              , initVal = Just (CInitExpression e)
                                                              , size = Nothing}]) = 
-                                                               let (Just name) = nameOfDeclarator decl
+                                                               let (Just name) = declName decl
                                                                in Just (Variable name (convertComponents specs decl) (Just (convert e)))
   convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
                                                              , initVal = Nothing
                                                              , size = Nothing }]) = 
-                                                               let (Just name) = nameOfDeclarator decl
+                                                               let (Just name) = declName decl
                                                                in Just (Variable name (convertComponents specs decl) Nothing)
   convertDeclarationToVariable _ = Nothing
   
   convertDeclarationToVariables :: CDeclaration -> [SVariable]
   convertDeclarationToVariables (CDeclaration specs infos) = map convert' infos where
-    convert' (DeclInfo {contents = Just decl, initVal, size = (Just size)}) = let (Just name) = nameOfDeclarator decl 
+    convert' (DeclInfo {contents = Just decl, initVal, size = (Just size)}) = let (Just name) = declName decl 
                                                                              in Variable name (convertComponents specs decl) (Just (convert size))
-    convert' (DeclInfo {contents = Just decl, initVal = Nothing, size = Nothing}) = let (Just name) = nameOfDeclarator decl 
+    convert' (DeclInfo {contents = Just decl, initVal = Nothing, size = Nothing}) = let (Just name) = declName decl 
                                                                              in Variable name (convertComponents specs decl) Nothing
-    convert' (DeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) = let (Just name) = nameOfDeclarator decl 
+    convert' (DeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) = let (Just name) = declName decl 
                                                                                                        in Variable name (convertComponents specs decl) (Just (convert init))
                                                                                                        
   
@@ -218,10 +218,10 @@ module Semantics.C.Conversions where
   -- FIXME: this won't work if there's more than one declarator per declaration
   convertDeclarationToField :: CDeclaration -> SField
   convertDeclarationToField d@(CDeclaration _ [DeclInfo {contents=(Just decl), initVal, size}]) = let (Just typ) = convertDeclarationToType d 
-                                                                                                  in SField (nameOfDeclarator decl) typ (convert <$> size)
+                                                                                                  in SField (declName decl) typ (convert <$> size)
   -- TODO: We're leaving storage specifiers out here, those should be included too.
   convertComponents :: [Specifier] -> CDeclarator -> SType
-  convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convert typeSpecs) (storageAttrs ++ qualAttrs)) (reverse $ derivedPartsOfDeclarator decl) where
+  convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convert typeSpecs) (storageAttrs ++ qualAttrs)) (reverse $ derived decl) where
     storageAttrs = convert <$> storageSpecs
     qualAttrs = convert <$> typeQuals
     (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
@@ -234,7 +234,7 @@ module Semantics.C.Conversions where
   functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
   functionPrototypeFromDeclaration (CDeclaration specs [DeclInfo { contents = (Just contents), ..}]) 
     = GFunctionPrototype rtype name params isVariadic where
-        (Just name) = nameOfDeclarator contents
+        (Just name) = declName contents
         params = extractFunctionArguments contents
         rtype = returnTypeOfFunction (CFunction specs contents undefined)
         isVariadic = doesDeclaratorContainVariadicSpecifier contents

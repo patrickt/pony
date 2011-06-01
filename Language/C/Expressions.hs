@@ -7,7 +7,7 @@ module Language.C.Expressions
   , unaryExpression
   , primaryExpression
   , constant
-, stringLiteral
+  , stringLiteral
   )
   where 
   
@@ -39,7 +39,7 @@ module Language.C.Expressions
                        , (bitwiseTable', "bitwise operation")
                        , (logicTable', "logical operation")
                        ] castExpression <?> "constant expression"
-
+  
   assignTable = 
     [ [ mkInfixL "="
       , mkInfixL "*=" 
