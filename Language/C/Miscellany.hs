@@ -65,3 +65,9 @@ module Language.C.Miscellany where
     extract (as, bs, cs) (TSpec t : rest) = extract (t:as, bs, cs) rest
     extract (as, bs, cs) (TQual q : rest) = extract (as, q:bs, cs) rest
     extract (as, bs, cs) (SSpec s : rest) = extract (as, bs, s:cs) rest
+
+	specifierBelongsToFunction :: Specifier -> Bool
+	specifierBelongsToFunction (SSpec SStatic) = True
+	specifierBelongsToFunction (SSpec SExtern) = True
+	specifierBelongsToFunction (TQual FInline) = True
+	specifierBelongsToFunction _ = False
