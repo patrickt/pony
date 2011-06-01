@@ -53,13 +53,13 @@ module Language.C.Miscellany where
   isFunctionVariadic (CFunction _ d _) = doesDeclaratorContainVariadicSpecifier d
   
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
-	partitionSpecifiers them = (typeSpecs, typeQuals, storageSpecs) where 
-  typeQuals = [ a | (TQual a) <- them ]
-  typeSpecs = [ a | (TSpec a) <- them ]
-  storageSpecs = [ a | (SSpec a) <- them ]
+  partitionSpecifiers them = (typeSpecs, typeQuals, storageSpecs) where 
+    typeQuals = [ a | (TQual a) <- them ]
+    typeSpecs = [ a | (TSpec a) <- them ]
+    storageSpecs = [ a | (SSpec a) <- them ]
 
-	specifierBelongsToFunction :: Specifier -> Bool
-	specifierBelongsToFunction (SSpec SStatic) = True
-	specifierBelongsToFunction (SSpec SExtern) = True
-	specifierBelongsToFunction (TQual FInline) = True
-	specifierBelongsToFunction _ = False
+  specifierBelongsToFunction :: Specifier -> Bool
+  specifierBelongsToFunction (SSpec SStatic) = True
+  specifierBelongsToFunction (SSpec SExtern) = True
+  specifierBelongsToFunction (TQual FInline) = True
+  specifierBelongsToFunction _ = False
