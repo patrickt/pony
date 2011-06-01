@@ -185,14 +185,16 @@ module Semantics.C.Conversions where
                                                                in Just (Variable name (convertComponents specs decl) Nothing)
   convertDeclarationToVariable _ = Nothing
   
+  -- | A declaration can refer to multiple variables, for example:
+  -- @int foo, bar, baz;@
   convertDeclarationToVariables :: CDeclaration -> [SVariable]
   convertDeclarationToVariables (CDeclaration specs infos) = map convert' infos where
-    convert' (DeclInfo {contents = Just decl, initVal, size = (Just size)}) = let (Just name) = declName decl 
-                                                                             in Variable name (convertComponents specs decl) (Just (convert size))
-    convert' (DeclInfo {contents = Just decl, initVal = Nothing, size = Nothing}) = let (Just name) = declName decl 
-                                                                             in Variable name (convertComponents specs decl) Nothing
-    convert' (DeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) = let (Just name) = declName decl 
-                                                                                                       in Variable name (convertComponents specs decl) (Just (convert init))
+    convert' (DeclInfo {contents = Just decl, initVal = Nothing, size }) 
+      = let (Just name) = declName decl 
+        in Variable name (convertComponents specs decl) (convert <$> size)
+    convert' (DeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) 
+      = let (Just name) = declName decl 
+        in Variable name (convertComponents specs decl) (Just (convert init))
                                                                                                        
   
   convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
