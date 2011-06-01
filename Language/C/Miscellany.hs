@@ -57,3 +57,9 @@ module Language.C.Miscellany where
     typeQuals = [ a | (TQual a) <- them ]
     typeSpecs = [ a | (TSpec a) <- them ]
     storageSpecs = [ a | (SSpec a) <- them ]
+
+  specifierBelongsToFunction :: Specifier -> Bool
+  specifierBelongsToFunction (SSpec SStatic) = True
+  specifierBelongsToFunction (SSpec SExtern) = True
+  specifierBelongsToFunction (TQual FInline) = True
+  specifierBelongsToFunction _ = False
