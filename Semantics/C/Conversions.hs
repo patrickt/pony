@@ -177,12 +177,12 @@ module Semantics.C.Conversions where
                                                              , initVal = Just (CInitExpression e)
                                                              , size = Nothing}]) = 
                                                                let (Just name) = declName decl
-                                                               in Just (Variable name (convertComponents specs decl) (Just (convert e)))
+                                                               in Just (SVariable name (convertComponents specs decl) (Just (convert e)))
   convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
                                                              , initVal = Nothing
                                                              , size = Nothing }]) = 
                                                                let (Just name) = declName decl
-                                                               in Just (Variable name (convertComponents specs decl) Nothing)
+                                                               in Just (SVariable name (convertComponents specs decl) Nothing)
   convertDeclarationToVariable _ = Nothing
   
   -- | A declaration can refer to multiple variables, for example:
@@ -191,10 +191,10 @@ module Semantics.C.Conversions where
   convertDeclarationToVariables (CDeclaration specs infos) = map convert' infos where
     convert' (DeclInfo {contents = Just decl, initVal = Nothing, size }) 
       = let (Just name) = declName decl 
-        in Variable name (convertComponents specs decl) (convert <$> size)
+        in SVariable name (convertComponents specs decl) (convert <$> size)
     convert' (DeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) 
       = let (Just name) = declName decl 
-        in Variable name (convertComponents specs decl) (Just (convert init))
+        in SVariable name (convertComponents specs decl) (Just (convert init))
                                                                                                        
   
   convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo

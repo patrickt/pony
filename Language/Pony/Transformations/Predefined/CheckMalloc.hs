@@ -10,7 +10,7 @@ module Language.Pony.Transformations.Predefined.CheckMalloc where
   
   checkMallocDeclarations :: [SLocal] -> [SLocal]
   checkMallocDeclarations = concatMap convert where
-    convert d@(LDeclaration (Variable name _ (Just (FunctionCall (Ident "malloc") _)))) =
+    convert d@(LDeclaration (SVariable name _ (Just (FunctionCall (Ident "malloc") _)))) =
       [ d, LStatement (IfThen (Unary "!" (Ident name)) (ExpressionS (FunctionCall (Ident "abort") []))) ]
     convert x = [x]
   

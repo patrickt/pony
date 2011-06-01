@@ -40,7 +40,7 @@ module Language.Pony.Transformations.Utilities where
   typedef n t = Typedef n t []
   
   globalVar :: String -> SType -> Expression -> SGlobal
-  globalVar n t v = GVariable (Variable n t (Just v))
+  globalVar n t v = GVariable (SVariable n t (Just v))
   
   (.=.) :: Expression -> Expression -> Expression
   a .=. b = Binary a "=" b
@@ -54,14 +54,14 @@ module Language.Pony.Transformations.Utilities where
   namesInGlobalScope :: Program -> [Name]
   namesInGlobalScope p = nub $ p >>= nameOf where
     nameOf (GFunction (SFunction _ _ n _ _ _)) = [n]
-    nameOf (GVariable (Variable n _ _)) = [n]
+    nameOf (GVariable (SVariable n _ _)) = [n]
     nameOf (GFunctionPrototype _ n _ _) = [n]
     nameOf _ = []
   
   namesInLocalScope :: Program -> SFunction -> [Name]
   namesInLocalScope p (SFunction _ _ n pms ls _) =  nub (namesInGlobalScope p ++ catMaybes (paramNames <$> pms) ++ (localNames =<< ls)) where
     paramNames (SParameter n _) = n
-    localNames (LDeclaration (Variable n _ _)) = [n]
+    localNames (LDeclaration (SVariable n _ _)) = [n]
     localNames _ = []
     
   makeHygenicName :: Name -> Program -> SFunction -> Name

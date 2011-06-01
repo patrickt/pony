@@ -47,7 +47,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
       gcList = globalVar "all_lists" listPointer sNull
       refListDeclaration = GComposite info where (SComposite info _) = refList
       refListInstance = globalVar "referenced_list" (pointerTo forwardRefList) sNull
-      convert nil@(GVariable (Variable "nil" _ _)) = [nil, gcList, refListDeclaration, refListInstance]
+      convert nil@(GVariable (SVariable "nil" _ _)) = [nil, gcList, refListDeclaration, refListInstance]
       convert x = [x]
     in 
       if gcList `elem` x then x else concatMap convert x
@@ -59,9 +59,9 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   referencedLists (SFunction _ _ _ params locals _) =
     (paramName <$> filter isListParameter params) ++ (localName <$> filter isLocalList locals) where
       paramName (SParameter (Just n) _) = n
-      localName (LDeclaration (Variable n _ _)) = n
+      localName (LDeclaration (SVariable n _ _)) = n
       isListParameter (SParameter _ t) = t == oldList
-      isLocalList (LDeclaration (Variable _ t _)) = t == oldList
+      isLocalList (LDeclaration (SVariable _ t _)) = t == oldList
       isLocalList _ = False
     
   redefineList :: SGlobal -> SGlobal
@@ -91,7 +91,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
           , stmt $ ("all_lists" .->. "c.list") .=. n ]
       expandCallocs x = [x]
       boilerplate = toAssignment <$> zip (referencedLists f) [0..(referencedListCount f)]
-      reflist = LDeclaration $ Variable "rl" forwardRefList Nothing
+      reflist = LDeclaration $ SVariable "rl" forwardRefList Nothing
       a1 = stmt $ Binary "rl" "." "parent" .=. "referenced_list"
       a2 = stmt $ Binary "rl" "." "nptrs" .=. (intToLiteral $ referencedListCount f)
       a3 = stmt $ "referenced_list" .=. Unary "&" "rl"

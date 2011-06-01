@@ -69,7 +69,7 @@ module Semantics.C.Nodes where
   data SField = SField (Maybe Name) SType (Maybe Expression)
     deriving (Show, Eq, Typeable, Data)
   
-  data SVariable = Variable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
+  data SVariable = SVariable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
   
   data SParameter = SParameter (Maybe Name) SType deriving (Show, Eq, Typeable, Data)
   

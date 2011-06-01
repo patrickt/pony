@@ -6,7 +6,7 @@ module Language.Pony.Transformations.Predefined.SeparateDeclarations where
   import Semantics.C.Nodes
   
   declare :: String -> SType -> SLocal
-  declare n t = LDeclaration (Variable n t Nothing)
+  declare n t = LDeclaration (SVariable n t Nothing)
   
   (.=.) :: Expression -> Expression -> SLocal
   a .=. b = LStatement $ ExpressionS (Binary a "=" b)
@@ -15,11 +15,11 @@ module Language.Pony.Transformations.Predefined.SeparateDeclarations where
   partitionLocals ls = partition ls ([], []) 
     where 
       partition [] them = them
-      partition (d@(LDeclaration (Variable _ _ Nothing)) : rest) (a,b) = 
+      partition (d@(LDeclaration (SVariable _ _ Nothing)) : rest) (a,b) = 
         partition rest (a ++ [d], b)
       partition (s@(LStatement st) : rest) (a, b) = 
         partition rest (a, b ++ [s])
-      partition (d@(LDeclaration (Variable n t (Just e))) : rest) (a,b) =
+      partition (d@(LDeclaration (SVariable n t (Just e))) : rest) (a,b) =
         partition rest (a ++ [declare n t], 
                         b ++ [Ident n .=. e])
   

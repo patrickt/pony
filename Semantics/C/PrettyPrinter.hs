@@ -79,13 +79,13 @@ module Semantics.C.PrettyPrinter where
         values = commaSep vals
   
   instance Pretty SVariable where
-    pretty (Variable n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
+    pretty (SVariable n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
       pretty t <+> pretty n' <+> star <> pretty n
     -- stupid C and its stupid decision to put array sizes after the variable name
-    pretty (Variable n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
-    pretty (Variable n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size)
-    pretty (Variable n t Nothing) = pretty t <+> pretty n
-    pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
+    pretty (SVariable n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
+    pretty (SVariable n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size)
+    pretty (SVariable n t Nothing) = pretty t <+> pretty n
+    pretty (SVariable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
 
   instance Pretty SParameter where
     pretty (SParameter Nothing (SFunctionPointer rt params _)) = pretty rt <+> parens star <> parens (hsep $ punctuate comma (pretty <$> params))
