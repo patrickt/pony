@@ -60,8 +60,7 @@ module Language.C.Miscellany where
   
   -- There is probably a better way to do this with Data.Generics or something
   partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
-  partitionSpecifiers specs = extract ([], [], []) specs where
-    extract (t, q, s) [] = (r t, r q, r s) where r = reverse
-    extract (as, bs, cs) (TSpec t : rest) = extract (t:as, bs, cs) rest
-    extract (as, bs, cs) (TQual q : rest) = extract (as, q:bs, cs) rest
-    extract (as, bs, cs) (SSpec s : rest) = extract (as, bs, s:cs) rest
+  partitionSpecifiers them = (typeQuals, typeSpecs, storageSpecs) where 
+    typeQuals = [ a | (TQual a) <- them ]
+    typeSpecs = [ a | (TSpec a) <- them ]
+    storageSpecs = [ a | (SSpec a) <- them ]
