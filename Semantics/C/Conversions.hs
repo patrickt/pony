@@ -219,10 +219,9 @@ module Semantics.C.Conversions where
   augmentType t (Function args variadic) = SFunctionPointer t (convert <$> args) []
 
   removeSpuriousPointers :: [DerivedDeclarator] -> [DerivedDeclarator]
-  removeSpuriousPointers p = go [] p where
+  removeSpuriousPointers p = go p [] where
       go [] acc = acc
-      go [x] acc = acc ++ [x]
-      go (f@(Function _ _) : (Pointer _) : xs ) acc = go xs (acc ++ [f])
+      go (f@(Function _ _) : (Pointer _) : xs) acc = go xs (acc ++ [f])
       go (x:xs) acc = go xs (acc ++ [x]) 
   
   extractTypeFromComponents :: [Specifier] -> CDeclarator -> SType
