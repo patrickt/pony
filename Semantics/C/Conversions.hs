@@ -6,7 +6,7 @@ module Semantics.C.Conversions where
   import Semantics.C.Nodes
   import Semantics.C.Reifiable
   import Data.Maybe
-  import Data.List (find)
+  import Data.List (find, foldl')
   
   instance Reifiable CTranslationUnit Program where
     convert = concatMap convert' where
@@ -146,25 +146,17 @@ module Semantics.C.Conversions where
       typ = convert typeSpecs
       quals = (convert <$> typeQuals) ++ (convert <$> storageSpecs)
   
-  -- TODO: remember to put in the array size when I have a handle on expressions
-  convertDerivedDeclarators :: DerivedDeclarator -> SType -> SType
-  -- the qualifiers are getting lost here, this needs a fix
-  convertDerivedDeclarators (Pointer qs) (SFunctionPointer t args attrs) = SFunctionPointer t args attrs
-  convertDerivedDeclarators (Pointer qs) t = SPointerTo t (map convert qs)
-  convertDerivedDeclarators (Array qs size) t = SArray t (convert <$> size) (map convert qs)
-  convertDerivedDeclarators (Function args variadic) t = SFunctionPointer t (convert <$> args) []
-  
   instance Reifiable CTypeName SType where
-    convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = convertComponents specs decl
+    convert (CTypeName (CDeclaration specs [DeclInfo { contents = Just decl, ..}])) = extractTypeFromComponents specs decl
     convert (CTypeName (CDeclaration specs _)) = convert specs
   
   instance Reifiable CField [SField] where
     convert (CField (CDeclaration specs infos)) = map convert' infos where
       convert' :: DeclInfo -> SField
-      convert' (DeclInfo {contents = (Just contents), size, ..}) = SField (declName contents) (convertComponents specs contents) (convert <$> size) 
+      convert' (DeclInfo {contents = (Just contents), size, ..}) = SField (declName contents) (extractTypeFromComponents specs contents) (convert <$> size) 
   
   instance Reifiable CParameter SParameter where
-    convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (declName contents) (convertComponents specs contents)
+    convert (CParameter (CDeclaration specs [DeclInfo { contents = (Just contents), .. }])) = SParameter (declName contents) (extractTypeFromComponents specs contents)
     convert (CParameter (CDeclaration specs _)) = SParameter Nothing (convert specs)
     
   instance Reifiable Enumerator Enumeration where
@@ -177,12 +169,12 @@ module Semantics.C.Conversions where
                                                              , initVal = Just (CInitExpression e)
                                                              , size = Nothing}]) = 
                                                                let (Just name) = declName decl
-                                                               in Just (SVariable name (convertComponents specs decl) (Just (convert e)))
+                                                               in Just (SVariable name (extractTypeFromComponents specs decl) (Just (convert e)))
   convertDeclarationToVariable (CDeclaration specs [DeclInfo { contents = Just decl
                                                              , initVal = Nothing
                                                              , size = Nothing }]) = 
                                                                let (Just name) = declName decl
-                                                               in Just (SVariable name (convertComponents specs decl) Nothing)
+                                                               in Just (SVariable name (extractTypeFromComponents specs decl) Nothing)
   convertDeclarationToVariable _ = Nothing
   
   -- | A declaration can refer to multiple variables, for example:
@@ -191,10 +183,10 @@ module Semantics.C.Conversions where
   convertDeclarationToVariables (CDeclaration specs infos) = map convert' infos where
     convert' (DeclInfo {contents = Just decl, initVal = Nothing, size }) 
       = let (Just name) = declName decl 
-        in SVariable name (convertComponents specs decl) (convert <$> size)
+        in SVariable name (extractTypeFromComponents specs decl) (convert <$> size)
     convert' (DeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) 
       = let (Just name) = declName decl 
-        in SVariable name (convertComponents specs decl) (Just (convert init))
+        in SVariable name (extractTypeFromComponents specs decl) (Just (convert init))
                                                                                                        
   
   convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
@@ -202,7 +194,6 @@ module Semantics.C.Conversions where
     CompositeInfo (boolToCompositeType isStruct) mN (concatMap convert fields) where
       boolToCompositeType True = Struct
       boolToCompositeType False = Union
-      
   
   extractFunctionArguments :: CDeclarator -> [SParameter]
   extractFunctionArguments (CDeclarator n derived asm attributes) = map convert args
@@ -221,17 +212,26 @@ module Semantics.C.Conversions where
   convertDeclarationToField :: CDeclaration -> SField
   convertDeclarationToField d@(CDeclaration _ [DeclInfo {contents=(Just decl), initVal, size}]) = let (Just typ) = convertDeclarationToType d 
                                                                                                   in SField (declName decl) typ (convert <$> size)
-  -- TODO: We're leaving storage specifiers out here, those should be included too.
-  convertComponents :: [Specifier] -> CDeclarator -> SType
-  convertComponents specs decl = foldr convertDerivedDeclarators (setAttributes (convert typeSpecs) (storageAttrs ++ qualAttrs)) (reverse $ derived decl) where
-    storageAttrs = convert <$> storageSpecs
-    qualAttrs = convert <$> typeQuals
-    (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
+  
+  augmentType :: SType -> DerivedDeclarator -> SType
+  augmentType t (Pointer qs) = SPointerTo t (convert <$> qs)
+  augmentType t (Array qs size) = SArray t (convert <$> size) (convert <$> qs)
+  augmentType t (Function args variadic) = SFunctionPointer t (convert <$> args) []
+
+  removeSpuriousPointers :: [DerivedDeclarator] -> [DerivedDeclarator]
+  removeSpuriousPointers p = go [] p where
+      go [] acc = acc
+      go [x] acc = acc ++ [x]
+      go (f@(Function _ _) : (Pointer _) : xs ) acc = go xs (acc ++ [f])
+      go (x:xs) acc = go xs (acc ++ [x]) 
+  
+  extractTypeFromComponents :: [Specifier] -> CDeclarator -> SType
+  extractTypeFromComponents specs decl = foldl' augmentType (convert specs) (removeSpuriousPointers $ derived decl)
     
   -- This is an easy conversion; all that is necessary is to drop the last
   -- item in the list of derived declarators.
   returnTypeOfFunction :: CFunction -> SType
-  returnTypeOfFunction (CFunction specs (CDeclarator n derived asm attrs) _) = convertComponents specs (CDeclarator n (init derived) asm attrs)
+  returnTypeOfFunction (CFunction specs (CDeclarator n derived asm attrs) _) = extractTypeFromComponents specs (CDeclarator n (init derived) asm attrs)
   
   functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
   functionPrototypeFromDeclaration (CDeclaration specs [DeclInfo { contents = (Just contents), ..}]) 
@@ -243,7 +243,7 @@ module Semantics.C.Conversions where
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
   convertDeclarationToType (CDeclaration specs [info]) = let (Just contents') = contents info 
-                                                         in Just (convertComponents specs contents')
+                                                         in Just (extractTypeFromComponents specs contents')
   convertDeclarationToType _ = Nothing
   
   convertExpressionToLocal :: CExpr -> SLocal
