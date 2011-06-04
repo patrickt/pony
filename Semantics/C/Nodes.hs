@@ -95,6 +95,7 @@ module Semantics.C.Nodes where
     
   data Expression
     = Literal CLiteral
+    | Str String
     | Ident Name
     | Brackets Expression Expression
     | FunctionCall Expression [Expression]

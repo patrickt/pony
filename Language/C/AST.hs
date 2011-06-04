@@ -68,8 +68,8 @@ module Language.C.AST
     deriving (Eq, Show, Typeable, Data)
     
   data AsmOperand 
-    = Simple CExpr
-    | GCCAsm CExpr (Maybe CExpr) (Maybe CExpr) (Maybe CExpr)
+    = Simple CStringLiteral
+    | GCCAsm CStringLiteral (Maybe CStringLiteral) (Maybe CStringLiteral) (Maybe CStringLiteral)
     deriving (Show, Eq, Typeable, Data)
     
   data AsmArgument 

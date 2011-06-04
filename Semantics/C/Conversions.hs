@@ -78,6 +78,9 @@ module Semantics.C.Conversions where
     convert (SizeOfType decl) = SizeOfSType (convert decl)
     convert (CBuiltin t) = Builtin t
   
+  instance Reifiable CStringLiteral Expression where
+    convert (CStringLiteral s) = Str s
+  
   
   instance Reifiable CAttribute Attribute where
     convert (CAttribute e) = Custom (convert <$> e)

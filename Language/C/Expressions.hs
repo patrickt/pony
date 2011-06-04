@@ -164,7 +164,7 @@ module Language.C.Expressions
     [ builtinExpression
     , identifier
     , constant
-    , stringLiteral
+    , Constant <$> CString <$> stringLiteral
     , L.parens expression 
     ]
   
@@ -174,8 +174,8 @@ module Language.C.Expressions
   constant :: Parser CExpr
   constant = Constant <$> choice [ try float, integer, charLiteral ]
                                  
-  stringLiteral :: Parser CExpr
-  stringLiteral = Constant <$> CString <$> concat `liftM` (L.stringLiteral `sepBy1` L.whiteSpace)
+  stringLiteral :: Parser CStringLiteral
+  stringLiteral = CStringLiteral <$> concat `liftM` (L.stringLiteral `sepBy1` L.whiteSpace)
   
   -- remember, kids, <$> is an infix synonym for fmap.
   -- TODO: The definition for integer suffixes is pretty gauche
