@@ -6,6 +6,7 @@ module Language.C.Lexer
   , reserved
   , operator
   , reservedOp
+  , reservedOp'
   , charLiteral
   , stringLiteral
   , natural
@@ -66,6 +67,7 @@ module Language.C.Lexer
   reserved = T.reserved lexer
   operator = T.operator lexer
   reservedOp = T.reservedOp lexer
+  reservedOp' n = reservedOp n >> return n
   charLiteral = T.charLiteral lexer
   stringLiteral = T.stringLiteral lexer
   natural = try cHex <|> try cOctal <|> (T.decimal lexer)
