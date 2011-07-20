@@ -109,20 +109,15 @@ module Language.C.Expressions
   sizeofExpr = pure UnaryOp <*> pure "sizeof" <*> (L.reservedOp "sizeof" *> unaryExpression)
   sizeofType = pure SizeOfType <*> (L.reservedOp "sizeof" *> L.parens typeName)
   
-  prefixInc = pure UnaryOp <*> string "++" <*> unaryExpression
-  prefixDec = pure UnaryOp <*> string "--" <*> unaryExpression
-  
   unaryExpression :: Parser CExpr
   unaryExpression = choice [ try sizeofExpr
                            , sizeofType
-                           , prefixInc
-                           , prefixDec
                            , unaryOperator ] <?> "unary expression"
   
   unaryOperator :: Parser CExpr
   unaryOperator = do
     -- We can't use L.reservedOp' because it checks that its input is not a prefix of a valid operator. Ugh.
-    c <- many $ choice $ L.symbol <$> ["&", "!", "+", "-", "~", "*"]
+    c <- many $ choice $ L.symbol <$> ["&", "!", "++", "+", "--", "-", "~", "*"]
     -- FIXME: this is technically wrong, it should be `e <- castExpression`, but that's left-recursive if no casts are found.
     -- there are ways around this - `chainl` and such - but until this actually shows up in code as being a problem, 
     -- I'm going to leave it as is.
