@@ -53,7 +53,7 @@ module Language.C.AST
     -- | New-style @for@-loops (C99 6.8.5.3.1).
     | ForDeclStmt CDeclaration (Maybe CExpr) (Maybe CExpr) CStatement
     -- | The @goto@ statement.
-    | GotoStmt String
+    | GotoStmt CExpr
     -- | The @if@ statement, taking the form of @if (cond) statement else? statement?@.
     | IfStmt CExpr CStatement (Maybe CStatement)
     -- | Labeled statements. As a GNU extension, labels may have the @__attribute__((unused))@ 

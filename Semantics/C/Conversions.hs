@@ -57,7 +57,7 @@ module Semantics.C.Conversions where
       (convert <$> e2)
       (convert <$> e3)
       (convert s)
-    convert (GotoStmt s) = GoTo s
+    convert (GotoStmt s) = GoTo (convert s)
     convert (IfStmt e s mS) = case mS of
       (Just s') -> IfThenElse (convert e) (convert s) (convert s')
       Nothing -> IfThen (convert e) (convert s)

@@ -86,7 +86,7 @@ module Semantics.C.Nodes where
     | EmptyS
     | ExpressionS Expression
     | For (Maybe SLocal) (Maybe Expression) (Maybe Expression) Statement
-    | GoTo Name
+    | GoTo Expression
     | IfThen Expression Statement
     | IfThenElse Expression Statement Statement
     | Labeled Name [Attribute] Statement

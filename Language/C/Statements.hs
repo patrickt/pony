@@ -120,7 +120,7 @@ whether it can consume input before failing.
                     , break'
                     , return' 
                     ] where
-    goto     = pure GotoStmt     <*>  (L.reserved "goto" *> L.identifier)
+    goto     = pure GotoStmt     <*>  (L.reserved "goto" *> expression)
     continue = pure ContinueStmt <*   L.reserved "continue"
     break'   = pure BreakStmt    <*   L.reserved "break"
     return'  = pure ReturnStmt   <*>  (L.reserved "return" *> (optional expression <* L.semi))
