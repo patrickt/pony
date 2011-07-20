@@ -69,7 +69,7 @@ module Language.C.AST
     
   data AsmOperand 
     = Simple CExpr
-    | GCCAsm CExpr (Maybe CExpr) (Maybe CExpr) (Maybe CExpr)
+    | GCCAsm CExpr [CExpr] [CExpr] [CExpr]
     deriving (Show, Eq, Typeable, Data)
     
   data AsmArgument 

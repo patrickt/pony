@@ -37,7 +37,7 @@ module Semantics.C.Conversions where
   
   instance Reifiable CStatement Statement where
     convert (AsmStmt tq (Simple s)) 
-      = Asm (isJust tq) (convert s) Nothing Nothing Nothing
+      = Asm (isJust tq) (convert s) [] [] []
     convert (AsmStmt tq (GCCAsm s inR outR clobber)) 
       = Asm (isJust tq) (convert s) (convert <$> inR) (convert <$> outR) (convert <$> clobber) 
     convert BreakStmt = Break
