@@ -88,9 +88,9 @@ module Language.C.Expressions
       , mkInfixL "-" ]
     , [ mkInfixL "<<"
       , mkInfixL ">>" ] ]
-  
-  mkInfixL name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocLeft
-  mkInfixR name = Infix (L.reservedOp name >> return (BinaryOp name)) AssocRight
+    
+  mkInfixL name = Infix (BinaryOp <$> L.reservedOp' name) AssocLeft
+  mkInfixR name = Infix (BinaryOp <$> L.reservedOp' name) AssocRight
   
   builtinExpression :: Parser CExpr
   builtinExpression = CBuiltin <$> builtinVaArg
@@ -102,32 +102,27 @@ module Language.C.Expressions
   
   castExpression :: Parser CExpr
   castExpression = do
-	  types <- many $ try (L.parens typeName)
-	  expr <- unaryExpression
-	  return (foldl (flip CCast) expr types) <?> "cast expression"
+    types <- many $ try (L.parens typeName)
+    expr <- unaryExpression
+    return (foldl (flip CCast) expr types) <?> "cast expression"
   
   sizeofExpr = pure UnaryOp <*> pure "sizeof" <*> (L.reservedOp "sizeof" *> unaryExpression)
   sizeofType = pure SizeOfType <*> (L.reservedOp "sizeof" *> L.parens typeName)
   
-  prefixInc = pure UnaryOp <*> string "++" <*> unaryExpression
-  prefixDec = pure UnaryOp <*> string "--" <*> unaryExpression
-  
   unaryExpression :: Parser CExpr
   unaryExpression = choice [ try sizeofExpr
                            , sizeofType
-                           , prefixInc
-                           , prefixDec
                            , unaryOperator ] <?> "unary expression"
   
   unaryOperator :: Parser CExpr
   unaryOperator = do
-    c <- many $ oneOf "&!*+-~!"
+    -- We can't use L.reservedOp' because it checks that its input is not a prefix of a valid operator. Ugh.
+    c <- many $ choice $ L.symbol <$> ["&&", "&", "!", "++", "+", "--", "-", "~", "*"]
     -- FIXME: this is technically wrong, it should be `e <- castExpression`, but that's left-recursive if no casts are found.
     -- there are ways around this - `chainl` and such - but until this actually shows up in code as being a problem, 
     -- I'm going to leave it as is.
     e <- postfixExpression
-    let c' = pure <$> c :: [String]
-    return $ foldr UnaryOp e c'
+    return $ foldr UnaryOp e c
   
   postfixExpression :: Parser CExpr
   postfixExpression = do
