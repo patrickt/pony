@@ -19,6 +19,7 @@ module Language.C.Expressions
   import {-# SOURCE #-} Language.C.Declarations 
   import qualified Language.C.Lexer as L
   import Text.Parsec.Expr
+  import Data.List
   
   buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
   buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
@@ -94,29 +95,28 @@ module Language.C.Expressions
   builtinExpression = CBuiltin <$> builtinVaArg
   
   builtinVaArg :: Parser BuiltinExpr
-  builtinVaArg = do
-    L.reserved "__builtin_va_arg"
-    L.symbol "("
-    expr <- expression
-    L.comma
-    typ <- typeName
-    L.symbol ")"
-    return $ BuiltinVaArg expr typ
+  builtinVaArg =  pure BuiltinVaArg 
+              <*> (L.reserved "__builtin_va_arg" *> L.parens expression)
+              <*> typeName
   
   castExpression :: Parser CExpr
   castExpression = do
 	  types <- many $ try (L.parens typeName)
 	  expr <- unaryExpression
-	  return $ foldl (flip CCast) expr types
+	  return (foldl (flip CCast) expr types) <?> "cast expression"
   
   sizeofExpr = pure UnaryOp <*> pure "sizeof" <*> (L.reservedOp "sizeof" *> unaryExpression)
   sizeofType = pure SizeOfType <*> (L.reservedOp "sizeof" *> L.parens typeName)
   
-  prefixInc = pure UnaryOp <*> pure "++" <*> (L.reservedOp "++" *> unaryExpression)
-  prefixDec = pure UnaryOp <*> pure "--" <*> (L.reservedOp "--" *> unaryExpression)
+  prefixInc = pure UnaryOp <*> string "++" <*> unaryExpression
+  prefixDec = pure UnaryOp <*> string "--" <*> unaryExpression
   
   unaryExpression :: Parser CExpr
-  unaryExpression = try sizeofExpr <|> sizeofType <|> prefixInc <|> prefixDec <|> unaryOperator
+  unaryExpression = choice [ try sizeofExpr
+                           , sizeofType
+                           , prefixInc
+                           , prefixDec
+                           , unaryOperator ] <?> "unary expression"
   
   unaryOperator :: Parser CExpr
   unaryOperator = do
@@ -125,38 +125,30 @@ module Language.C.Expressions
     -- there are ways around this - `chainl` and such - but until this actually shows up in code as being a problem, 
     -- I'm going to leave it as is.
     e <- postfixExpression
-    let c' = [ [a] | a <- c]
+    let c' = pure <$> c :: [String]
     return $ foldr UnaryOp e c'
   
   postfixExpression :: Parser CExpr
   postfixExpression = do
     e <- primaryExpression
-    r <- many $ choice [ try arrow, dot, call, index, try increment, try decrement ]
+    r <- many $ choice [ arrow, dot, call, index, try increment, try decrement ]
     L.whiteSpace
-    return (foldl translate e r)
+    -- This is known as a "bill fold". Get it? foldr ($)? HAHAHAHAHAHAHAHAHA.
+    return $ foldr ($) e (reverse r)
     where
-      translate a b = b a
-      increment = do
-        string "++"
-        return $ UnaryOp "++ post"
-      decrement = do
-        string "--"
-        return $ UnaryOp "-- post"
+      increment = string "++" *> pure UnaryOp <*> pure "++ post"
+      decrement = string "--" *> pure UnaryOp <*> pure "-- post"
       index = do
-        char '[' >> L.whiteSpace
-        idx <- expression
-        L.whiteSpace >> char ']'
+        idx <- L.brackets expression
         return $ \x -> Index x idx
       call = do
-        char '(' >> L.whiteSpace
-        args <- L.commaSep expression
-        L.whiteSpace >> char ')'
+        args <- L.parens $ L.commaSep expression
         return $ \x -> Call x args
       dot = do
-        ident <- (char '.' *> identifier)
+        ident <- L.dot *> identifier
         return $ \x -> BinaryOp "." x ident
       arrow = do
-        ident <- (string "->" *> identifier)
+        ident <- L.arrow *> identifier
         return $ \x -> BinaryOp "->" x ident
 
   primaryExpression :: Parser CExpr
@@ -164,18 +156,18 @@ module Language.C.Expressions
     [ builtinExpression
     , identifier
     , constant
-    , stringLiteral
+    , Constant <$> CString <$> stringLiteral
     , L.parens expression 
     ]
   
   identifier :: Parser CExpr
-  identifier = Identifier <$> L.identifier 
+  identifier = Identifier <$> L.identifier <?> "identifier"
   
   constant :: Parser CExpr
-  constant = Constant <$> choice [ try float, integer, charLiteral ]
+  constant = Constant <$> choice [ try float, integer, charLiteral ] <?> "literal"
                                  
-  stringLiteral :: Parser CExpr
-  stringLiteral = Constant <$> CString <$> concat `liftM` (L.stringLiteral `sepBy1` L.whiteSpace)
+  stringLiteral :: Parser CStringLiteral
+  stringLiteral = CStringLiteral <$> concat `liftM` (L.stringLiteral `sepBy1` L.whiteSpace) <?> "string literal"
   
   -- remember, kids, <$> is an infix synonym for fmap.
   -- TODO: The definition for integer suffixes is pretty gauche
