@@ -79,8 +79,10 @@ module Semantics.C.Conversions where
     convert (CBuiltin t) = Builtin t
   
   instance Reifiable CStringLiteral Expression where
-    convert (CStringLiteral s) = Str s
+    convert (CStringLiteral s) = CStr s
   
+  instance Reifiable AsmArgument AsmOp where
+    convert (AsmArgument x y) = AsmOp (convert x) (convert <$> y)
   
   instance Reifiable CAttribute Attribute where
     convert (CAttribute e) = Custom (convert <$> e)

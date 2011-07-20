@@ -22,6 +22,10 @@ module Semantics.C.PrettyPrinter where
     pretty Unsigned = "unsigned"
     pretty Signed = "signed"
   
+  instance Pretty AsmOp where
+    pretty (AsmOp x Nothing) = pretty x
+    pretty (AsmOp x (Just a)) = pretty x <> parens' a
+  
   instance Pretty SType where
     pretty (SVoid attrs) = pretty attrs <+> "void"
     pretty (SInt (IntegerFlags s w) attrs) 
@@ -146,6 +150,7 @@ module Semantics.C.PrettyPrinter where
   instance Pretty Expression where
     pretty (Literal l) = pretty l
     pretty (Ident n) = text n
+    pretty (CStr n) = doubleQuotes $ text n
     pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
     pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
     pretty (Cast t e) = parens' t <> pretty e

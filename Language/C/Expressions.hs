@@ -7,6 +7,7 @@ module Language.C.Expressions
   , unaryExpression
   , primaryExpression
   , constant
+  , identifier
   , stringLiteral
   )
   where 

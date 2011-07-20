@@ -5,7 +5,7 @@ module Language.Pony.Transformations.Predefined.HelloWorld where
   import Data.Generics
   
   helloToPrintf :: Expression -> Expression
-  helloToPrintf (Ident "hello") = FunctionCall (Ident "printf") [(Str "Hello from Pony!")]
+  helloToPrintf (Ident "hello") = FunctionCall (Ident "printf") [(CStr "Hello from Pony!")]
   helloToPrintf x = x
   
   helloT :: GenericT

@@ -63,9 +63,12 @@ whether it can consume input before failing.
     simple = pure Simple <*> (stringLiteral <* notFollowedBy L.colon)
     complex =  pure GCCAsm 
            <*> stringLiteral 
+           <*> (L.colon *> L.commaSep asmArgument)
+           <*> (L.colon *> L.commaSep asmArgument)
            <*> (L.colon *> L.commaSep stringLiteral)
-           <*> (L.colon *> L.commaSep stringLiteral)
-           <*> (L.colon *> L.commaSep stringLiteral)
+
+  asmArgument :: Parser AsmArgument
+  asmArgument = pure AsmArgument <*> stringLiteral <*> (optional $ L.parens identifier)
   
   expressionStmt :: Parser CStatement
   expressionStmt = e <?> "expression" where 

@@ -73,8 +73,10 @@ module Semantics.C.Nodes where
   
   data SParameter = SParameter (Maybe Name) SType deriving (Show, Eq, Typeable, Data)
   
+  data AsmOp = AsmOp Expression (Maybe Expression) deriving (Show, Eq, Typeable, Data)
+  
   data Statement
-    = Asm Bool Expression [Expression] [Expression] [Expression]
+    = Asm Bool Expression [AsmOp] [AsmOp] [Expression]
     | Break
     | Case Expression Statement
     | Compound [SLocal]
@@ -95,7 +97,7 @@ module Semantics.C.Nodes where
     
   data Expression
     = Literal CLiteral
-    | Str String
+    | CStr String
     | Ident Name
     | Brackets Expression Expression
     | FunctionCall Expression [Expression]
