@@ -24,6 +24,7 @@ Cabal-version:       >=1.2.3
 
 Executable test
   Main-is:             Testing/Main.hs
+  ghc-options:         -Wall
   LD-Options:          -w
   Build-depends:       QuickCheck >= 2.3,
                        HUnit == 1.2.2.3,

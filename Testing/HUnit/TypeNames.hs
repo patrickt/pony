@@ -6,7 +6,6 @@ module Testing.HUnit.TypeNames
   import Test.HUnit hiding (Test)
   import Language.C
   import Semantics.C
-  import Data.Maybe (fromJust)
   
   tests :: [Test]
   tests = [ testCase "const int * const * restrict => restrict pointer to const pointer to const int" testRestrictPtrToConstPtrToInt ]
