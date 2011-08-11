@@ -49,6 +49,7 @@ module Semantics.C.Nodes where
   setAttributes (SFloat f _) a = SFloat f a
   setAttributes (SChar s _) a = SChar s a
   setAttributes (SPointerTo t _) a = SPointerTo t a
+  setAttributes (SFunctionPointer t p _) a = SFunctionPointer t p a
   setAttributes (SArray t e _) a = SArray t e a
   setAttributes (SComposite i _) a = SComposite i a
   setAttributes (SEnum i _) a = SEnum i a
@@ -140,6 +141,10 @@ module Semantics.C.Nodes where
     | Volatile
     | Custom [Expression]
     deriving (Show, Eq, Typeable, Data)
+  
+  void, char, signedChar, unsignedChar, shortSignedInt, shortUnsignedInt, 
+    signedInt, unsignedInt, longSignedInt, longUnsignedInt, longLongSignedInt,
+    longlongUnsignedInt, int128, uint128, float, double, longDouble :: SType
   
   void = SVoid []
   char = SChar Nothing []

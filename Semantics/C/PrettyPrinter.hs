@@ -1,6 +1,9 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings #-}
 
-module Semantics.C.PrettyPrinter where
+module Semantics.C.PrettyPrinter 
+  ( Pretty (..)
+  )
+  where
   
   import Control.Applicative ((<$>))
   import Semantics.C.Nodes
@@ -45,7 +48,7 @@ module Semantics.C.PrettyPrinter where
     pretty (Typedef s _ _) = text s
     pretty (SBuiltinType n _) = text n
     pretty (SFunctionPointer t vs _) = parens' t <> parens (hsep $ punctuate comma (pretty <$> vs))
-    -- pretty x = ("undefined for " ++ show x)
+    pretty whoops = error ("pretty-print not defined for " ++ show whoops)
   
   instance Pretty CompositeType where
     pretty Struct = "struct"
@@ -177,6 +180,7 @@ module Semantics.C.PrettyPrinter where
     pretty (GTypedef n (SFunctionPointer rt params _)) = "typedef" <+> pretty rt <+> name <> parens (commaSep params) <> semicolon where
       name = parens (star <> text n)
     pretty (GTypedef n t) = "typedef" <+> pretty t <+> pretty n <> semicolon
+    pretty (GEnumeration i) = pretty i <> semicolon
     pretty (GComposite i) = pretty i <> semicolon
     pretty (GFunctionPrototype t n p False) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
     pretty (GFunctionPrototype t n p True) = pretty t <+> pretty n <> parens (hcat (punctuate comma (pretty <$> p)) <> ", ...") <> semicolon

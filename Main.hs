@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns, DeriveDataTypeable, FlexibleContexts #-}
+
 module Main where
   
   import Control.Monad.Error

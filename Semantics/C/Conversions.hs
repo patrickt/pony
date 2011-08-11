@@ -1,6 +1,9 @@
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, NamedFieldPuns, RecordWildCards #-}
 
-module Semantics.C.Conversions where
+module Semantics.C.Conversions 
+  ( Reifiable(..) )
+
+  where
   
   import Language.C hiding (char)
   import Semantics.C.Nodes
@@ -30,6 +33,7 @@ module Semantics.C.Conversions where
           args = extractFunctionArguments decl
           newBody = body >>= convert
           in SFunction [] ftype name args newBody (isFunctionVariadic f)
+    convert _ = error "malformed function passed to `convert`"
   
   instance Reifiable BlockItem FunctionBody where
     convert (Left declaration) = LDeclaration <$> convertDeclarationToVariables declaration
@@ -45,6 +49,7 @@ module Semantics.C.Conversions where
     convert (CompoundStmt bis) = Compound (bis >>= convert)
     convert ContinueStmt = Continue
     convert (DefaultStmt st) = Default (convert st)
+    convert (DoWhileStmt st e) = DoWhile (convert st) (convert e)
     convert EmptyStmt = EmptyS
     convert (ExpressionStmt ex) = ExpressionS (convert ex)
     convert (ForStmt e1 e2 e3 s) = For 
@@ -93,6 +98,7 @@ module Semantics.C.Conversions where
     convert SStatic   = Static
     convert SExtern   = Extern
     convert (SAttribute c) = convert c
+    convert STypedef = error "stray STypedef passed to `convert`"
     
   instance Reifiable TypeQualifier Attribute where
     convert QConst    = Const
@@ -212,11 +218,6 @@ module Semantics.C.Conversions where
   convertComposite (TStructOrUnion n b decls _) = CompositeInfo (boolToCompositeType b) n (concatMap convert decls) where
     boolToCompositeType True = Struct
     boolToCompositeType False = Union
-  
-  -- FIXME: this won't work if there's more than one declarator per declaration
-  convertDeclarationToField :: CDeclaration -> SField
-  convertDeclarationToField d@(CDeclaration _ [DeclInfo {contents=(Just decl), initVal, size}]) = let (Just typ) = convertDeclarationToType d 
-                                                                                                  in SField (declName decl) typ (convert <$> size)
   
   augmentType :: SType -> DerivedDeclarator -> SType
   augmentType t (Pointer qs) = SPointerTo t (convert <$> qs)
