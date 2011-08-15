@@ -8,10 +8,7 @@ module Main where
   import Language.C
   import Semantics.C
   import System.Console.CmdArgs
-  import System.Environment
   import Text.CSV
-  import Text.Printf
-  import Text.Pretty
   import Language.Pony.Transformations
   
   -- TODO: allow for multiple inputs (input :: [FilePath])
@@ -46,7 +43,7 @@ module Main where
   } &= program "pony"
     &= summary "pony 0.1.0, (c) George Washington University 2010-2011"
     
-  
+  getInternals :: MonadIO m => String -> m Internals
   getInternals [] = return emptyInternals
   getInternals ponyproj = do
     cp' <- runErrorT $ join $ liftIO $ readfile emptyCP ponyproj
@@ -64,11 +61,11 @@ module Main where
       }
   
   getOperators :: (MonadError CPError m, MonadIO m) => ConfigParser -> String -> m [Field]
-  getOperators cp name = do
-    arith <- get cp "operators" name
+  getOperators cp sectionName = do
+    arith <- get cp "operators" sectionName
     case parseCSV ".ponyproj" (arith :: String) of
       (Left e) -> throwError (ParseError (show e), "in CSV parsing")
-      (Right csv) -> return $ head csv
+      (Right vals) -> return $ head vals
   
   parsePony :: PonyOptions -> IO ()
   parsePony PonyOptions { output, input, trans, ponyproj } = do
@@ -78,7 +75,7 @@ module Main where
       (Left parseError) -> print parseError
       Right externs -> do
         let converted = convert externs
-        let (MkTrans n direction t) = read trans :: Transformation
+        let (MkTrans _ direction t) = read trans :: Transformation
         case direction of 
           TopDown -> writeFile output (show $ pretty $ everywhere t converted)
           BottomUp -> writeFile output (show $ pretty $ everywhere' t converted)

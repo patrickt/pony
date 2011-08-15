@@ -27,12 +27,13 @@ module Semantics.C.Conversions
         | otherwise = GVariable <$> convertDeclarationToVariables d
   
   instance Reifiable CFunction SFunction where
-    convert f@(CFunction spec decl (CompoundStmt body)) =
+    convert f@(CFunction specs decl (CompoundStmt body)) =
       let ftype = returnTypeOfFunction f
+          fmods = functionLevelSpecifiers specs
           (Just name) = declName decl
           args = extractFunctionArguments decl
           newBody = body >>= convert
-          in SFunction [] ftype name args newBody (isFunctionVariadic f)
+          in SFunction fmods ftype name args newBody (isFunctionVariadic f)
     convert _ = error "malformed function passed to `convert`"
   
   instance Reifiable BlockItem FunctionBody where
@@ -198,7 +199,11 @@ module Semantics.C.Conversions
     convert' (DeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) 
       = let (Just name) = declName decl 
         in SVariable name (extractTypeFromComponents specs decl) (Just (convert init))
-                                                                                                       
+  
+  functionLevelSpecifiers :: [Specifier] -> [Attribute]
+  functionLevelSpecifiers specs = (convert <$> sspecs) ++ (convert <$> tquals) where
+    relevant = filter specifierBelongsToFunction specs
+    (_, tquals, sspecs) = partitionSpecifiers relevant 
   
   convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
   convertDeclarationToCompositeInfo (CDeclaration [TSpec (TStructOrUnion mN isStruct fields _)] _) =
@@ -236,7 +241,9 @@ module Semantics.C.Conversions
   -- This is an easy conversion; all that is necessary is to drop the last
   -- item in the list of derived declarators.
   returnTypeOfFunction :: CFunction -> SType
-  returnTypeOfFunction (CFunction specs (CDeclarator n derived asm attrs) _) = extractTypeFromComponents specs (CDeclarator n (init derived) asm attrs)
+  returnTypeOfFunction (CFunction specs (CDeclarator n derived asm attrs) _) = 
+    extractTypeFromComponents relevantSpecs (CDeclarator n (init derived) asm attrs) where
+      relevantSpecs = filter (not . specifierBelongsToFunction) specs
   
   functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
   functionPrototypeFromDeclaration (CDeclaration specs [DeclInfo { contents = (Just contents), ..}]) 
