@@ -1,12 +1,12 @@
 module Semantics.C 
-  ( module Semantics.C.Conversions
+  ( module Semantics.C.Reifiable.Instances
   , module Semantics.C.PrettyPrinter
   , module Semantics.C.Nodes
   )
   
   where
   
-  import Semantics.C.Conversions
+  import Semantics.C.Reifiable.Instances
   import Semantics.C.PrettyPrinter
   import Semantics.C.Nodes
   

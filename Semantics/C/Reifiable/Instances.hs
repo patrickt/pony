@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, NamedFieldPuns, RecordWildCards #-}
 
-module Semantics.C.Conversions 
+module Semantics.C.Reifiable.Instances 
   ( Reifiable(..) )
 
   where
