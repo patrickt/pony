@@ -37,8 +37,8 @@ module Semantics.C.Reifiable.Instances
     convert _ = error "malformed function passed to `convert`"
   
   instance Reifiable BlockItem FunctionBody where
-    convert (Left declaration) = LDeclaration <$> convertDeclarationToVariables declaration
-    convert (Right statement) = LStatement <$> [convert statement]
+    convert (Left decl) = LDeclaration <$> convertDeclarationToVariables decl
+    convert (Right stmt) = LStatement <$> [convert stmt]
   
   instance Reifiable CStatement Statement where
     convert (AsmStmt tq (Simple s)) 

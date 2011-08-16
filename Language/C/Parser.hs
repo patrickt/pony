@@ -16,11 +16,9 @@ module Language.C.Parser
   )
   where
   
-  import Control.Monad
   import Control.Applicative hiding (Const)
   import Data.Generics
   import Language.C.AST
-  import Language.C.Literals
   import System.Cmd
   import Text.Parsec hiding (parseTest, many, optional, (<|>))
   import Text.Parsec.String hiding (Parser, parseFromFile)

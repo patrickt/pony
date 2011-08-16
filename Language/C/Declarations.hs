@@ -10,14 +10,11 @@ where
   
   import Control.Monad (when)
   import Data.Either
-  import Data.Maybe
-  import Debug.Trace
   import Language.C.AST hiding (asmName)
   import Language.C.Expressions
   import qualified Language.C.Lexer as L
   import Language.C.Parser
   import Language.C.Specifiers
-  import Language.C.Miscellany
   
   -- | C99 6.7 - abstract and concrete declarations.
   declaration :: Parser CDeclaration
@@ -42,13 +39,13 @@ where
   -- | Parameter declarations. Must have types, but may be anonymous if they appear
   -- as a forward declaration.
   parameter :: Parser CParameter
-  parameter = pure declaration <*> some specifier <*> declarator where
-    declaration s d = CParameter $ CDeclaration s [DeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
+  parameter = pure decl <*> some specifier <*> declarator where
+    decl s d = CParameter $ CDeclaration s [DeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
   
   -- | Type names, used in cast operations and typedefs.
   typeName :: Parser CTypeName
-  typeName = pure declaration <*> some specifier <*> optional declarator where
-    declaration s d = CTypeName $ CDeclaration s [DeclInfo {contents = d, initVal = Nothing, size = Nothing}]
+  typeName = pure decl <*> some specifier <*> optional declarator where
+    decl s d = CTypeName $ CDeclaration s [DeclInfo {contents = d, initVal = Nothing, size = Nothing}]
   
   func :: Parser DerivedDeclarator
   func = L.parens $ do
@@ -98,8 +95,8 @@ where
   initlist = L.braces (L.commaSep1 initList') <?> "initializer list" where
     initList' = do
       desigs <- many designator
-      init <- (L.reservedOp "=" *> initializer)
-      return (desigs, init)
+      initValue <- (L.reservedOp "=" *> initializer)
+      return (desigs, initValue)
   
   initializer :: Parser CInitializer
   initializer = (CInitList <$> initlist) <|> (CInitExpression <$> expression)
@@ -116,14 +113,6 @@ where
     
   asmName :: Parser String
   asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
-  
-  -- | Abstract (unnamed) declarators.
-  abstractDeclarator :: Parser CDeclarator
-  abstractDeclarator = do
-    ptrs <- many pointer
-    arrayOrFunction <- many (try array <|> func)
-    let derived = ptrs ++ arrayOrFunction
-    return $ CDeclarator Nothing derived Nothing []
   
   -- Declarators (C99 6.7.5). May be named or unnamed.
   declarator :: Parser CDeclarator

@@ -3,12 +3,10 @@
 module Language.C.Miscellany where
   
   import Language.C.AST
-  import Data.Maybe
-  import Data.List (find)
   
   -- | A declaration is a typedef iff its first specifier is an 'STypedef'.
   declarationIsTypedef :: CDeclaration -> Bool
-  declarationIsTypedef (CDeclaration (SSpec STypedef : rest) _) = True
+  declarationIsTypedef (CDeclaration (SSpec STypedef : _) _) = True
   declarationIsTypedef _ = False
   
   -- A declaration is of a composite type if it contains a 'TStructOrUnion' specifier.
@@ -29,6 +27,7 @@ module Language.C.Miscellany where
   declarationHasPointer (CDeclaration _ infos) = any hasPointer infos where
     hasPointer :: DeclInfo -> Bool
     hasPointer (DeclInfo {contents = Just decl, ..}) = declaratorIsPointer decl
+    hasPointer _ = False
     
   declaratorIsPointer :: CDeclarator -> Bool
   declaratorIsPointer (CDeclarator _ derived _ _) = any isPointer derived where
@@ -42,6 +41,7 @@ module Language.C.Miscellany where
   
   dropTypedef :: CDeclaration -> CDeclaration
   dropTypedef (CDeclaration (SSpec STypedef : rest) it) = CDeclaration rest it
+  dropTypedef _ = error "invalid declaration passed to dropTypedef"
   
   doesDeclaratorContainVariadicSpecifier :: CDeclarator -> Bool
   doesDeclaratorContainVariadicSpecifier d = any variadicFunction (derived d) where

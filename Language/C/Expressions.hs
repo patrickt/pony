@@ -13,14 +13,12 @@ module Language.C.Expressions
   where 
   
   import Control.Monad
-  import Debug.Trace
   import Language.C.Parser
   import Language.C.AST
   import Language.C.Literals
   import {-# SOURCE #-} Language.C.Declarations 
   import qualified Language.C.Lexer as L
   import Text.Parsec.Expr
-  import Data.List
   
   buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
   buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
@@ -114,10 +112,24 @@ module Language.C.Expressions
                            , sizeofType
                            , unaryOperator ] <?> "unary expression"
   
+  prefixOperator :: Parser String
+  prefixOperator = 
+    choice [ try $ s "&&"
+           , s "&"
+           , s "!"
+           , try $ s "++"
+           , s "+"
+           , try $ s "--"
+           , s "-"
+           , s "~"
+           , s "*" 
+           ]
+           where s = L.symbol
+  
   unaryOperator :: Parser CExpr
   unaryOperator = do
     -- We can't use L.reservedOp' because it checks that its input is not a prefix of a valid operator. Ugh.
-    c <- many $ choice $ L.symbol <$> ["&&", "&", "!", "++", "+", "--", "-", "~", "*"]
+    c <- many prefixOperator
     -- FIXME: this is technically wrong, it should be `e <- castExpression`, but that's left-recursive if no casts are found.
     -- there are ways around this - `chainl` and such - but until this actually shows up in code as being a problem, 
     -- I'm going to leave it as is.

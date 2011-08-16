@@ -29,13 +29,13 @@ module Language.C.Lexer
   
   where
   
-  import Data.Char (isSpace)
   import Numeric (readOct, readHex)
   import Text.Parsec
   import Text.Parsec.Language
   import qualified Text.Parsec.Token as T
   
   -- Currently trigraphs, digraphs, _Bool, _Complex, and _Imaginary are unsupported.
+  ponyCDef :: LanguageDef st
   ponyCDef = javaStyle 
     { T.reservedOpNames = ["->", "++", "--", "&", "*", "+", "-", "~", "!", "/", "%", "<<", ">>", 
                           "/", "%", "<<", ">>", "<", ">", "<=", ">=", "==", "!=", "^", "|", "&&", 
