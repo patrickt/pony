@@ -29,9 +29,9 @@ module Language.C.Lexer
   
   where
   
-  import Control.Applicative (some)
+  import Control.Applicative
   import Numeric (readOct, readHex)
-  import Text.Parsec
+  import Text.Parsec hiding ((<|>), many)
   import Text.Parsec.Language
   import qualified Text.Parsec.Token as T
   
@@ -74,33 +74,16 @@ module Language.C.Lexer
   natural = try cHex <|> try cOctal <|> (T.decimal lexer)
   float = try floating <|> suffixed
     where
-      floating = do
-        frac <- fractConstant
-        expPart <- option [] exponentPart
-        suf <- option [] suffix
-        return (frac ++ expPart ++ suf)
-      suffixed = do
-        digits <- some digit
-        expPart <- exponentPart
-        suf <- option [] suffix
-        return (digits ++ expPart ++ suf)
-      float1 = do
-        leading <- many digit
-        char '.'
-        trailing <- some digit
-        return (leading ++ "." ++ trailing)
-      float2 = do
-        leading <- some digit
-        char '.'
-        return $ leading ++ "."
-      digitSequence = some digit
-      fractConstant = try float1 <|> float2
-      exponentPart = do
-        e <- oneOf "eE" >>= \x -> return [x]
-        sign <- option [] (string "-" <|> string "+")
-        digits <- some digit
-        return (e ++ sign ++ digits)
-      suffix = oneOf "flFL" >>= \x -> return [x]
+      floating       = assemble <$> (try float1 <|> float2) <*> optional' exponentPart <*> optional' suffix 
+      suffixed       = assemble <$> some digit <*> exponentPart <*> optional' suffix
+      float1         = assemble <$> many digit <*> string "." <*> some digit
+      float2         = (++) <$> string "." <*> some digit
+      exponentPart   = assemble <$> (single $ oneOf "eE") <*> sign <*> some digit
+      sign           = optional' (single $ oneOf "-+")
+      assemble x y z = x ++ y ++ z
+      suffix         = single $ oneOf "flFL"
+      optional'      = option ""
+      single         = fmap (:[]) 
     
   symbol = T.symbol lexer
   lexeme = T.lexeme lexer
