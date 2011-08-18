@@ -85,7 +85,8 @@ module Semantics.C.Reifiable.Instances
     convert (CBuiltin t) = Builtin t
   
   instance Reifiable CStringLiteral Expression where
-    convert (CStringLiteral s) = CStr s
+    convert lit = CStr s where
+      (Constant (CString s)) = getExpr lit
   
   instance Reifiable AsmArgument AsmOp where
     convert (AsmArgument x y) = AsmOp (convert x) (convert <$> y)

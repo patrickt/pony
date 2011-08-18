@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
 module Language.C.Literals 
-  ( CLiteral (..), CStringLiteral (..) )
+  ( CLiteral (..) )
   where
   
   import Data.Generics
@@ -11,9 +11,5 @@ module Language.C.Literals
     = CInteger Integer
     | CChar Char
     | CFloat Double
-    | CString CStringLiteral
+    | CString String
     deriving (Eq, Typeable, Data, Show)
-  
-  data CStringLiteral = CStringLiteral String
-    deriving (Show, Eq, Typeable, Data)
-  

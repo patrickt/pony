@@ -66,12 +66,18 @@ module Language.C.AST
     -- | The @while@ statement, of the form @while expr statement@.
     | WhileStmt CExpr CStatement
     deriving (Eq, Show, Typeable, Data)
-    
+  
+  -- | There are two types of inline assembly: the first is the standard call to @asm()@, 
+  -- which is identical to a function call in syntax (except for the fact that it can only 
+  -- take a string as its parameter). The second is GCC assembly syntax, which takes the form of
+  -- @asm( instructions : output-operands* : input-operands : clobbered-registers* );@
   data AsmOperand 
     = Simple CStringLiteral
     | GCCAsm CStringLiteral [AsmArgument] [AsmArgument] [CStringLiteral]
     deriving (Show, Eq, Typeable, Data)
-    
+  
+  -- | Represents an output or input value in GCC assembly syntax. Takes the form of 
+  -- | @string (variable)?@.
   data AsmArgument 
     = AsmArgument CStringLiteral (Maybe CExpr)
     deriving (Show, Eq, Typeable, Data)
@@ -104,6 +110,11 @@ module Language.C.AST
     | SizeOfType CTypeName
     | CBuiltin BuiltinExpr
     deriving (Eq, Show, Typeable, Data)
+  
+  -- | A string literal newtype to provide a modicum of type safety in the AST.
+  newtype CStringLiteral = CStringLiteral {
+    getExpr :: CExpr
+  } deriving (Eq, Typeable, Data, Show)
   
   -- TODO: Expand this to include __builtin_offsetof and __builtin_types_compatible_p
   -- | GNU/clang built-in functions that are exposed after preprocessing.
@@ -227,6 +238,7 @@ module Language.C.AST
     | CInitList IList
     deriving (Eq, Show, Typeable, Data)
   
+  -- | Represents the deconstructed initializers.
   type IList = [([CDesignator], CInitializer)]
   
   -- | Indirectly derived declarators used inside the 'CDeclarator' type.
