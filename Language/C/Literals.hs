@@ -10,6 +10,6 @@ module Language.C.Literals
   data CLiteral
     = CInteger Integer
     | CChar Char
-    | CFloat Double
+    | CFloat String -- | Strings don't lose precision, unlike Doubles.
     | CString String
     deriving (Eq, Typeable, Data, Show)

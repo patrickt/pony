@@ -12,7 +12,7 @@ module Testing.QuickCheck.Constants
   tests :: [Test]
   tests = [ testProperty "decimal integers" prop_decimalIntegers
           , testProperty "characters" prop_characters
-          --, testProperty "floating-point literals" prop_floatingPoint
+          , testProperty "floating-point literals" prop_floatingPoint
           , testProperty "string literals" prop_strings
           , testProperty "space-separated string literals" prop_spaceSeparatedStrings
           ]
@@ -25,8 +25,8 @@ module Testing.QuickCheck.Constants
     
   prop_floatingPoint :: Double -> Bool
   prop_floatingPoint f = case parseConstant (show f) of
-    (Right (Constant (CFloat f')))               -> f == f'
-    (Right (UnaryOp "-" (Constant (CFloat f')))) -> f == negate f'
+    (Right (Constant (CFloat f')))               -> f' == (show f)
+    (Right (UnaryOp "-" (Constant (CFloat f')))) -> f' == (tail $ show f)
     _                                            -> False
 
   prop_characters :: Char -> Bool

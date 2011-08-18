@@ -29,6 +29,7 @@ module Language.C.Lexer
   
   where
   
+  import Control.Applicative (some)
   import Numeric (readOct, readHex)
   import Text.Parsec
   import Text.Parsec.Language
@@ -71,7 +72,36 @@ module Language.C.Lexer
   charLiteral = T.charLiteral lexer
   stringLiteral = T.stringLiteral lexer
   natural = try cHex <|> try cOctal <|> (T.decimal lexer)
-  float = T.float lexer
+  float = try floating <|> suffixed
+    where
+      floating = do
+        frac <- fractConstant
+        expPart <- option [] exponentPart
+        suf <- option [] suffix
+        return (frac ++ expPart ++ suf)
+      suffixed = do
+        digits <- some digit
+        expPart <- exponentPart
+        suf <- option [] suffix
+        return (digits ++ expPart ++ suf)
+      float1 = do
+        leading <- many digit
+        char '.'
+        trailing <- some digit
+        return (leading ++ "." ++ trailing)
+      float2 = do
+        leading <- some digit
+        char '.'
+        return $ leading ++ "."
+      digitSequence = some digit
+      fractConstant = try float1 <|> float2
+      exponentPart = do
+        e <- oneOf "eE" >>= \x -> return [x]
+        sign <- option [] (string "-" <|> string "+")
+        digits <- some digit
+        return (e ++ sign ++ digits)
+      suffix = oneOf "flFL" >>= \x -> return [x]
+    
   symbol = T.symbol lexer
   lexeme = T.lexeme lexer
   parens = T.parens lexer
