@@ -71,10 +71,8 @@ whether it can consume input before failing.
   asmArgument = pure AsmArgument <*> stringLiteral <*> (optional $ L.parens identifier)
   
   expressionStmt :: Parser CStatement
-  expressionStmt = e <?> "expression" where 
-    -- Can't figure out how to express this in applicative form
-    e = do { expr <- optional expression; L.semi; return $ maybe EmptyStmt ExpressionStmt expr }
-  
+  expressionStmt = maybe EmptyStmt ExpressionStmt <$> optional expression <* L.semi
+    
   selectionStmt :: Parser CStatement
   selectionStmt = ifStmt <|> switch where
     ifStmt = pure IfStmt <*> (L.reserved "if" *> L.parens expression)
