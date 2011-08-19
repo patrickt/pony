@@ -24,7 +24,7 @@ Cabal-version:       >=1.2.3
 
 Executable test
   Main-is:             Testing/Main.hs
-  ghc-options:         -O -Wall -fno-warn-orphans
+  ghc-options:         -O
   LD-Options:          -w
   Build-depends:       QuickCheck >= 2.3,
                        HUnit == 1.2.2.3,
@@ -34,7 +34,7 @@ Executable test
 
 Executable pony
   Main-is:             Main.hs
-  ghc-options:         -O -Wall -fno-warn-orphans
+  ghc-options:         -O -Wall -fno-warn-orphans -fno-warn-missing-signatures
   LD-Options:          -w
   Extensions:          DeriveDataTypeable,
                        NamedFieldPuns,
