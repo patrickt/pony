@@ -13,6 +13,7 @@ module Language.C.Expressions
   where 
   
   import Control.Monad
+  import Data.List (foldl')
   import Language.C.Parser
   import Language.C.AST
   import Language.C.Literals
@@ -21,8 +22,8 @@ module Language.C.Expressions
   import Text.Parsec.Expr
   
   buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
-  buildChainedParser ((t,msg):ts) p = buildChainedParser ts (buildExpressionParser t p <?> msg)
-  buildChainedParser [] p = p
+  buildChainedParser ts p = foldl' go p ts
+    where go p (t, msg) = buildExpressionParser t p <?> msg
   
   expression :: Parser CExpr
   expression = buildExpressionParser assignTable constantExpression <?> "C expression"
