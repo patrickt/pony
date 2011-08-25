@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings #-}
 
-module Semantics.C.PrettyPrinter 
+module Semantics.C.Pretty 
   ( Pretty (..)
   )
   where
@@ -169,7 +169,7 @@ module Semantics.C.PrettyPrinter
     pretty (SizeOfSType t) = "sizeof" <> parens' t
     pretty (Builtin b) = textS b
     
-  instance Pretty SLocal where
+  instance Pretty Local where
     pretty (LStatement s) = pretty s
     pretty (LDeclaration d) = pretty d <> semicolon
     

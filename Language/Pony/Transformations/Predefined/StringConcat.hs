@@ -10,7 +10,7 @@ module Language.Pony.Transformations.Predefined.StringConcat where
   strlcpy to from size = LStatement $ ExpressionS $ FunctionCall (Ident "strlcpy") [to, from, size]
   strlcat to from size = LStatement $ ExpressionS $ FunctionCall (Ident "strlcat") [to, from, size]
   
-  checkForConcatenation :: SLocal -> [SLocal]
+  checkForConcatenation :: Local -> [Local]
   checkForConcatenation (LStatement (ExpressionS (Binary (Ident a) "=" (Binary (Ident l) "<+>" (Ident r))))) = 
     [ LDeclaration (Variable "needed_size" (STypedef "size_t" unsignedInt []) 
         (Just (Binary (strlen l) "+" (strlen r))))

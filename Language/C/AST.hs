@@ -158,21 +158,21 @@ module Language.C.AST
   -- | Storage class specifiers (C99 6.7.1).
   -- As an extension, @__attribute__(())@ is considered a storage specifier.
   data CStorageSpecifier
-    = SAuto
-    | SRegister
-    | SStatic
-    | SExtern
+    = CAuto
+    | CRegister
+    | CStatic
+    | CExtern
     | CTypedef
-    | SAttribute CAttribute
+    | CAttr CAttribute
     deriving (Eq, Show, Typeable, Data)
   
   -- | Type qualifiers (C99 6.7.3) and function specifiers (C99 6.7.4).
   -- Please note that the 'FInline' qualifier must only be applied to functions.
   data CTypeQualifier
-    = QConst
-    | QRestrict
-    | QVolatile
-    | FInline
+    = CConst
+    | CRestrict
+    | CVolatile
+    | CInline
     deriving (Eq, Show, Typeable, Data)
   
   -- | C qualifiers and specifiers.

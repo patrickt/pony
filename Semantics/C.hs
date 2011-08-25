@@ -7,6 +7,6 @@ module Semantics.C
   where
   
   import Semantics.C.Reifiable.Instances
-  import Semantics.C.PrettyPrinter
+  import Semantics.C.Pretty
   import Semantics.C.ASG
   

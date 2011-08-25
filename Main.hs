@@ -2,6 +2,8 @@
 
 module Main where
   
+  
+{-
   import Control.Monad.Error
   import Data.ConfigFile
   import Data.Generics
@@ -82,3 +84,7 @@ module Main where
     
   main :: IO ()
   main = cmdArgs ponyOptions >>= parsePony
+  
+-}
+
+  main = print "Main.hs is deprecated. Please use the library interface."

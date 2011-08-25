@@ -13,7 +13,7 @@ module Semantics.C.ASG where
   -- its name, its parameters (a list of 'Variables'), and a boolean that 
   -- determines whether it is variadic or not.
   data Function 
-    = Function [Attribute] SType Name [Parameter] [SLocal] Bool
+    = Function [Attribute] SType Name [Parameter] [Local] Bool
     deriving (Show, Eq, Typeable, Data)
   
   data Signedness 
@@ -80,13 +80,13 @@ module Semantics.C.ASG where
     = Asm Bool Expression [AsmOp] [AsmOp] [Expression]
     | Break
     | Case Expression Statement
-    | Compound [SLocal]
+    | Compound [Local]
     | Continue
     | Default Statement
     | DoWhile Statement Expression
     | EmptyS
     | ExpressionS Expression
-    | For (Maybe SLocal) (Maybe Expression) (Maybe Expression) Statement
+    | For (Maybe Local) (Maybe Expression) (Maybe Expression) Statement
     | GoTo Expression
     | IfThen Expression Statement
     | IfThenElse Expression Statement Statement
@@ -166,12 +166,12 @@ module Semantics.C.ASG where
   
   -- Do we need to distinguish between statements and instructions, like CIL does?
   -- Will we need a separate ADT for typedefs? I feel that global typedefs are a good first step.
-  data SLocal
+  data Local
     = LDeclaration Variable
     | LStatement Statement
     deriving (Show, Eq, Typeable, Data)
   
-  type FunctionBody = [SLocal]
+  type FunctionBody = [Local]
   
   data SGlobal
     = GFunction Function

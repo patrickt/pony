@@ -48,7 +48,7 @@ module Language.Pony.Transformations.Utilities where
   (.->.) :: Expression -> Expression -> Expression
   a .->. b = Binary a "->" b
   
-  stmt :: Expression -> SLocal
+  stmt :: Expression -> Local
   stmt = LStatement . ExpressionS
   
   namesInGlobalScope :: Program -> [Name]

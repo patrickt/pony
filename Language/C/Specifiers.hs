@@ -21,12 +21,12 @@ where
   
   typeQualifier :: Parser CTypeQualifier
   typeQualifier = choice 
-    [ "const" `as` QConst
-    , "restrict" `as` QRestrict
-    , "volatile" `as` QVolatile 
-    , "inline" `as` FInline -- TODO: ensure that this only goes on functions.
-    , "__inline" `as` FInline
-    , "__inline__" `as` FInline
+    [ "const" `as` CConst
+    , "restrict" `as` CRestrict
+    , "volatile" `as` CVolatile 
+    , "inline" `as` CInline -- TODO: ensure that this only goes on functions.
+    , "__inline" `as` CInline
+    , "__inline__" `as` CInline
     ] <?> "type qualifier"
     
   enumerator :: Parser CEnumerator
@@ -81,11 +81,11 @@ where
   storageSpecifier :: Parser CStorageSpecifier
   storageSpecifier = choice
    [ "typedef" `as` CTypedef
-   , "extern" `as` SExtern
-   , "static" `as` SStatic
-   , "auto" `as` SAuto
-   , "register" `as` SRegister
-   , SAttribute <$> attribute 
+   , "extern" `as` CExtern
+   , "static" `as` CStatic
+   , "auto" `as` CAuto
+   , "register" `as` CRegister
+   , CAttr <$> attribute 
    ] <?> "storage specifier"
 
   specifier :: Parser CSpecifier

@@ -95,18 +95,18 @@ module Semantics.C.Reifiable.Instances
     convert (CAttribute e) = Custom (convert <$> e)
   
   instance Reifiable CStorageSpecifier Attribute where
-    convert SAuto = Auto
-    convert SRegister = Register
-    convert SStatic   = Static
-    convert SExtern   = Extern
-    convert (SAttribute c) = convert c
+    convert CAuto = Auto
+    convert CRegister = Register
+    convert CStatic   = Static
+    convert CExtern   = Extern
+    convert (CAttr c) = convert c
     convert CTypedef = error "stray CTypedef passed to `convert`"
     
   instance Reifiable CTypeQualifier Attribute where
-    convert QConst    = Const
-    convert QRestrict = Restrict
-    convert QVolatile = Volatile
-    convert FInline = Inline
+    convert CConst    = Const
+    convert CRestrict = Restrict
+    convert CVolatile = Volatile
+    convert CInline   = Inline
   
   instance Reifiable CTypeSpecifier SType where
     convert x = convert [x]
@@ -259,8 +259,8 @@ module Semantics.C.Reifiable.Instances
                                                          in Just (extractTypeFromComponents specs contents')
   convertDeclarationToType _ = Nothing
   
-  convertExpressionToLocal :: CExpr -> SLocal
+  convertExpressionToLocal :: CExpr -> Local
   convertExpressionToLocal e = LStatement $ ExpressionS $ convert e
 
-  convertDeclarationToLocal :: CDeclaration -> Maybe SLocal
+  convertDeclarationToLocal :: CDeclaration -> Maybe Local
   convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
