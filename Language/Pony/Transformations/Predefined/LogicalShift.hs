@@ -1,7 +1,7 @@
 module Language.Pony.Transformations.Predefined.LogicalShift where
   
   import Language.C
-  import Semantics.C.Nodes
+  import Semantics.C.ASG
   import Data.Generics
   
   -- bug: need to evaluate the arguments here...

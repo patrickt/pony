@@ -47,41 +47,41 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
       gcList = globalVar "all_lists" listPointer sNull
       refListDeclaration = GComposite info where (SComposite info _) = refList
       refListInstance = globalVar "referenced_list" (pointerTo forwardRefList) sNull
-      convert nil@(GVariable (SVariable "nil" _ _)) = [nil, gcList, refListDeclaration, refListInstance]
+      convert nil@(GVariable (Variable "nil" _ _)) = [nil, gcList, refListDeclaration, refListInstance]
       convert x = [x]
     in 
       if gcList `elem` x then x else concatMap convert x
       
-  referencedListCount :: SFunction -> Int
+  referencedListCount :: Function -> Int
   referencedListCount f = length $ referencedLists f 
       
-  referencedLists :: SFunction -> [String]
-  referencedLists (SFunction _ _ _ params locals _) =
+  referencedLists :: Function -> [String]
+  referencedLists (Function _ _ _ params locals _) =
     (paramName <$> filter isListParameter params) ++ (localName <$> filter isLocalList locals) where
-      paramName (SParameter (Just n) _) = n
-      localName (LDeclaration (SVariable n _ _)) = n
-      isListParameter (SParameter _ t) = t == oldList
-      isLocalList (LDeclaration (SVariable _ t _)) = t == oldList
+      paramName (Parameter (Just n) _) = n
+      localName (LDeclaration (Variable n _ _)) = n
+      isListParameter (Parameter _ t) = t == oldList
+      isLocalList (LDeclaration (Variable _ t _)) = t == oldList
       isLocalList _ = False
     
   redefineList :: SGlobal -> SGlobal
   redefineList (GTypedef "list_t" _) = GTypedef "list_t" newList
   redefineList x = x
   
-  modifyMain :: SFunction -> SFunction
-  modifyMain (SFunction attrs typ "main" params locals iv) =
-    SFunction attrs typ "main" params (inits ++ locals) iv where
+  modifyMain :: Function -> Function
+  modifyMain (Function attrs typ "main" params locals iv) =
+    Function attrs typ "main" params (inits ++ locals) iv where
       inits = [ stmt $ "all_lists" .=. "malloc(sizeof(list_t))"
               , stmt $ FunctionCall "memset" ["all_lists", intToLiteral 0, "sizeof(all_lists)"]
               ]
     
-  addGC :: SFunction -> SFunction
-  addGC f@(SFunction attrs typ name params locals isVariadic)
+  addGC :: Function -> Function
+  addGC f@(Function attrs typ name params locals isVariadic)
     | name `elem` ["__sputc", "mark", "sweep", "__mark_list"] = f
     | name == "main" = modifyMain f
     | name == "del" = removeDelete f
     | otherwise = 
-    SFunction attrs typ name params (reflist : a1 : a2 : a3 :  (declarations ++ boilerplate ++ (init assignments >>= expandCallocs) ++ [reset] ++ [last assignments])) isVariadic where
+    Function attrs typ name params (reflist : a1 : a2 : a3 :  (declarations ++ boilerplate ++ (init assignments >>= expandCallocs) ++ [reset] ++ [last assignments])) isVariadic where
       (declarations, assignments) = partitionLocals locals
       toAssignment (str,n) = stmt $ Binary (Brackets (Binary "rl" "." "ref_lists") (intToLiteral n)) "=" (Ident str)
       expandCallocs a@(LStatement (ExpressionS (Binary n "=" (FunctionCall "calloc" _)))) 
@@ -91,7 +91,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
           , stmt $ ("all_lists" .->. "c.list") .=. n ]
       expandCallocs x = [x]
       boilerplate = toAssignment <$> zip (referencedLists f) [0..(referencedListCount f)]
-      reflist = LDeclaration $ SVariable "rl" forwardRefList Nothing
+      reflist = LDeclaration $ Variable "rl" forwardRefList Nothing
       a1 = stmt $ Binary "rl" "." "parent" .=. "referenced_list"
       a2 = stmt $ Binary "rl" "." "nptrs" .=. (intToLiteral $ referencedListCount f)
       a3 = stmt $ "referenced_list" .=. Unary "&" "rl"
@@ -102,9 +102,9 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   rewriteConsOperator x = x
   
   -- make `del` a no-op
-  removeDelete :: SFunction -> SFunction
-  removeDelete (SFunction attrs typ "del" params _ isVariadic) = 
-    SFunction attrs typ "del" params [] isVariadic
+  removeDelete :: Function -> Function
+  removeDelete (Function attrs typ "del" params _ isVariadic) = 
+    Function attrs typ "del" params [] isVariadic
   precise x = x
   
   gcT :: GenericT

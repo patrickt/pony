@@ -6,7 +6,7 @@ module Language.C.Miscellany where
   
   -- | A declaration is a typedef iff its first specifier is an 'STypedef'.
   declarationIsTypedef :: CDeclaration -> Bool
-  declarationIsTypedef (CDeclaration (SSpec STypedef : _) _) = True
+  declarationIsTypedef (CDeclaration (SSpec CTypedef : _) _) = True
   declarationIsTypedef _ = False
   
   -- A declaration is of a composite type if it contains a 'TStructOrUnion' specifier.
@@ -19,7 +19,7 @@ module Language.C.Miscellany where
   declarationIsFunctionPrototype :: CDeclaration -> Bool
   declarationIsFunctionPrototype (CDeclaration _ (CDeclInfo { contents = Just (CDeclarator (Just _) derived _ _), ..} : _)) = 
     any isFunction derived where
-      isFunction (Function _ _) = True
+      isFunction (DerivedFunction _ _) = True
       isFunction _ = False
   declarationIsFunctionPrototype _ = False
   
@@ -40,12 +40,12 @@ module Language.C.Miscellany where
   nameOfDeclaration _ = Nothing
   
   dropTypedef :: CDeclaration -> CDeclaration
-  dropTypedef (CDeclaration (SSpec STypedef : rest) it) = CDeclaration rest it
+  dropTypedef (CDeclaration (SSpec CTypedef : rest) it) = CDeclaration rest it
   dropTypedef _ = error "invalid declaration passed to dropTypedef"
   
   doesDeclaratorContainVariadicSpecifier :: CDeclarator -> Bool
   doesDeclaratorContainVariadicSpecifier d = any variadicFunction (derived d) where
-    variadicFunction (Function _ True) = True
+    variadicFunction (DerivedFunction _ True) = True
     variadicFunction _ = False
   
   -- this is buggy

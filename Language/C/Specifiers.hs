@@ -80,7 +80,7 @@ where
 
   storageSpecifier :: Parser CStorageSpecifier
   storageSpecifier = choice
-   [ "typedef" `as` STypedef
+   [ "typedef" `as` CTypedef
    , "extern" `as` SExtern
    , "static" `as` SStatic
    , "auto" `as` SAuto

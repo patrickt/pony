@@ -6,7 +6,7 @@ module Semantics.C.Reifiable.Instances
   where
   
   import Language.C hiding (char)
-  import Semantics.C.Nodes
+  import Semantics.C.ASG
   import Semantics.C.Reifiable
   import Data.Maybe
   import Data.List (find, foldl')
@@ -26,14 +26,14 @@ module Semantics.C.Reifiable.Instances
         | declarationIsFunctionPrototype d = [ functionPrototypeFromDeclaration d ]
         | otherwise = GVariable <$> convertDeclarationToVariables d
   
-  instance Reifiable CFunction SFunction where
+  instance Reifiable CFunction Function where
     convert f@(CFunction specs decl (CompoundStmt body)) =
       let ftype = returnTypeOfFunction f
           fmods = functionLevelSpecifiers specs
           (Just name) = declName decl
           args = extractFunctionArguments decl
           newBody = body >>= convert
-          in SFunction fmods ftype name args newBody (isFunctionVariadic f)
+          in Function fmods ftype name args newBody (isFunctionVariadic f)
     convert _ = error "malformed function passed to `convert`"
   
   instance Reifiable CBlockItem FunctionBody where
@@ -100,7 +100,7 @@ module Semantics.C.Reifiable.Instances
     convert SStatic   = Static
     convert SExtern   = Extern
     convert (SAttribute c) = convert c
-    convert STypedef = error "stray STypedef passed to `convert`"
+    convert CTypedef = error "stray CTypedef passed to `convert`"
     
   instance Reifiable CTypeQualifier Attribute where
     convert QConst    = Const
@@ -149,7 +149,7 @@ module Semantics.C.Reifiable.Instances
     convert [TLong, TDouble]                = longDouble
     convert [t@(TStructOrUnion _ _ _ as)]   = SComposite (convertComposite t) (convert <$> as)
     convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
-    convert [TTypedef n d]                  = Typedef n (convert d) []
+    convert [TTypedef n d]                  = STypedef n (convert d) []
     convert [TBuiltin s]                    = SBuiltinType s []
     convert other                           = error ("unknown type " ++ show other)
   
@@ -163,43 +163,43 @@ module Semantics.C.Reifiable.Instances
     convert (CTypeName (CDeclaration specs [CDeclInfo { contents = Just decl, ..}])) = extractTypeFromComponents specs decl
     convert (CTypeName (CDeclaration specs _)) = convert specs
   
-  instance Reifiable CField [SField] where
+  instance Reifiable CField [Field] where
     convert (CField (CDeclaration specs infos)) = map convert' infos where
-      convert' :: CDeclInfo -> SField
-      convert' (CDeclInfo {contents = (Just contents), size, ..}) = SField (declName contents) (extractTypeFromComponents specs contents) (convert <$> size) 
+      convert' :: CDeclInfo -> Field
+      convert' (CDeclInfo {contents = (Just contents), size, ..}) = Field (declName contents) (extractTypeFromComponents specs contents) (convert <$> size) 
   
-  instance Reifiable CParameter SParameter where
-    convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = SParameter (declName contents) (extractTypeFromComponents specs contents)
-    convert (CParameter (CDeclaration specs _)) = SParameter Nothing (convert specs)
+  instance Reifiable CParameter Parameter where
+    convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = Parameter (declName contents) (extractTypeFromComponents specs contents)
+    convert (CParameter (CDeclaration specs _)) = Parameter Nothing (convert specs)
     
   instance Reifiable CEnumerator Enumeration where
     convert (EnumIdent s) = Enumeration s Nothing
     convert (EnumAssign s expr) = Enumeration s (Just (convert expr))
   
   -- TODO: Handle initializer lists here.
-  convertDeclarationToVariable :: CDeclaration -> Maybe SVariable
+  convertDeclarationToVariable :: CDeclaration -> Maybe Variable
   convertDeclarationToVariable (CDeclaration specs [CDeclInfo { contents = Just decl
                                                               , initVal = Just (CInitExpression e)
                                                               , size = Nothing}]) = 
                                                                 let (Just name) = declName decl
-                                                                in Just (SVariable name (extractTypeFromComponents specs decl) (Just (convert e)))
+                                                                in Just (Variable name (extractTypeFromComponents specs decl) (Just (convert e)))
   convertDeclarationToVariable (CDeclaration specs [CDeclInfo { contents = Just decl
                                                               , initVal = Nothing
                                                               , size = Nothing }]) = 
                                                                 let (Just name) = declName decl
-                                                                in Just (SVariable name (extractTypeFromComponents specs decl) Nothing)
+                                                                in Just (Variable name (extractTypeFromComponents specs decl) Nothing)
   convertDeclarationToVariable _ = Nothing
   
   -- | A declaration can refer to multiple variables, for example:
   -- @int foo, bar, baz;@
-  convertDeclarationToVariables :: CDeclaration -> [SVariable]
+  convertDeclarationToVariables :: CDeclaration -> [Variable]
   convertDeclarationToVariables (CDeclaration specs infos) = map convert' infos where
     convert' (CDeclInfo {contents = Just decl, initVal = Nothing, size }) 
       = let (Just name) = declName decl 
-        in SVariable name (extractTypeFromComponents specs decl) (convert <$> size)
+        in Variable name (extractTypeFromComponents specs decl) (convert <$> size)
     convert' (CDeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) 
       = let (Just name) = declName decl 
-        in SVariable name (extractTypeFromComponents specs decl) (Just (convert init))
+        in Variable name (extractTypeFromComponents specs decl) (Just (convert init))
   
   functionLevelSpecifiers :: [CSpecifier] -> [Attribute]
   functionLevelSpecifiers specs = (convert <$> sspecs) ++ (convert <$> tquals) where
@@ -212,11 +212,11 @@ module Semantics.C.Reifiable.Instances
       boolToCompositeType True = Struct
       boolToCompositeType False = Union
   
-  extractFunctionArguments :: CDeclarator -> [SParameter]
+  extractFunctionArguments :: CDeclarator -> [Parameter]
   extractFunctionArguments (CDeclarator n derived asm attributes) = map convert args
-    where (Just (Function args _)) = funcArgs
+    where (Just (DerivedFunction args _)) = funcArgs
           funcArgs = find isFunction derived
-          isFunction (Function _ _) = True
+          isFunction (DerivedFunction _ _) = True
           isFunction _ = False
   
   -- FIXME: ignoring attributes here
@@ -228,12 +228,12 @@ module Semantics.C.Reifiable.Instances
   augmentType :: SType -> CDerivedDeclarator -> SType
   augmentType t (Pointer qs) = SPointerTo t (convert <$> qs)
   augmentType t (Array qs size) = SArray t (convert <$> size) (convert <$> qs)
-  augmentType t (Function args variadic) = SFunctionPointer t (convert <$> args) []
+  augmentType t (DerivedFunction args variadic) = SFunctionPointer t (convert <$> args) []
 
   removeSpuriousPointers :: [CDerivedDeclarator] -> [CDerivedDeclarator]
   removeSpuriousPointers p = go p [] where
       go [] acc = acc
-      go (f@(Function _ _) : (Pointer _) : xs) acc = go xs (acc ++ [f])
+      go (f@(DerivedFunction _ _) : (Pointer _) : xs) acc = go xs (acc ++ [f])
       go (x:xs) acc = go xs (acc ++ [x]) 
   
   extractTypeFromComponents :: [CSpecifier] -> CDeclarator -> SType

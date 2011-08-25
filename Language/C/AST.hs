@@ -162,7 +162,7 @@ module Language.C.AST
     | SRegister
     | SStatic
     | SExtern
-    | STypedef
+    | CTypedef
     | SAttribute CAttribute
     deriving (Eq, Show, Typeable, Data)
   
@@ -277,5 +277,5 @@ module Language.C.AST
   data CDerivedDeclarator
    = Pointer [CTypeQualifier]
    | Array [CTypeQualifier] (Maybe CExpr)
-   | Function [CParameter] Bool
+   | DerivedFunction [CParameter] Bool
    deriving (Eq, Show, Typeable, Data)

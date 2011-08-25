@@ -24,7 +24,7 @@ where
   
   
   checkTypedefs :: CDeclaration -> Parser CDeclaration
-  checkTypedefs d@(CDeclaration (SSpec STypedef : rest) infos) = do
+  checkTypedefs d@(CDeclaration (SSpec CTypedef : rest) infos) = do
     let (Just declr) = contents $ head infos
     let (Just name) = declName declr
     updateState $ addTypeDef name (CTypeName (CDeclaration rest infos))
@@ -60,7 +60,7 @@ where
     let singleton x = length x == 1
     -- there must be only one ..., and it must be the last element of the function
     when (notNull dots && (not (singleton dots) || null params || last given /= Right ())) (unexpected "ellipsis")
-    return $ Function params $ notNull dots
+    return $ DerivedFunction params $ notNull dots
   
   -- This doesn't handle a lot of the stupid cases introduced by C99's variable-length arrays, e.g.
   -- [ static type-qualifier-list? assignment-expression ]
@@ -91,7 +91,7 @@ where
   designator =  pure ArrayDesignator <*> L.brackets constant
             <|> pure MemberDesignator <*> (L.dot *> L.identifier)
   
-  initlist :: Parser IList
+  initlist :: Parser CInitList
   initlist = L.braces (L.commaSep1 initList') <?> "initializer list" where
     initList' = do
       desigs <- many designator

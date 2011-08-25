@@ -2,15 +2,15 @@ module Language.Pony.Transformations.Predefined.CheckMalloc where
   
   import Control.Monad
   import Language.C
-  import Semantics.C.Nodes
+  import Semantics.C.ASG
   import Data.List
   import Data.Generics
   import Data.Maybe
   import Debug.Trace
   
-  checkMallocDeclarations :: [SLocal] -> [SLocal]
+  checkMallocDeclarations :: [Local] -> [Local]
   checkMallocDeclarations = concatMap convert where
-    convert d@(LDeclaration (SVariable name _ (Just (FunctionCall (Ident "malloc") _)))) =
+    convert d@(LDeclaration (Variable name _ (Just (FunctionCall (Ident "malloc") _)))) =
       [ d, LStatement (IfThen (Unary "!" (Ident name)) (ExpressionS (FunctionCall (Ident "abort") []))) ]
     convert x = [x]
   

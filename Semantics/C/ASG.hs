@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Semantics.C.Nodes where
+module Semantics.C.ASG where
   
   import Data.Generics
   import Language.Pony.MachineSizes
@@ -10,10 +10,10 @@ module Semantics.C.Nodes where
   type Name = String
   
   -- | A semantic function has five components: its attributes, its return type (a 'SType'),
-  -- its name, its parameters (a list of 'SVariables'), and a boolean that 
+  -- its name, its parameters (a list of 'Variables'), and a boolean that 
   -- determines whether it is variadic or not.
-  data SFunction 
-    = SFunction [Attribute] SType Name [SParameter] [SLocal] Bool
+  data Function 
+    = Function [Attribute] SType Name [Parameter] [SLocal] Bool
     deriving (Show, Eq, Typeable, Data)
   
   data Signedness 
@@ -35,11 +35,11 @@ module Semantics.C.Nodes where
     | SFloat FloatFlags [Attribute]
     | SChar (Maybe Signedness) [Attribute]
     | SPointerTo SType [Attribute]
-    | SFunctionPointer SType [SParameter] [Attribute]
+    | SFunctionPointer SType [Parameter] [Attribute]
     | SArray SType (Maybe Expression) [Attribute] 
     | SComposite CompositeInfo [Attribute]
     | SEnum EnumerationInfo [Attribute]
-    | Typedef Name SType [Attribute]
+    | STypedef Name SType [Attribute]
     | SBuiltinType Name [Attribute]
     deriving (Show, Eq, Typeable, Data)
   
@@ -53,7 +53,7 @@ module Semantics.C.Nodes where
   setAttributes (SArray t e _) a = SArray t e a
   setAttributes (SComposite i _) a = SComposite i a
   setAttributes (SEnum i _) a = SEnum i a
-  setAttributes (Typedef n t _) a = Typedef n t a
+  setAttributes (STypedef n t _) a = STypedef n t a
   setAttributes (SBuiltinType n _) a = SBuiltinType n a
   
   data EnumerationInfo = EnumerationInfo (Maybe Name) [Enumeration]
@@ -64,15 +64,15 @@ module Semantics.C.Nodes where
   
   data CompositeType = Struct | Union deriving (Show, Eq, Typeable, Data)
   
-  data CompositeInfo = CompositeInfo CompositeType (Maybe Name) [SField]
+  data CompositeInfo = CompositeInfo CompositeType (Maybe Name) [Field]
     deriving (Show, Eq, Typeable, Data)
   
-  data SField = SField (Maybe Name) SType (Maybe Expression)
+  data Field = Field (Maybe Name) SType (Maybe Expression)
     deriving (Show, Eq, Typeable, Data)
   
-  data SVariable = SVariable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
+  data Variable = Variable Name SType (Maybe Expression) deriving (Show, Eq, Typeable, Data)
   
-  data SParameter = SParameter (Maybe Name) SType deriving (Show, Eq, Typeable, Data)
+  data Parameter = Parameter (Maybe Name) SType deriving (Show, Eq, Typeable, Data)
   
   data AsmOp = AsmOp Expression (Maybe Expression) deriving (Show, Eq, Typeable, Data)
   
@@ -167,16 +167,16 @@ module Semantics.C.Nodes where
   -- Do we need to distinguish between statements and instructions, like CIL does?
   -- Will we need a separate ADT for typedefs? I feel that global typedefs are a good first step.
   data SLocal
-    = LDeclaration SVariable
+    = LDeclaration Variable
     | LStatement Statement
     deriving (Show, Eq, Typeable, Data)
   
   type FunctionBody = [SLocal]
   
   data SGlobal
-    = GFunction SFunction
-    | GVariable SVariable
-    | GFunctionPrototype SType Name [SParameter] Bool
+    = GFunction Function
+    | GVariable Variable
+    | GFunctionPrototype SType Name [Parameter] Bool
     | GTypedef Name SType
     | GEnumeration EnumerationInfo
     | GComposite CompositeInfo
