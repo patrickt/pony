@@ -1,10 +1,38 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
 module Language.C.AST
+  ( CTranslationUnit
+  , BlockItem
+  , CStatement(..) 
+  , AsmOperand (..)
+  , AsmArgument (..)
+  , CFunction (..)
+  , CExternal (..)
+  , CExpr (..)
+  , CStringLiteral (..)
+  , BuiltinExpr (..)
+  , StorageSpecifier (..)
+  , TypeQualifier (..)
+  , TypeSpecifier (..)
+  , Specifier (..)
+  , Enumerator (..)
+  , CAttribute (..)
+  , DeclInfo (..)
+  , CDeclaration (..)
+  , CTypeName (..)
+  , CParameter (..)
+  , CField (..)
+  , AsmName (..)
+  , CDeclarator (..)
+  , CDesignator (..)
+  , CInitializer (..)
+  , IList
+  , DerivedDeclarator (..) 
+  )
   
   where
   
-  import Data.Generics
+  import Data.Typeable
   import Language.C.Literals
   
   -- TODO: Add position information to all of the types, etc.
@@ -150,12 +178,6 @@ module Language.C.AST
     | SSpec StorageSpecifier
     deriving (Eq, Show, Typeable, Data)
   
-  -- | C enumeration specifiers (C99 6.7.2.2).
-  data Enumerator 
-    = EnumIdent String
-    | EnumAssign String CExpr
-    deriving (Eq, Show, Typeable, Data)
-  
   -- | C type specifiers (6.7.2).
   -- As a GNU extension, @typeof(expr)@ is supported.
   data TypeSpecifier
@@ -178,6 +200,12 @@ module Language.C.AST
      | TTypedef String CTypeName
      | TTypeOfExpr CExpr
      deriving (Eq, Show, Typeable, Data)
+
+  -- | C enumeration specifiers (C99 6.7.2.2).
+  data Enumerator 
+    = EnumIdent String
+    | EnumAssign String CExpr
+    deriving (Eq, Show, Typeable, Data)
   
   -- | C @__attribute__(())@ specifications. 
   data CAttribute = CAttribute [CExpr]
