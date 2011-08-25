@@ -40,14 +40,14 @@ where
   -- as a forward declaration.
   parameter :: Parser CParameter
   parameter = pure decl <*> some specifier <*> declarator where
-    decl s d = CParameter $ CDeclaration s [DeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
+    decl s d = CParameter $ CDeclaration s [CDeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
   
   -- | Type names, used in cast operations and typedefs.
   typeName :: Parser CTypeName
   typeName = pure decl <*> some specifier <*> optional declarator where
-    decl s d = CTypeName $ CDeclaration s [DeclInfo {contents = d, initVal = Nothing, size = Nothing}]
+    decl s d = CTypeName $ CDeclaration s [CDeclInfo {contents = d, initVal = Nothing, size = Nothing}]
   
-  func :: Parser DerivedDeclarator
+  func :: Parser CDerivedDeclarator
   func = L.parens $ do
     -- Since I can't figure out an elegant way of ensuring that only the last 
     -- parameter is (optionally) an ellipsis, we parse instances of 
@@ -66,26 +66,26 @@ where
   -- [ static type-qualifier-list? assignment-expression ]
   -- [type-qualifier-list static assignment-expression]
   -- [type-qualifier-list? *]
-  array :: Parser DerivedDeclarator
+  array :: Parser CDerivedDeclarator
   array = do
     (quals, expr) <- L.brackets lunacy
     return $ Array quals expr
     where lunacy = pure (,) <*> many typeQualifier <*> optional expression
 
   -- ISO C99 standard, section 6.7.5.
-  pointer :: Parser DerivedDeclarator
+  pointer :: Parser CDerivedDeclarator
   pointer = Pointer <$> (char '*' >> L.whiteSpace >> many typeQualifier)
 
-  initDeclarator :: Parser DeclInfo
-  initDeclarator = pure DeclInfo <*> Just <$> declarator 
-                                 <*> optional assignment 
-                                 <*> pure Nothing
+  initDeclarator :: Parser CDeclInfo
+  initDeclarator = pure CDeclInfo <*> Just <$> declarator 
+                                  <*> optional assignment 
+                                  <*> pure Nothing
     where assignment = L.reservedOp "=" >> initializer
     
-  sizedDeclarator :: Parser DeclInfo
-  sizedDeclarator = pure DeclInfo <*> Just <$> declarator
-                                  <*> pure Nothing
-                                  <*> optional (L.colon *> expression)
+  sizedDeclarator :: Parser CDeclInfo
+  sizedDeclarator = pure CDeclInfo <*> Just <$> declarator
+                                   <*> pure Nothing
+                                   <*> optional (L.colon *> expression)
                                   
   designator :: Parser CDesignator
   designator =  pure ArrayDesignator <*> L.brackets constant

@@ -94,7 +94,7 @@ module Language.C.Expressions
   builtinExpression :: Parser CExpr
   builtinExpression = CBuiltin <$> builtinVaArg
   
-  builtinVaArg :: Parser BuiltinExpr
+  builtinVaArg :: Parser CBuiltinExpr
   builtinVaArg =  pure BuiltinVaArg 
               <*> (L.reserved "__builtin_va_arg" *> L.parens expression)
               <*> typeName

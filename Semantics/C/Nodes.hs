@@ -107,7 +107,7 @@ module Semantics.C.Nodes where
     | Binary Expression Name Expression
     | Ternary Expression Expression Expression
     | SizeOfSType SType
-    | Builtin AST.BuiltinExpr
+    | Builtin AST.CBuiltinExpr
     -- | Initializers can *only* appear on the right hand side of an assignment expression.
     -- Woe betide you if you do not abide by this rule.
     | InitializerList InitList

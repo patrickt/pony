@@ -19,7 +19,7 @@ where
   attribute :: Parser CAttribute
   attribute = pure CAttribute <*> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression))
   
-  typeQualifier :: Parser TypeQualifier
+  typeQualifier :: Parser CTypeQualifier
   typeQualifier = choice 
     [ "const" `as` QConst
     , "restrict" `as` QRestrict
@@ -29,13 +29,13 @@ where
     , "__inline__" `as` FInline
     ] <?> "type qualifier"
     
-  enumerator :: Parser Enumerator
+  enumerator :: Parser CEnumerator
   enumerator = do
     ident <- L.identifier
     value <- optional (L.reservedOp "=" *> constantExpression)
     return $ maybe (EnumIdent ident) (EnumAssign ident) value
   
-  typeSpecifier :: Parser TypeSpecifier
+  typeSpecifier :: Parser CTypeSpecifier
   typeSpecifier = choice 
     [ "void" `as` TVoid 
     , "char" `as` TChar
@@ -78,7 +78,7 @@ where
           (Just specs) -> return (TTypedef ident specs)
           Nothing -> fail "could not find typedef"
 
-  storageSpecifier :: Parser StorageSpecifier
+  storageSpecifier :: Parser CStorageSpecifier
   storageSpecifier = choice
    [ "typedef" `as` STypedef
    , "extern" `as` SExtern
@@ -88,7 +88,7 @@ where
    , SAttribute <$> attribute 
    ] <?> "storage specifier"
 
-  specifier :: Parser Specifier
+  specifier :: Parser CSpecifier
   specifier = choice 
     [ TQual <$> typeQualifier
     , TSpec <$> typeSpecifier

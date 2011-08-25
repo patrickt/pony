@@ -17,7 +17,7 @@ module Language.C.Miscellany where
   
   -- A declaration is a function or function prototype if its derived declarations
   declarationIsFunctionPrototype :: CDeclaration -> Bool
-  declarationIsFunctionPrototype (CDeclaration _ (DeclInfo { contents = Just (CDeclarator (Just _) derived _ _), ..} : _)) = 
+  declarationIsFunctionPrototype (CDeclaration _ (CDeclInfo { contents = Just (CDeclarator (Just _) derived _ _), ..} : _)) = 
     any isFunction derived where
       isFunction (Function _ _) = True
       isFunction _ = False
@@ -25,18 +25,18 @@ module Language.C.Miscellany where
   
   declarationHasPointer :: CDeclaration -> Bool
   declarationHasPointer (CDeclaration _ infos) = any hasPointer infos where
-    hasPointer :: DeclInfo -> Bool
-    hasPointer (DeclInfo {contents = Just decl, ..}) = declaratorIsPointer decl
+    hasPointer :: CDeclInfo -> Bool
+    hasPointer (CDeclInfo {contents = Just decl, ..}) = declaratorIsPointer decl
     hasPointer _ = False
     
   declaratorIsPointer :: CDeclarator -> Bool
   declaratorIsPointer (CDeclarator _ derived _ _) = any isPointer derived where
-    isPointer :: DerivedDeclarator -> Bool
+    isPointer :: CDerivedDeclarator -> Bool
     isPointer (Pointer _) = True
     isPointer _ = False
   
   nameOfDeclaration :: CDeclaration -> Maybe String
-  nameOfDeclaration (CDeclaration _ [DeclInfo {contents, ..}]) = contents >>= declName
+  nameOfDeclaration (CDeclaration _ [CDeclInfo {contents, ..}]) = contents >>= declName
   nameOfDeclaration _ = Nothing
   
   dropTypedef :: CDeclaration -> CDeclaration
@@ -52,13 +52,13 @@ module Language.C.Miscellany where
   isFunctionVariadic :: CFunction -> Bool
   isFunctionVariadic (CFunction _ d _) = doesDeclaratorContainVariadicSpecifier d
   
-  partitionSpecifiers :: [Specifier] -> ([TypeSpecifier], [TypeQualifier], [StorageSpecifier])
+  partitionSpecifiers :: [CSpecifier] -> ([CTypeSpecifier], [CTypeQualifier], [CStorageSpecifier])
   partitionSpecifiers them = (typeSpecs, typeQuals, storageSpecs) where 
     typeQuals = [ a | (TQual a) <- them ]
     typeSpecs = [ a | (TSpec a) <- them ]
     storageSpecs = [ a | (SSpec a) <- them ]
 
-  specifierBelongsToFunction :: Specifier -> Bool
+  specifierBelongsToFunction :: CSpecifier -> Bool
   specifierBelongsToFunction (SSpec SStatic) = True
   specifierBelongsToFunction (SSpec SExtern) = True
   specifierBelongsToFunction (TQual FInline) = True

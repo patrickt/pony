@@ -47,7 +47,7 @@ whether it can consume input before failing.
   compoundStmt :: Parser CStatement
   compoundStmt = L.braces (CompoundStmt <$> many blockItem) <?> "compound statement"
   
-  blockItem :: Parser BlockItem
+  blockItem :: Parser CBlockItem
   blockItem  =  try (Left <$> declaration) 
             <|> (Right <$> statement) 
             <?> "declaration or C statement"
@@ -58,7 +58,7 @@ whether it can consume input before failing.
          <*> L.parens asmOperand where
            volatile = L.reserved "volatile" *> pure QVolatile
             
-  asmOperand :: Parser AsmOperand
+  asmOperand :: Parser CAsmOperand
   asmOperand = try simple <|> complex where
     simple = Simple <$> (stringLiteral <* notFollowedBy L.colon)
     complex =  GCCAsm 
@@ -67,8 +67,8 @@ whether it can consume input before failing.
            <*> (L.colon *> L.commaSep asmArgument)
            <*> (L.colon *> L.commaSep stringLiteral)
 
-  asmArgument :: Parser AsmArgument
-  asmArgument = AsmArgument <$> stringLiteral <*> (optional $ L.parens identifier)
+  asmArgument :: Parser CAsmArgument
+  asmArgument = CAsmArgument <$> stringLiteral <*> (optional $ L.parens identifier)
   
   expressionStmt :: Parser CStatement
   expressionStmt = maybe EmptyStmt ExpressionStmt <$> optional expression <* L.semi
