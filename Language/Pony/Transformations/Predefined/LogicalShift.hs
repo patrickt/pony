@@ -1,6 +1,6 @@
 module Language.Pony.Transformations.Predefined.LogicalShift where
   
-  import Language.C
+  import Language.C99
   import Semantics.C.ASG
   import Data.Generics
   

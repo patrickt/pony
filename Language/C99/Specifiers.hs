@@ -1,4 +1,4 @@
-module Language.C.Specifiers
+module Language.C99.Specifiers
   ( typeQualifier
   , typeSpecifier
   , storageSpecifier
@@ -8,11 +8,11 @@ module Language.C.Specifiers
 
 where
   
-  import Language.C.Parser
-  import Language.C.Lexer as L
-  import Language.C.AST
-  import {-# SOURCE #-} Language.C.Declarations
-  import Language.C.Expressions (expression, constantExpression)
+  import Language.C99.Parser
+  import Language.C99.Lexer as L
+  import Language.C99.AST
+  import {-# SOURCE #-} Language.C99.Declarations
+  import Language.C99.Expressions (expression, constantExpression)
   
   as name qual = L.reserved name >> return qual
   

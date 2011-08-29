@@ -1,11 +1,11 @@
-module Language.C.TopLevel
+module Language.C99.TopLevel
   ( preprocessedC ) where
     
-  import Language.C.Parser
-  import Language.C.Lexer as L
-  import Language.C.AST
-  import Language.C.Declarations
-  import Language.C.Functions
+  import Language.C99.Parser
+  import Language.C99.Lexer as L
+  import Language.C99.AST
+  import Language.C99.Declarations
+  import Language.C99.Functions
   
   -- | A parser action that parses a translation unit. It will fail if it
   -- finds any C-style comments, as the preprocessor removes them.

@@ -5,7 +5,7 @@ module Semantics.C.Reifiable.Instances
 
   where
   
-  import Language.C hiding (char)
+  import Language.C99 hiding (char)
   import Semantics.C.ASG
   import Semantics.C.Reifiable
   import Data.Maybe
@@ -95,12 +95,12 @@ module Semantics.C.Reifiable.Instances
     convert (CAttribute e) = Custom (convert <$> e)
   
   instance Reifiable CStorageSpecifier Attribute where
-    convert CAuto = Auto
+    convert CAuto     = Auto
     convert CRegister = Register
     convert CStatic   = Static
     convert CExtern   = Extern
     convert (CAttr c) = convert c
-    convert CTypedef = error "stray CTypedef passed to `convert`"
+    convert CTypedef  = error "stray CTypedef passed to `convert`"
     
   instance Reifiable CTypeQualifier Attribute where
     convert CConst    = Const

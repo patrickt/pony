@@ -7,7 +7,7 @@ module Main where
   import Control.Monad.Error
   import Data.ConfigFile
   import Data.Generics
-  import Language.C
+  import Language.C99
   import Semantics.C
   import System.Console.CmdArgs
   import Text.CSV

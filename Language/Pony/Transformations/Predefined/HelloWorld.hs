@@ -1,6 +1,6 @@
 module Language.Pony.Transformations.Predefined.HelloWorld where
   
-  import Language.C.Literals
+  import Language.C99.Literals
   import Semantics.C
   import Data.Generics
   

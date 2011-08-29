@@ -4,8 +4,8 @@ module Semantics.C.ASG where
   
   import Data.Generics
   import Language.Pony.MachineSizes
-  import Language.C.Literals
-  import qualified Language.C.AST as AST
+  import Language.C99.Literals
+  import qualified Language.C99.AST as AST
   
   type Name = String
   

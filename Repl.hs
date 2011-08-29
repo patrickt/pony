@@ -3,8 +3,8 @@
 module Main where
   
   import Text.Parsec hiding (parseTest, (<|>))
-  import Language.C
-  import Language.C.Lexer as L
+  import Language.C99
+  import Language.C99.Lexer as L
   import Semantics.C
   import Data.Generics hiding ((:+:))
   import Language.Pony.Transformations

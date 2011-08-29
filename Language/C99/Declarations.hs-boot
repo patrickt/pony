@@ -1,7 +1,7 @@
-module Language.C.Declarations where
+module Language.C99.Declarations where
   
-  import Language.C.AST
-  import Language.C.Parser
+  import Language.C99.AST
+  import Language.C99.Parser
   
   declaration :: Parser CDeclaration
   

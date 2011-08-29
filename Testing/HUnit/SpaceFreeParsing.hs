@@ -4,7 +4,7 @@ module Testing.HUnit.SpaceFreeParsing
   import Test.Framework
   import Test.Framework.Providers.HUnit
   import Test.HUnit hiding (Test)
-  import Language.C
+  import Language.C99
   
   tests :: [Test]
   tests = [ testCase "no spaces but no infix operations" testNoSpacesNoInfixOps

@@ -1,8 +1,8 @@
 {-# LANGUAGE NamedFieldPuns, RecordWildCards #-}
 
-module Language.C.Miscellany where
+module Language.C99.Miscellany where
   
-  import Language.C.AST
+  import Language.C99.AST
   
   -- | A declaration is a typedef iff its first specifier is an 'STypedef'.
   declarationIsTypedef :: CDeclaration -> Bool

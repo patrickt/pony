@@ -4,7 +4,7 @@ module Testing.HUnit.Assembly
   import Test.Framework
   import Test.Framework.Providers.HUnit
   import Test.HUnit hiding (Test)
-  import Language.C
+  import Language.C99
   
   tests :: [Test]
   tests = [ testCase "simple statements" testSimpleStatements

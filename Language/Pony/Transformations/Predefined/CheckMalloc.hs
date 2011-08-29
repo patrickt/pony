@@ -1,7 +1,7 @@
 module Language.Pony.Transformations.Predefined.CheckMalloc where
   
   import Control.Monad
-  import Language.C
+  import Language.C99
   import Semantics.C.ASG
   import Data.List
   import Data.Generics

@@ -1,7 +1,7 @@
 module Language.Pony.Transformations.Predefined.SeparateDeclarations where
   
   import Data.Generics
-  import Language.C
+  import Language.C99
   import Semantics.C
   
   declare :: String -> SType -> Local

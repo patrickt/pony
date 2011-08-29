@@ -34,7 +34,7 @@ Executable test
 
 Executable pony
   Main-is:             Main.hs
-  ghc-options:         -O -Wall -fno-warn-orphans -fno-warn-missing-signatures
+  ghc-options:         -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   LD-Options:          -w
   Extensions:          DeriveDataTypeable,
                        NamedFieldPuns,

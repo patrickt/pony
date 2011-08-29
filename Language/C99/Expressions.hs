@@ -1,4 +1,4 @@
-module Language.C.Expressions
+module Language.C99.Expressions
   ( expression
   , constantExpression
   , builtinExpression
@@ -14,11 +14,11 @@ module Language.C.Expressions
   
   import Control.Monad
   import Data.List (foldl')
-  import Language.C.Parser
-  import Language.C.AST
-  import Language.C.Literals
-  import {-# SOURCE #-} Language.C.Declarations 
-  import qualified Language.C.Lexer as L
+  import Language.C99.Parser
+  import Language.C99.AST
+  import Language.C99.Literals
+  import {-# SOURCE #-} Language.C99.Declarations 
+  import qualified Language.C99.Lexer as L
   import Text.Parsec.Expr
   
   buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a

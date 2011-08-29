@@ -27,6 +27,11 @@ There are six built-in transformations that you can play with. Pass these names 
 
 Please read the LICENSE file for the terms under which Pony is distributed, and please read the CREDITS file to read acknowledgments. 
 
+Miscellaneous Information
+=========================
+
+The module for parsing C (`Language.C99`) is so named in order to distinguish it in nomenclature from Benedikt Huber's `Language.C` module (which was an invaluable resource for Pony development).
+
 Debugging
 =========
 

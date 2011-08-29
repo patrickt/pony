@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Language.C.Literals 
+module Language.C99.Literals 
   ( CLiteral (..) )
   where
   

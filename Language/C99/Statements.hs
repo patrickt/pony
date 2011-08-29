@@ -1,13 +1,13 @@
-module Language.C.Statements 
+module Language.C99.Statements 
   ( statement, compoundStmt, asmStmt )
   where
   
-  import Language.C.Parser
-  import Language.C.Expressions
-  import Language.C.AST
-  import Language.C.Declarations
-  import Language.C.Specifiers
-  import qualified Language.C.Lexer as L
+  import Language.C99.Parser
+  import Language.C99.Expressions
+  import Language.C99.AST
+  import Language.C99.Declarations
+  import Language.C99.Specifiers
+  import qualified Language.C99.Lexer as L
   
 {-
 What this really should be is a chained parser akin to the one in Expressions.hs.

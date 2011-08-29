@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Language.C.Parser 
+module Language.C99.Parser 
   ( module Text.Parsec
   , module Control.Applicative
   , Parser
@@ -18,7 +18,7 @@ module Language.C.Parser
   
   import Control.Applicative hiding (Const)
   import Data.Generics
-  import Language.C.AST
+  import Language.C99.AST
   import System.Cmd
   import Text.Parsec hiding (parseTest, many, optional, (<|>))
   import Text.Parsec.String hiding (Parser, parseFromFile)

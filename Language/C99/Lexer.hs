@@ -1,6 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Language.C.Lexer 
+module Language.C99.Lexer 
   ( identifier
   , whiteSpace
   , reserved

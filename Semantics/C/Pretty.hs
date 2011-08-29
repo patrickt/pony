@@ -8,7 +8,7 @@ module Semantics.C.Pretty
   import Control.Applicative ((<$>))
   import Semantics.C.ASG
   import Language.Pony.MachineSizes
-  import Language.C.Literals
+  import Language.C99.Literals
   import Text.Pretty
   
   instance Pretty Function where

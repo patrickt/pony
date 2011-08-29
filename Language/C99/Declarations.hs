@@ -1,4 +1,4 @@
-module Language.C.Declarations
+module Language.C99.Declarations
   ( declaration
   , sizedDeclaration
   , typeName
@@ -10,11 +10,11 @@ where
   
   import Control.Monad (when)
   import Data.Either
-  import Language.C.AST hiding (asmName)
-  import Language.C.Expressions
-  import qualified Language.C.Lexer as L
-  import Language.C.Parser
-  import Language.C.Specifiers
+  import Language.C99.AST hiding (asmName)
+  import Language.C99.Expressions
+  import qualified Language.C99.Lexer as L
+  import Language.C99.Parser
+  import Language.C99.Specifiers
   
   -- | C99 6.7 - abstract and concrete declarations.
   declaration :: Parser CDeclaration

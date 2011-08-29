@@ -4,7 +4,7 @@ module Testing.QuickCheck.Constants
   
   import Test.Framework(Test)
   import Test.Framework.Providers.QuickCheck2(testProperty)
-  import Language.C
+  import Language.C99
   
   parseConstant :: String -> Either ParseError CExpr
   parseConstant = runParser constantExpression emptyInternals "test data"
