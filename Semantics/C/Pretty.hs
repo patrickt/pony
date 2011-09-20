@@ -162,8 +162,6 @@ module Semantics.C.Pretty
     -- terrible hack pending workaround
     pretty (Unary "sizeof" e) = "sizeof" <> parens' e
     pretty (Unary n e) = text n <> pretty e
-    pretty (Binary lhs "." rhs) = pretty lhs <> dot <> pretty rhs
-    pretty (Binary lhs "->" rhs) = pretty lhs <> arrow <> pretty rhs
     pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
     pretty (SizeOfSType t) = "sizeof" <> parens' t
