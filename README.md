@@ -5,20 +5,18 @@ I wrote Pony in order to help make C programming suck less. Real-world C code, e
 Installation
 ============
 
-Pony has been tested under GHC 7.0.3 on Mac OS 10.6. Theoretically, it should work on any POSIX platform. If you do not already have a working installation of GHC and Cabal, I recommend that you install the Haskell Platform. 
+Pony has been tested under GHC 7.0.3 on Mac OS 10.7. Theoretically, it should work on any POSIX platform. If you do not already have a working installation of GHC and Cabal, I recommend that you install the Haskell Platform. You'll also need [cabal-dev](https://github.com/creswick/cabal-dev), installable via cabal.
 
 To compile and run Pony, perform the following steps.
 
-    cabal install --only-dependencies # only needs to be run once
-    cabal configure
-    cabal build
-    ./runpony --ponyproj=<your .ponyproj> --trans=<a transformation> --output=<output file> [filename]
+    cabal-dev install-deps
+    cabal-dev install
     
-To run the unit tests, please run the `./tests` shell script. To generate documentation, run `cabal haddock`.
+To run the unit tests, please run the `./tests` shell script. To generate documentation, run `cabal-dev haddock`.
 
-There are six built-in transformations that you can play with. Pass these names to Pony with the --trans option:
+There are six built-in transformations that you can play with. They are currently being translated to use Pony's new library mechanism.
 
-* `StringConcat` - introduces `<+>`, a string concatenation operator. (Be sure to use `examples/example.ponyproj` to ensure that the new operator is added.)
+* `StringConcat` - introduces `<+>`, a string concatenation operator.
 * `HelloWorld` - converts the identifier 'hello' into the archetypal hello-world printf.
 * `LogicalShift` - introduces the `>>>` operator for right logical shift, as in Java.
 * `CheckMalloc` - ensures that all calls to `malloc(3)` are checked for NULL.
@@ -35,7 +33,7 @@ The module for parsing C (`Language.C99`) is so named in order to distinguish it
 Debugging
 =========
 
-If you find a bug, please file it on the bug tracker. If you're having trouble triaging a bug, I recommend loading up Repl.hs, which provides access to Pony's subcomponents, in GHCi.
+If you find a bug, please file it on the bug tracker. If you're having trouble triaging a bug, run `cabal-dev ghci` in the Pony root folder; it will load all of Pony's components into a ghci instance.
 
 --
 Patrick Thomson

@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-dist/build/test/test
+cabal-dev/bin/test

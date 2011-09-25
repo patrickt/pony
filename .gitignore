@@ -7,3 +7,4 @@ ponytmp
 *.o
 *.hi
 a.out
+cabal-dev/
