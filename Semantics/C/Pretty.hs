@@ -166,6 +166,19 @@ module Semantics.C.Pretty
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
     pretty (SizeOfSType t) = "sizeof" <> parens' t
     pretty (Builtin b) = textS b
+    pretty (InitializerList i) = braces $ pretty i
+    
+  instance Pretty InitList where
+    pretty (InitList i) = braces $ hcat $ (r <$> i) where
+      r (desigs, initializer) = hcat (pretty <$> desigs) <+> equals <+> pretty initializer
+    
+  instance Pretty Designator where
+    pretty (MemberDesignator n) = dot <> text n
+    pretty (ArrayDesignator e) = brackets $ pretty e
+    
+  instance Pretty Initializer where
+    pretty (InitExpression e) = pretty e
+    pretty (Composite l) = pretty l
     
   instance Pretty Local where
     pretty (LStatement s) = pretty s

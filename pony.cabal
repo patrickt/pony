@@ -30,7 +30,7 @@ Library
                    process > 1.0,
                    syb >= 0.1
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
-  Exposed-modules: Language.C99, Language.Pony, Semantics.C
+  Exposed-modules: Language.Pony, Semantics.C
   Extensions:      DeriveDataTypeable,
                    NamedFieldPuns,
                    Rank2Types,
