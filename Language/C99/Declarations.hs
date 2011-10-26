@@ -7,6 +7,7 @@ module Language.C99.Declarations
 where
   
   -- Lasciate ogne speranza, voi ch'intrate.
+  -- Is this (^) French?
   
   import Control.Monad (when)
   import Data.Either

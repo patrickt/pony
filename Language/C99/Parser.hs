@@ -76,12 +76,12 @@ module Language.C99.Parser
   -- terminate early. Extremely useful for debugging purposes.
   parseUnsafe :: Parser a -> String -> a
   parseUnsafe p s = either (error . show) id (runParser p emptyInternals "" s)
-  
+
   -- | Like 'preprocessAndParse', except without the whole preprocessing thing.
   -- Useful for debugging in conjunction with 'unsafePerformIO'.
   parseFromFile :: Parser a -> FilePath -> IO (Either ParseError a)
   parseFromFile p loc = parseFromFileCustom p loc emptyInternals
-  
+
   -- | Like 'parseFromFile', except you can specify your own 'Internals' structure.
   parseFromFileCustom :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
   parseFromFileCustom p loc internals = runParser p internals loc <$> readFile loc
