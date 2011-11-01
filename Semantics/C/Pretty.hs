@@ -181,20 +181,20 @@ module Semantics.C.Pretty
     pretty (Composite l) = pretty l
     
   instance Pretty Local where
-    pretty (LStatement s) = pretty s
-    pretty (LDeclaration d) = pretty d <> semicolon
+    pretty (LStatement s _) = pretty s
+    pretty (LDeclaration d _) = pretty d <> semicolon
     
   instance Pretty SGlobal where
-    pretty (GFunction g) = pretty g
-    pretty (GVariable v) = pretty v <> semicolon
-    pretty (GTypedef n (SArray t size _)) = "typedef" <+> pretty t <+> pretty n <> brackets (pretty size) <> semicolon
-    pretty (GTypedef n (SFunctionPointer rt params _)) = "typedef" <+> pretty rt <+> name <> parens (commaSep params) <> semicolon where
+    pretty (GFunction g _) = pretty g
+    pretty (GVariable v _) = pretty v <> semicolon
+    pretty (GTypedef n (SArray t size _) _) = "typedef" <+> pretty t <+> pretty n <> brackets (pretty size) <> semicolon
+    pretty (GTypedef n (SFunctionPointer rt params _) _) = "typedef" <+> pretty rt <+> name <> parens (commaSep params) <> semicolon where
       name = parens (star <> text n)
-    pretty (GTypedef n t) = "typedef" <+> pretty t <+> pretty n <> semicolon
-    pretty (GEnumeration i) = pretty i <> semicolon
-    pretty (GComposite i) = pretty i <> semicolon
-    pretty (GFunctionPrototype t n p False) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
-    pretty (GFunctionPrototype t n p True) = pretty t <+> pretty n <> parens (hcat (punctuate comma (pretty <$> p)) <> ", ...") <> semicolon
+    pretty (GTypedef n t _) = "typedef" <+> pretty t <+> pretty n <> semicolon
+    pretty (GEnumeration i _) = pretty i <> semicolon
+    pretty (GComposite i _) = pretty i <> semicolon
+    pretty (GFunctionPrototype t n p False _) = pretty t <+> pretty n <> parens (hcat $ punctuate comma (pretty <$> p)) <> semicolon
+    pretty (GFunctionPrototype t n p True _) = pretty t <+> pretty n <> parens (hcat (punctuate comma (pretty <$> p)) <> ", ...") <> semicolon
     
   instance Pretty Program where
     pretty a = vcat $ pretty <$> a

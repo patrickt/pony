@@ -14,31 +14,31 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CTranslationUnit Program where
     convert = concatMap convert' where
       convert' :: CExternal -> [SGlobal]
-      convert' (FunctionDecl f) = GFunction <$> [convert f]
+      convert' (FunctionDecl f) = flip GFunction [] <$> [convert f] 
       -- TODO: For the love of god, turn this into pattern matching
       convert' (ExternDecl d) 
         | declarationIsTypedef d = 
             let 
             (Just name) = nameOfDeclaration d
             (Just typ) = convertDeclarationToType $ dropTypedef d 
-             in [GTypedef name typ]
-        | declarationIsComposite d && not (declarationHasPointer d) = [GComposite $ convertDeclarationToCompositeInfo d]
+             in [GTypedef name typ []]
+        | declarationIsComposite d && not (declarationHasPointer d) = [(GComposite $ convertDeclarationToCompositeInfo d) []]
         | declarationIsFunctionPrototype d = [ functionPrototypeFromDeclaration d ]
-        | otherwise = GVariable <$> convertDeclarationToVariables d
+        | otherwise = flip GVariable [] <$> convertDeclarationToVariables d 
   
   instance Reifiable CFunction Function where
-    convert f@(CFunction specs decl (CompoundStmt body)) =
+     convert f@(CFunction specs decl (CompoundStmt body)) =
       let ftype = returnTypeOfFunction f
           fmods = functionLevelSpecifiers specs
           (Just name) = declName decl
           args = extractFunctionArguments decl
           newBody = body >>= convert
           in Function fmods ftype name args newBody (isFunctionVariadic f)
-    convert _ = error "malformed function passed to `convert`"
+     convert _ = error "malformed function passed to `convert`"
   
   instance Reifiable CBlockItem FunctionBody where
-    convert (Left decl) = LDeclaration <$> convertDeclarationToVariables decl
-    convert (Right stmt) = LStatement <$> [convert stmt]
+    convert (Left decl) = flip LDeclaration [] <$> convertDeclarationToVariables decl
+    convert (Right stmt) = flip LStatement [] <$> [convert stmt]
   
   instance Reifiable CStatement Statement where
     convert (AsmStmt tq (Simple s)) 
@@ -248,19 +248,19 @@ module Semantics.C.Reifiable.Instances
   
   functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
   functionPrototypeFromDeclaration (CDeclaration specs [CDeclInfo { contents = (Just contents), ..}]) 
-    = GFunctionPrototype rtype name params isVariadic where
+    = GFunctionPrototype rtype name params isVariadic [] where
         (Just name) = declName contents
         params = extractFunctionArguments contents
         rtype = returnTypeOfFunction (CFunction specs contents undefined)
         isVariadic = doesDeclaratorContainVariadicSpecifier contents
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
-  convertDeclarationToType (CDeclaration specs [info]) = let (Just contents') = contents info 
+  convertDeclarationToType (CDeclaration specs [info]) =let (Just contents') = contents info 
                                                          in Just (extractTypeFromComponents specs contents')
   convertDeclarationToType _ = Nothing
   
   convertExpressionToLocal :: CExpr -> Local
-  convertExpressionToLocal e = LStatement $ ExpressionS $ convert e
+  convertExpressionToLocal e = flip LStatement [] $ ExpressionS $ convert e 
 
   convertDeclarationToLocal :: CDeclaration -> Maybe Local
-  convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
+  convertDeclarationToLocal d = flip LDeclaration [] <$> convertDeclarationToVariable d

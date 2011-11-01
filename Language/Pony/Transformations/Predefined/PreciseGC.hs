@@ -45,9 +45,9 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   insertGCList x = 
     let 
       gcList = globalVar "all_lists" listPointer sNull
-      refListDeclaration = GComposite info where (SComposite info _) = refList
+      refListDeclaration = GComposite info [] where (SComposite info _) = refList 
       refListInstance = globalVar "referenced_list" (pointerTo forwardRefList) sNull
-      convert nil@(GVariable (Variable "nil" _ _)) = [nil, gcList, refListDeclaration, refListInstance]
+      convert nil@(GVariable (Variable "nil" _ _) _) = [nil, gcList, refListDeclaration, refListInstance]
       convert x = [x]
     in 
       if gcList `elem` x then x else concatMap convert x
@@ -59,13 +59,13 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   referencedLists (Function _ _ _ params locals _) =
     (paramName <$> filter isListParameter params) ++ (localName <$> filter isLocalList locals) where
       paramName (Parameter (Just n) _) = n
-      localName (LDeclaration (Variable n _ _)) = n
+      localName (LDeclaration (Variable n _ _) _) = n
       isListParameter (Parameter _ t) = t == oldList
-      isLocalList (LDeclaration (Variable _ t _)) = t == oldList
+      isLocalList (LDeclaration (Variable _ t _) _) = t == oldList
       isLocalList _ = False
     
   redefineList :: SGlobal -> SGlobal
-  redefineList (GTypedef "list_t" _) = GTypedef "list_t" newList
+  redefineList (GTypedef "list_t" _ li) = GTypedef "list_t" newList li
   redefineList x = x
   
   modifyMain :: Function -> Function
@@ -84,14 +84,15 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
     Function attrs typ name params (reflist : a1 : a2 : a3 :  (declarations ++ boilerplate ++ (init assignments >>= expandCallocs) ++ [reset] ++ [last assignments])) isVariadic where
       (declarations, assignments) = partitionLocals locals
       toAssignment (str,n) = stmt $ Binary (Brackets (Binary "rl" "." "ref_lists") (intToLiteral n)) "=" (Ident str)
-      expandCallocs a@(LStatement (ExpressionS (Binary n "=" (FunctionCall "calloc" _)))) 
+      expandCallocs a@(LStatement (ExpressionS (Binary n "=" (FunctionCall "calloc" _))) _ )
         = [ a
           , stmt $ ("all_lists" .->. "next") .=. "all_lists"
           , stmt $ ("all_lists" .->. "tag") .=. "LIST"
           , stmt $ ("all_lists" .->. "c.list") .=. n ]
       expandCallocs x = [x]
       boilerplate = toAssignment <$> zip (referencedLists f) [0..(referencedListCount f)]
-      reflist = LDeclaration $ Variable "rl" forwardRefList Nothing
+      reflist = LDeclaration  var [var]
+      var = Variable "rl" forwardRefList Nothing
       a1 = stmt $ Binary "rl" "." "parent" .=. "referenced_list"
       a2 = stmt $ Binary "rl" "." "nptrs" .=. (intToLiteral $ referencedListCount f)
       a3 = stmt $ "referenced_list" .=. Unary "&" "rl"

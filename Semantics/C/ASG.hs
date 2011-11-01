@@ -167,36 +167,22 @@ module Semantics.C.ASG where
   -- Do we need to distinguish between statements and instructions, like CIL does?
   -- Will we need a separate ADT for typedefs? I feel that global typedefs are a good first step.
 
-   type boundVariables = [Variable]
+  type BoundVariables = [Variable]
 
-   data Local
-    = LDeclaration Variable
-    | LStatement Statement
-    deriving (Show, Eq, Typeable, Data)
+  data Local
+   = LDeclaration Variable BoundVariables
+   | LStatement Statement BoundVariables
+   deriving (Show, Eq, Typeable, Data)
   
-  data FunctionBody = FunctionBody [Local] boundVariables
-
-  functionBody :: [Local] -> FunctionBody
-  functionBody ls = FunctionBody ls $ catmap boundFromLocal ls
-    where
-    boundFromLocal :: Local -> boundVariables 
-    boundFromLocal (LDeclaration v) = [v]
-    boundFromLocal _ = []
-  
+  type FunctionBody = [Local] 
+ 
   data SGlobal
-    = GFunction Function
-    | GVariable Variable
-    | GFunctionPrototype SType Name [Parameter] Bool
-    | GTypedef Name SType
-    | GEnumeration EnumerationInfo
-    | GComposite CompositeInfo
+    = GFunction Function BoundVariables
+    | GVariable Variable BoundVariables
+    | GFunctionPrototype SType Name [Parameter] Bool BoundVariables
+    | GTypedef Name SType BoundVariables
+    | GEnumeration EnumerationInfo BoundVariables
+    | GComposite CompositeInfo BoundVariables
     deriving (Show, Eq, Typeable, Data)
   
-  data Program = Program [SGlobal] boundVariables
-
-  program :: [SGlobal] -> Program
-  program gs = Program gs $ catmap boundFromGlobal gs
-    where
-    boundFromGlobal :: SGlobal -> boundVariables
-    boundFromGlobal (GVariable v) = [v]
-    boundFromGlobal _ = []
+  type Program = [SGlobal]
