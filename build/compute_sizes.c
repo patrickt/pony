@@ -31,8 +31,13 @@ int main (int argc, char const *argv[])
   fprintf(hask, "sizeOfLongLong :: Int\n");
   fprintf(hask, "sizeOfLongLong = %lu\n\n", sizeof(long long int) * 8);
   
+#ifdef __int128_t
   fprintf(hask, "sizeOfInt128 :: Int\n");
   fprintf(hask, "sizeOfInt128 = %lu\n\n", sizeof(__int128_t) * 8); // Hopefully 128 bits wide!
+#else
+  fprintf(hask, "sizeOfInt128 :: Int\n");
+  fprintf(hask, "sizeOfInt128 = 128\n\n");
+#endif
   
   fprintf(hask, "sizeOfFloat :: Int\n");
   fprintf(hask, "sizeOfFloat = %lu\n\n", sizeof(float) * 8);
