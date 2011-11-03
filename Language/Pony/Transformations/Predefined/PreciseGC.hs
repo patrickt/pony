@@ -91,7 +91,7 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
           , stmt $ ("all_lists" .->. "c.list") .=. n ]
       expandCallocs x = [x]
       boilerplate = toAssignment <$> zip (referencedLists f) [0..(referencedListCount f)]
-      reflist = LDeclaration  var [var]
+      reflist = LDeclaration  var []
       var = Variable "rl" forwardRefList Nothing
       a1 = stmt $ Binary "rl" "." "parent" .=. "referenced_list"
       a2 = stmt $ Binary "rl" "." "nptrs" .=. (intToLiteral $ referencedListCount f)

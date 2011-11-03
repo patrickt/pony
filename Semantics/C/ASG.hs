@@ -167,7 +167,7 @@ module Semantics.C.ASG where
   -- Do we need to distinguish between statements and instructions, like CIL does?
   -- Will we need a separate ADT for typedefs? I feel that global typedefs are a good first step.
 
-  type BoundVariables = [Variable]
+  type BoundVariables = [Name]
 
   data Local
    = LDeclaration Variable BoundVariables

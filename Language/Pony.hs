@@ -37,7 +37,7 @@ module Language.Pony
     case result of
       (Left parseError) -> print parseError
       Right externs -> do
-        let converted = convert externs
+        let converted = fillASG $ convert externs
         let (MkTrans _ direction t) = trans
         case direction of 
           TopDown -> writeFile output (show $ pretty $ everywhere t converted)

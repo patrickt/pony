@@ -12,13 +12,14 @@ module Language.Pony.Transformations.Predefined.StringConcat where
   
   checkForConcatenation :: Local -> [Local]
   checkForConcatenation (LStatement (ExpressionS (Binary (Ident a) "=" (Binary (Ident l) "<+>" (Ident r)))) li) = 
-    [ LDeclaration var (li ++ [var])
-    , malloc a (Ident "needed_size")
-    , strlcpy (Ident a) (Ident l) (Ident "needed_size")
-    , strlcat (Ident a) (Ident r) (Ident "needed_size")
+    [ LDeclaration var (li ++ [name])
+    , malloc a (Ident name)
+    , strlcpy (Ident a) (Ident l) (Ident name)
+    , strlcat (Ident a) (Ident r) (Ident name)
     ]
       where 
         var = (Variable "needed_size" (STypedef "size_t" unsignedInt []) (Just (Binary (strlen l) "+" (strlen r))))
+        name = "needed_size"
   checkForConcatenation x = [x]
   
   concatT :: GenericT

@@ -4,6 +4,9 @@ int main (int argc, char const *argv[])
     char *second = "from Pony!";
     char *third;
     third = first <+> second;
-    printf(third);
+    char * fourth;
+    fourth = first <+> second;
+    printf("%s\n", third);
+    printf("%s\n", fourth);
     return 0;
 }
