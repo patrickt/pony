@@ -15,7 +15,7 @@ module Concat where
   checkForConcatenation loc@(LStatement (ExpressionS (Binary (Ident a) "=" (Binary (Ident l) "<+>" (Ident r)))) b) =  let 
     needed = getFreeVariable "needed_size" loc
      in
-     [ LDeclaration (Variable needed (STypedef "size_t" unsignedInt []) (Just (Binary (strlen l) "+" (strlen r)))) (b ++ [needed])
+     [ LDeclaration (Variable needed (STypedef "unsigned int" unsignedInt []) (Just (Binary (strlen l) "+" (strlen r)))) (b ++ [needed])
      , malloc a (Ident needed)
      , strlcpy (Ident a) (Ident l) (Ident needed)
      , strlcat (Ident a) (Ident r) (Ident needed)

@@ -65,7 +65,7 @@ module Language.Pony.Transformations.Utilities where
 --    paramNames (Parameter n _) = n
 --    localNames (LDeclaration (Variable n _ _) _) = [n]
 --    localNames _ = []
-    
+     
   namesInLocalScope :: Local -> [Name]
   namesInLocalScope (LDeclaration _ b) = b
   namesInLocalScope (LStatement _ b)   = b
@@ -108,12 +108,12 @@ module Language.Pony.Transformations.Utilities where
     let
       filled = fill i b
     in
-     (fst filled) : fillASG' is (b ++ (snd filled))
+     (fst filled) : fillASG' is (snd filled)
   fillASG' [] _ = []
 
   fill :: SGlobal -> BoundVariables -> (SGlobal, BoundVariables)
   fill (GVariable var@(Variable name _ _) _) b = let bound = b ++ [name] in ((GVariable var bound), bound)
-  fill i@(GFunctionPrototype t n ps bool _) b = let
+  fill (GFunctionPrototype t n ps bool _) b = let
     bound = b ++ [n]
     in
     ((GFunctionPrototype t n ps bool bound), bound)
