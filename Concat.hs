@@ -8,8 +8,8 @@ module Concat where
   
   malloc l s = stmt $ ((Ident l) .=. (FunctionCall "alloca") [s])
   
-  strlcpy to from size = stmt $ FunctionCall (Ident "strlcpy") [to, from, size]
-  strlcat to from size = stmt $ FunctionCall (Ident "strlcat") [to, from, size]
+  strlcpy to from size = stmt $ FunctionCall (Ident "strncpy") [to, from, size]
+  strlcat to from size = stmt $ FunctionCall (Ident "strncat") [to, from, size]
   
   checkForConcatenation :: Local -> [Local]
   checkForConcatenation loc@(LStatement (ExpressionS (Binary (Ident a) "=" (Binary (Ident l) "<+>" (Ident r)))) b) =  let 

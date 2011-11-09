@@ -8,7 +8,9 @@ module Language.Pony.Transformations.Utilities where
   import Data.Maybe
   import GHC.Exts ( IsString(..) )
   import Semantics.C
-  
+  import Data.Unique
+  import System.IO.Unsafe
+
   instance IsString Expression where fromString = Ident
   
   countWhere :: (a -> Bool) -> [a] -> Int
@@ -78,15 +80,18 @@ module Language.Pony.Transformations.Utilities where
   namesInGlobalScope (GEnumeration _ b)             = b
   namesInGlobalScope (GComposite _ b)               = b
 
+
   getFreeVariable :: Name -> Local -> Name
   getFreeVariable n l = if n `elem` namesInLocalScope l
-                        then getFreeVariable ("__pony" ++ n) l
-                        else n
+                        then getFreeVariable (upid ++ n) l
+                        else upid ++ n
+                          where upid = "__pony_" ++ (unsafePerformIO $ newUnique >>= (\u -> return $ hashUnique u) >>= (\i -> return $ show i)) ++ "__"
   
   getFreeVariable' :: Name -> SGlobal -> Name
   getFreeVariable' n g = if n `elem` namesInGlobalScope g
-                         then getFreeVariable' ("__pony" ++ n) g
-                         else n
+                         then getFreeVariable' ( upid ++ n) g
+                         else upid ++ n
+                           where upid = "__pony_" ++ (unsafePerformIO $ newUnique >>= (\u -> return $ hashUnique u) >>= (\i -> return $ show i)) ++ "__"
 
 --  makeHygenicName :: Name -> Program -> Function -> Name
 --  makeHygenicName n p f 

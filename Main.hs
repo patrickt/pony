@@ -8,14 +8,14 @@ module Main where
   
   malloc l s = stmt $ ((Ident l) .=. (FunctionCall "alloca") [s])
   
-  strlcpy to from size = stmt $ FunctionCall (Ident "strlcpy") [to, from, size]
-  strlcat to from size = stmt $ FunctionCall (Ident "strlcat") [to, from, size]
+  strlcpy to from size = stmt $ FunctionCall (Ident "strncpy") [to, from, size]
+  strlcat to from size = stmt $ FunctionCall (Ident "strncat") [to, from, size]
   
   checkForConcatenation :: Local -> [Local]
   checkForConcatenation loc@(LStatement (ExpressionS (Binary (Ident a) "=" (Binary (Ident l) "<+>" (Ident r)))) b) =  let 
     needed = getFreeVariable "needed_size" loc
      in
-     [ LDeclaration (Variable needed (STypedef "size_t" unsignedInt []) (Just (Binary (strlen l) "+" (strlen r)))) (b ++ [needed])
+     [ LDeclaration (Variable needed (STypedef "unsigned int" unsignedInt []) (Just (Binary (strlen l) "+" (strlen r)))) (b ++ [needed])
      , malloc a (Ident needed)
      , strlcpy (Ident a) (Ident l) (Ident needed)
      , strlcat (Ident a) (Ident r) (Ident needed)
