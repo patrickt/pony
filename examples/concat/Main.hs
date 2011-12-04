@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Concat where
+module Main where
   
   import Language.Pony
   

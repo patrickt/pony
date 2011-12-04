@@ -1,8 +1,6 @@
-module Language.Pony.Transformations.Predefined.HelloWorld where
+module Main where
   
-  import Language.C99.Literals
-  import Semantics.C
-  import Data.Generics
+  import Language.Pony
   
   helloToPrintf :: Expression -> Expression
   helloToPrintf (Ident "hello") = FunctionCall (Ident "printf") [(CStr "Hello from Pony!")]
@@ -10,3 +8,8 @@ module Language.Pony.Transformations.Predefined.HelloWorld where
   
   helloT :: GenericT
   helloT = mkT helloToPrintf
+  
+  main :: IO ()
+  main = run $ pony {
+    transformations = [MkTrans "Hello" TopDown helloT ]
+  }

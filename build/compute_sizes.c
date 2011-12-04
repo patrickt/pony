@@ -6,7 +6,14 @@
 
 int main (int argc, char const *argv[])
 {
-  FILE *hask = fopen(argv[1], "w");
+  FILE *hask = fopen(argv[1], "r");
+  if (hask) {
+    printf("MachineSizes.hs already exists; skipping generation\n");
+    fclose(hask);
+    return EXIT_SUCCESS;
+  }
+  
+  hask = fopen(argv[1], "w");
   if (!hask) {
     perror("Error encountered while determining machine-specific sizes");
     return EXIT_FAILURE;

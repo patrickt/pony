@@ -1,5 +1,5 @@
 Name:                pony
-Version:             0.1.1
+Version:             0.1.2
 Synopsis:            a modular, extensible source transformer for systems programming
 
 Description:         Pony is a tool intended for programmers of low-level systems. Code authors will write code in standard C99, then specify a set of  high-level transformations that they wish to add to their code, such as garbage collection, closures, and new operators. Pony will apply these transformations, ensure that the generated code is correct, and emit C99.
@@ -13,16 +13,21 @@ Copyright:           (c) 2010-2011 George Washington University
 Category:            Language
 Build-type:          Configure
 Stability:           alpha
-tested-with:         GHC
-
-
--- Extra files to be distributed with the package, such as examples or
--- a README.
+Tested-with:         GHC
+Cabal-version:       >= 1.2.3
 Extra-source-files:  README.md, CREDITS.md, configure
 
-Cabal-version:       >=1.2.3
+Flag tests {
+  Description:       Build testing software
+  Default:           False
+}
 
-Library
+Flag examples {
+  Description:       Build example programs
+  Default:           True
+}
+
+Library {
   Build-depends:   base >= 4.2 && < 5,
                    mtl >= 2.0.1.0,
                    parsec >= 3.1.0, 
@@ -31,17 +36,40 @@ Library
                    syb >= 0.1
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Exposed-modules: Language.Pony, Semantics.C
-  Extensions:      DeriveDataTypeable,
-                   NamedFieldPuns,
-                   Rank2Types,
-                   FlexibleContexts,
-                   TypeSynonymInstances,
-                   MultiParamTypeClasses,
-                   TypeOperators,
-                   FunctionalDependencies,
-                   FlexibleInstances
+  Extensions:     DeriveDataTypeable,
+                  NamedFieldPuns,
+                  Rank2Types,
+                  FlexibleContexts,
+                  TypeSynonymInstances,
+                  MultiParamTypeClasses,
+                  TypeOperators,
+                  FunctionalDependencies,
+                  FlexibleInstances             
+}
+                   
+Executable concat {
+  Main-is:  Main.hs
+  Hs-source-dirs: examples/concat .
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
 
-Executable test
+Executable hello {
+  Main-is:  Main.hs
+  Hs-source-dirs: examples/hello .
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
+
+Executable test {
   Main-is:             Testing/Main.hs
   ghc-options:         -O
   LD-Options:          -w
@@ -50,4 +78,10 @@ Executable test
                        test-framework == 0.3.3,
                        test-framework-quickcheck2 >= 0.2.7,
                        test-framework-hunit == 0.2.6
+  if flag(tests) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
 
