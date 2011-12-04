@@ -1,14 +1,9 @@
-module Language.Pony.Transformations.Predefined.SeparateDeclarations where
+module Main where
   
-  import Data.Generics
-  import Language.C99
-  import Semantics.C
+  import Language.Pony
   
   declare :: String -> SType -> Local
   declare n t = LDeclaration (Variable n t Nothing)
-  
-  (.=.) :: Expression -> Expression -> Local
-  a .=. b = LStatement $ ExpressionS (Binary a "=" b)
   
   partitionLocals :: [Local] -> ([Local], [Local])
   partitionLocals ls = partition ls ([], []) 
@@ -20,10 +15,15 @@ module Language.Pony.Transformations.Predefined.SeparateDeclarations where
         partition rest (a, b ++ [s])
       partition (d@(LDeclaration (Variable n t (Just e))) : rest) (a,b) =
         partition rest (a ++ [declare n t], 
-                        b ++ [Ident n .=. e])
+                        b ++ [stmt $ Ident n .=. e])
   
   separate :: [Local] -> [Local]
   separate xs = a ++ b where (a, b) = partitionLocals xs
   
   separateT :: GenericT
   separateT = mkT separate
+  
+  main :: IO ()
+  main = run $ pony {
+    transformations = [MkTrans "SeparateDeclarations" TopDown separateT]
+  }

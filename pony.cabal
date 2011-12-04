@@ -46,6 +46,17 @@ Library {
                   FunctionalDependencies,
                   FlexibleInstances             
 }
+
+Executable check-malloc {
+  Main-is: Main.hs
+  Hs-source-dirs: examples/check-malloc .
+  LD-Options: -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
                    
 Executable concat {
   Main-is:  Main.hs
@@ -61,6 +72,39 @@ Executable concat {
 Executable hello {
   Main-is:  Main.hs
   Hs-source-dirs: examples/hello .
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
+
+Executable logical-shift {
+  Main-is:  Main.hs
+  Hs-source-dirs: examples/logical-shift .
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
+
+Executable precise-gc {
+  Main-is: Main.hs
+  Hs-source-dirs: examples/precise-gc .
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
+
+Executable separate-declarations {
+  Main-is: Main.hs
+  Hs-source-dirs: examples/separate-declarations .
   LD-Options:          -w
   if flag(examples) {
     Buildable: True

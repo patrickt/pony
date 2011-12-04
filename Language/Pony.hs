@@ -5,6 +5,7 @@ module Language.Pony
   , module Language.Pony.Transformations
   , module Language.Pony.Transformations.Utilities
   , module Semantics.C
+  , module Language.C99.Literals
   , run
   , pony
   , Operator (..)
@@ -15,6 +16,7 @@ module Language.Pony
   
   import Data.Generics hiding (empty)
   import Language.C99
+  import Language.C99.Literals
   import Language.Pony.Transformations
   import Language.Pony.Transformations.Utilities
   import Semantics.C

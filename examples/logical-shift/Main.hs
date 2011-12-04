@@ -1,8 +1,7 @@
-module Language.Pony.Transformations.Predefined.LogicalShift where
+module Main where
   
-  import Language.C99
-  import Semantics.C.ASG
-  import Data.Generics
+  import Language.Pony
+  import Language.C99.Literals
   
   -- bug: need to evaluate the arguments here...
   convertLogicalShift :: Expression -> Expression
@@ -12,3 +11,9 @@ module Language.Pony.Transformations.Predefined.LogicalShift where
   
   logicalShift :: GenericT
   logicalShift = mkT convertLogicalShift
+  
+  main :: IO ()
+  main = run $ pony {
+    operators = [Bitwise ">>>"],
+    transformations = [MkTrans "LogicalShift" BottomUp logicalShift ]
+  }

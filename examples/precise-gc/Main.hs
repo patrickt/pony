@@ -1,14 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Language.Pony.Transformations.Predefined.PreciseGC where
+module Main where
   
   import Control.Applicative
-  import Data.Generics
-  import Data.List
-  import Language.Pony.Transformations.Predefined.SeparateDeclarations (partitionLocals)
-  import Language.Pony.Transformations.Utilities
-  import Semantics.C
-
+  import Language.Pony
+  
+  declare :: String -> SType -> Local
+  declare n t = LDeclaration (Variable n t Nothing)
+  
+  partitionLocals :: [Local] -> ([Local], [Local])
+  partitionLocals ls = partition ls ([], []) 
+    where 
+      partition [] them = them
+      partition (d@(LDeclaration (Variable _ _ Nothing)) : rest) (a,b) = 
+        partition rest (a ++ [d], b)
+      partition (s@(LStatement st) : rest) (a, b) = 
+        partition rest (a, b ++ [s])
+      partition (d@(LDeclaration (Variable n t (Just e))) : rest) (a,b) =
+        partition rest (a ++ [declare n t], 
+                        b ++ [stmt $ Ident n .=. e])
   
   refList :: SType
   refList = struct "ref_list_s" 
@@ -109,4 +119,10 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   
   gcT :: GenericT
   gcT = mkT redefineList `extT` insertGCList `extT` addGC `extT` rewriteConsOperator
+  
+  main :: IO ()
+  main = run $ pony {
+    operators = [Logical "::"],
+    transformations = [MkTrans "PreciseGC" TopDown gcT]
+  }
   

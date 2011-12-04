@@ -1,12 +1,6 @@
-module Language.Pony.Transformations.Predefined.CheckMalloc where
+module Main where
   
-  import Control.Monad
-  import Language.C99
-  import Semantics.C.ASG
-  import Data.List
-  import Data.Generics
-  import Data.Maybe
-  import Debug.Trace
+  import Language.Pony
   
   checkMallocDeclarations :: [Local] -> [Local]
   checkMallocDeclarations = concatMap convert where
@@ -21,3 +15,8 @@ module Language.Pony.Transformations.Predefined.CheckMalloc where
   
   checkMalloc :: GenericT
   checkMalloc = mkT checkMallocAssignments `extT` checkMallocDeclarations
+  
+  main :: IO ()
+  main = run $ pony { 
+    transformations = [MkTrans "CheckMalloc" TopDown checkMalloc ]
+  }
