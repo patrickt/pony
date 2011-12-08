@@ -3,6 +3,7 @@
 module Semantics.C.ASG where
   
   import Data.Generics
+  import Data.Monoid
   import Language.Pony.MachineSizes
   import Language.C99.Literals
   import qualified Language.C99.AST as AST
@@ -95,6 +96,22 @@ module Semantics.C.ASG where
     | Switch Expression Statement
     | While Expression Statement 
     deriving (Show, Eq, Typeable, Data)
+  
+  infixl 4 |>
+  infixl 4 <|
+  (|>), (<|) :: Monoid a => a -> a -> a
+  (|>) = mappend
+  (<|) = flip mappend
+  
+    
+  instance Monoid Statement where
+    mempty = EmptyS
+    mappend (Compound ls) (Compound rs) = Compound $ ls ++ rs
+    mappend l EmptyS = l
+    mappend EmptyS r = r
+    mappend (Compound ls) r = Compound $ ls ++ [LStatement r]
+    mappend l (Compound rs) = Compound ((LStatement l) : rs)
+    mappend l r = Compound $ [LStatement l, LStatement r]
     
   data Expression
     = Literal CLiteral
