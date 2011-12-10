@@ -3,7 +3,7 @@
 module Language.C99.AST
   ( CTranslationUnit
   , CAsmArgument (..)
-  , CAsmName (..)
+  , CAsmName 
   , CAsmOperand (..)
   , CAttribute (..)
   , CBlockItem

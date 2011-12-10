@@ -1,9 +1,53 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Semantics.C.ASG where
+module Semantics.C.ASG 
+  ( Attribute (..)
+  , AsmOp (..)
+  , CompositeInfo (..)
+  , CompositeType (..)
+  , Designator (..)
+  , Enumeration (..)
+  , EnumerationInfo (..)
+  , Expression (..)
+  , Field (..)
+  , FloatFlags (..)
+  , Function (..)
+  , Initializer (..)
+  , InitList (..)
+  , IntegerFlags (..)
+  , Local (..)
+  , Name
+  , Parameter (..)
+  , Program
+  , SGlobal (..)
+  , Signedness (..)
+  , Statement (..)
+  , SType (..)
+  , Variable (..)
+  , char
+  , double
+  , float
+  , int128
+  , intToLiteral
+  , longDouble
+  , longLongSignedInt
+  , longlongUnsignedInt
+  , longSignedInt
+  , longUnsignedInt
+  , setAttributes
+  , shortSignedInt
+  , shortUnsignedInt
+  , signedChar
+  , signedInt
+  , uint128
+  , unsignedChar
+  , unsignedInt
+  , void
+  ) where
   
-  import Data.Generics
   import Data.Monoid
+  import Language.Pony.Prelude
+  import Data.Generics
   import Language.Pony.MachineSizes
   import Language.C99.Literals
   import qualified Language.C99.AST as AST
@@ -97,13 +141,6 @@ module Semantics.C.ASG where
     | While Expression Statement 
     deriving (Show, Eq, Typeable, Data)
   
-  infixl 4 |>
-  infixl 4 <|
-  (|>), (<|) :: Monoid a => a -> a -> a
-  (|>) = mappend
-  (<|) = flip mappend
-  
-    
   instance Monoid Statement where
     mempty = EmptyS
     mappend (Compound ls) (Compound rs) = Compound $ ls ++ rs
@@ -188,8 +225,7 @@ module Semantics.C.ASG where
     | LStatement Statement
     deriving (Show, Eq, Typeable, Data)
   
-  type FunctionBody = [Local]
-  
+  -- todo: drop S-prefix
   data SGlobal
     = GFunction Function
     | GVariable Variable

@@ -36,7 +36,7 @@ module Semantics.C.Reifiable.Instances
           in Function fmods ftype name args newBody (isFunctionVariadic f)
     convert _ = error "malformed function passed to `convert`"
   
-  instance Reifiable CBlockItem FunctionBody where
+  instance Reifiable CBlockItem [Local] where
     convert (Left decl) = LDeclaration <$> convertDeclarationToVariables decl
     convert (Right stmt) = LStatement <$> [convert stmt]
   
