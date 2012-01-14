@@ -3,7 +3,6 @@
 module Language.Pony.Transformations.Utilities where
   
   import Control.Applicative
-  import Control.Monad
   import Data.List
   import Data.Maybe
   import GHC.Exts ( IsString(..) )
@@ -12,7 +11,7 @@ module Language.Pony.Transformations.Utilities where
   instance IsString Expression where fromString = Ident
   
   countWhere :: (a -> Bool) -> [a] -> Int
-  countWhere pred x = length $ filter pred x
+  countWhere p x = length $ filter p x
   
   -- | The post-processed representation of NULL
   sNull :: Expression
@@ -59,9 +58,9 @@ module Language.Pony.Transformations.Utilities where
     nameOf _ = []
   
   namesInLocalScope :: Program -> Function -> [Name]
-  namesInLocalScope p (Function _ _ n pms ls _) =  nub (namesInGlobalScope p ++ catMaybes (paramNames <$> pms) ++ (localNames =<< ls)) where
-    paramNames (Parameter n _) = n
-    localNames (LDeclaration (Variable n _ _)) = [n]
+  namesInLocalScope p (Function _ _ n pms ls _) =  n : nub (namesInGlobalScope p ++ catMaybes (paramNames <$> pms) ++ (localNames =<< ls)) where
+    paramNames (Parameter name _) = name
+    localNames (LDeclaration (Variable name _ _)) = [name]
     localNames _ = []
     
   makeHygenicName :: Name -> Program -> Function -> Name

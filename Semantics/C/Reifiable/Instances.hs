@@ -73,6 +73,7 @@ module Semantics.C.Reifiable.Instances
     convert (WhileStmt ex st) = While (convert ex) (convert st)
   
   instance Reifiable CExpr Expression where
+    convert (Comma _) = error "BUG: COMMA NOT DEFINED YET"
     convert (Constant l) = Literal l
     convert (Identifier i) = Ident i
     convert (Index l r) = Brackets (convert l) (convert r)
@@ -166,7 +167,8 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CField [Field] where
     convert (CField (CDeclaration specs infos)) = map convert' infos where
       convert' :: CDeclInfo -> Field
-      convert' (CDeclInfo {contents = (Just contents), size, ..}) = Field (declName contents) (extractTypeFromComponents specs contents) (convert <$> size) 
+      convert' (CDeclInfo {contents = (Just contents), size, ..}) = Field (declName contents) (extractTypeFromComponents specs contents) (convert <$> size)
+      convert' _ = error "unexpected pattern passed to CField -> Field conversion" 
   
   instance Reifiable CParameter Parameter where
     convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = Parameter (declName contents) (extractTypeFromComponents specs contents)
@@ -197,9 +199,10 @@ module Semantics.C.Reifiable.Instances
     convert' (CDeclInfo {contents = Just decl, initVal = Nothing, size }) 
       = let (Just name) = declName decl 
         in Variable name (extractTypeFromComponents specs decl) (convert <$> size)
-    convert' (CDeclInfo {contents = Just decl, initVal = Just (CInitExpression init), size = Nothing}) 
+    convert' (CDeclInfo {contents = Just decl, initVal = Just (CInitExpression ie), size = Nothing}) 
       = let (Just name) = declName decl 
-        in Variable name (extractTypeFromComponents specs decl) (Just (convert init))
+        in Variable name (extractTypeFromComponents specs decl) (Just (convert ie))
+    convert' _ = error "BUG: unexpected pattern passed to convertDeclarationToVariables."
   
   functionLevelSpecifiers :: [CSpecifier] -> [Attribute]
   functionLevelSpecifiers specs = (convert <$> sspecs) ++ (convert <$> tquals) where
@@ -211,9 +214,10 @@ module Semantics.C.Reifiable.Instances
     CompositeInfo (boolToCompositeType isStruct) mN (concatMap convert fields) where
       boolToCompositeType True = Struct
       boolToCompositeType False = Union
+  convertDeclarationToCompositeInfo _ = error "BUG: unexpected pattern passed to convertDeclarationToCompositeInfo"
   
   extractFunctionArguments :: CDeclarator -> [Parameter]
-  extractFunctionArguments (CDeclarator n derived asm attributes) = map convert args
+  extractFunctionArguments (CDeclarator _ derived _ _) = map convert args
     where (Just (DerivedFunction args _)) = funcArgs
           funcArgs = find isFunction derived
           isFunction (DerivedFunction _ _) = True
@@ -224,6 +228,7 @@ module Semantics.C.Reifiable.Instances
   convertComposite (TStructOrUnion n b decls _) = CompositeInfo (boolToCompositeType b) n (concatMap convert decls) where
     boolToCompositeType True = Struct
     boolToCompositeType False = Union
+  convertComposite _ = error "BUG: non-composite type specifier passed to convertComposite"
   
   augmentType :: SType -> CDerivedDeclarator -> SType
   augmentType t (Pointer qs) = SPointerTo t (convert <$> qs)
@@ -253,6 +258,7 @@ module Semantics.C.Reifiable.Instances
         params = extractFunctionArguments contents
         rtype = returnTypeOfFunction (CFunction specs contents undefined)
         isVariadic = doesDeclaratorContainVariadicSpecifier contents
+  functionPrototypeFromDeclaration _ = error "BUG: invalid declaration passed to functionPrototypeFromDeclaration"
   
   convertDeclarationToType :: CDeclaration -> Maybe SType
   convertDeclarationToType (CDeclaration specs [info]) = let (Just contents') = contents info 
