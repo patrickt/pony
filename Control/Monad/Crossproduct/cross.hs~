@@ -1,0 +1,13 @@
+{- This file describes a method for taking crossproducts over almost any monad. It is based off of the method described in "Composing Monads Using Coproducts", by Lüth and Ghani. -}
+
+module Control.Monad.Crossproduct where
+ 
+  {- First, we give an equivelant definition of a monad.-}
+  class Functor t => Triple t where
+    eta :: a -> t a
+    mu  :: t (t a) -> t a
+    
+  {- Now, we show that it's equivelant, and give us the ability to use monads. -}
+    
+  instance Triple f => Monad f where
+    x >>= y = (mu . (fmap y)) y

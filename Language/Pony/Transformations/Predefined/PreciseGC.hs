@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Language.Pony.Transformations.Predefined.PreciseGC where
-  
   import Control.Applicative
   import Data.Generics
   import Data.List
@@ -110,4 +109,3 @@ module Language.Pony.Transformations.Predefined.PreciseGC where
   
   gcT :: GenericT
   gcT = mkT redefineList `extT` insertGCList `extT` addGC `extT` rewriteConsOperator
-  

@@ -113,36 +113,36 @@ module Semantics.C.Pretty
     pretty (Field n t (Just i)) = pretty t <+> pretty n <> colon <+> pretty i <> semicolon
 
   instance Pretty Statement where
-    pretty (Asm True a b c d) = 
+    pretty (Asm True a b c d _) = 
       "asm volatile" <> parens (pretty a <:> 
                                 csep b <:> 
                                 csep c <:> 
                                 csep d) where
                                   csep x = hsep $ punctuate comma (pretty <$> x)
-    pretty (Asm False a b c d) = 
+    pretty (Asm False a b c d _) = 
       "asm" <> parens (pretty a <:> 
                        csep b <:> 
                        csep c <:> 
                        csep d) where
                          csep x = hsep $ punctuate comma (pretty <$> x)
-    pretty Break = "break;" 
-    pretty (Case e s) = "case" <+> pretty e <> colon <+> pretty s
-    pretty (Compound b) = lbrace $$ nest 2 (vcat (pretty <$> b)) $$ rbrace
-    pretty Continue = "continue;"
-    pretty (Default s) = "default:" <+> pretty s <> semicolon
-    pretty (DoWhile s e) = "do" <+> pretty s <+> "while" <+> parens' e
-    pretty EmptyS = empty
-    pretty (ExpressionS s) = pretty s <> semicolon
-    pretty (For a b c s) = "for" <> parens contents <+> pretty s where
+    pretty (Break _) = "break;" 
+    pretty (Case e s _) = "case" <+> pretty e <> colon <+> pretty s
+    pretty (Compound b _) = lbrace $$ nest 2 (vcat (pretty <$> b)) $$ rbrace
+    pretty (Continue _) = "continue;"
+    pretty (Default s _) = "default:" <+> pretty s <> semicolon
+    pretty (DoWhile s e _) = "do" <+> pretty s <+> "while" <+> parens' e
+    pretty (EmptyS _) = empty
+    pretty (ExpressionS s _) = pretty s <> semicolon
+    pretty (For a b c s _) = "for" <> parens contents <+> pretty s where
       contents = pretty a <+> pretty b <> semicolon <+> pretty c
-    pretty (GoTo n) = "goto" <+> pretty n <> semicolon
-    pretty (IfThen e s) = "if" <+> parens' e <+> pretty s
-    pretty (IfThenElse e s s') = "if" <+> parens' e <+> pretty s <+> "else" <+> pretty s'
-    pretty (Labeled name _ s) = pretty name <> colon <+> pretty s
-    pretty (Return Nothing) = "return;" 
-    pretty (Return (Just e)) = "return" <+> pretty e <> semicolon
-    pretty (Switch e s) = "switch" <+> parens' e <+> pretty s
-    pretty (While e s) = "while" <+> parens' e <+> pretty s
+    pretty (GoTo n _) = "goto" <+> pretty n <> semicolon
+    pretty (IfThen e s _) = "if" <+> parens' e <+> pretty s
+    pretty (IfThenElse e s s' _) = "if" <+> parens' e <+> pretty s <+> "else" <+> pretty s'
+    pretty (Labeled name _ s _) = pretty name <> colon <+> pretty s
+    pretty (Return Nothing _) = "return;" 
+    pretty (Return (Just e) _) = "return" <+> pretty e <> semicolon
+    pretty (Switch e s _) = "switch" <+> parens' e <+> pretty s
+    pretty (While e s _) = "while" <+> parens' e <+> pretty s
     
   instance Pretty CLiteral where
     pretty (CInteger i) = textS i
@@ -151,22 +151,22 @@ module Semantics.C.Pretty
     pretty (CString s) = textS   s
 
   instance Pretty Expression where
-    pretty (Literal l) = pretty l
-    pretty (Ident n) = text n
-    pretty (CStr n) = doubleQuotes $ text n
-    pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
-    pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
-    pretty (Cast t e) = parens' t <> pretty e
-    pretty (Unary "++ post" e) = pretty e <> "++"
-    pretty (Unary "-- post" e) = pretty e <> "--"
+    pretty (Literal l _) = pretty l
+    pretty (Ident n _) = text n
+    pretty (CStr n _) = doubleQuotes $ text n
+    pretty (Brackets lhs rhs _) = pretty lhs <> brackets (pretty rhs)
+    pretty (FunctionCall lhs args _) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
+    pretty (Cast t e _) = parens' t <> pretty e
+    pretty (Unary "++ post" e _) = pretty e <> "++"
+    pretty (Unary "-- post" e _) = pretty e <> "--"
     -- terrible hack pending workaround
-    pretty (Unary "sizeof" e) = "sizeof" <> parens' e
-    pretty (Unary n e) = text n <> pretty e
-    pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
-    pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
-    pretty (SizeOfSType t) = "sizeof" <> parens' t
-    pretty (Builtin b) = textS b
-    pretty (InitializerList i) = braces $ pretty i
+    pretty (Unary "sizeof" e _) = "sizeof" <> parens' e
+    pretty (Unary n e _) = text n <> pretty e
+    pretty (Binary lhs op rhs _) = pretty lhs <+> text op <+> pretty rhs
+    pretty (Ternary a b c _) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
+    pretty (SizeOfSType t _) = "sizeof" <> parens' t
+    pretty (Builtin b _) = textS b
+    pretty (InitializerList i _) = braces $ pretty i
     
   instance Pretty InitList where
     pretty (InitList i) = braces $ hcat $ (r <$> i) where

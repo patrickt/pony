@@ -10,13 +10,13 @@ module Language.Pony.Transformations.Predefined.CheckMalloc where
   
   checkMallocDeclarations :: [Local] -> [Local]
   checkMallocDeclarations = concatMap convert where
-    convert d@(LDeclaration (Variable name _ (Just (FunctionCall (Ident "malloc") _))) li ) =
-      [ d, LStatement (IfThen (Unary "!" (Ident name)) (ExpressionS (FunctionCall (Ident "abort") []))) li ]
+    convert d@(LDeclaration (Variable name _ (Just (FunctionCall (Ident "malloc" _)_ _))) li ) =
+      [ d, LStatement (IfThen (Unary "!" (Ident name []) []) (ExpressionS (FunctionCall (Ident "abort" []) [] []) []) []) li ]
     convert x = [x]
   
   checkMallocAssignments :: Statement -> Statement
-  checkMallocAssignments (ExpressionS call@(Binary left "=" (FunctionCall (Ident "malloc") args))) =
-    IfThen (Unary "!" call) (ExpressionS (FunctionCall (Ident "abort") []))
+  checkMallocAssignments (ExpressionS call@(Binary left "=" (FunctionCall (Ident "malloc" _) args _) _) _) =
+    IfThen (Unary "!" call []) (ExpressionS (FunctionCall (Ident "abort" []) [] []) []) []
   checkMallocAssignments x = x
   
   checkMalloc :: GenericT

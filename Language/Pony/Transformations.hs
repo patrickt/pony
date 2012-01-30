@@ -3,20 +3,21 @@
 module Language.Pony.Transformations where
   
   import Data.Generics
+  {-
   import qualified Language.Pony.Transformations.Predefined.CheckMalloc as CM
   import qualified Language.Pony.Transformations.Predefined.LogicalShift as LS
   import qualified Language.Pony.Transformations.Predefined.SeparateDeclarations as SD
   import qualified Language.Pony.Transformations.Predefined.HelloWorld as HW
   import qualified Language.Pony.Transformations.Predefined.StringConcat as SC
   import qualified Language.Pony.Transformations.Predefined.PreciseGC as PGC
-  
+-}  
   data Direction = TopDown | BottomUp
   
   data Transformation = MkTrans String Direction GenericT
   
   instance Show Transformation where
     show (MkTrans s _ _) = s ++ "Trans"
-  
+{-  
   checkMalloc :: Transformation
   checkMalloc = MkTrans "CheckMalloc" TopDown CM.checkMalloc
   
@@ -44,3 +45,5 @@ module Language.Pony.Transformations where
       "StringConcat" -> [(stringConcat, "")]
       "PreciseGC" -> [(preciseGC, "")]
       other -> []
+      
+      -}

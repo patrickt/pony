@@ -77,40 +77,40 @@ module Semantics.C.ASG where
   data AsmOp = AsmOp Expression (Maybe Expression) deriving (Show, Eq, Typeable, Data)
   
   data Statement
-    = Asm Bool Expression [AsmOp] [AsmOp] [Expression]
-    | Break
-    | Case Expression Statement
-    | Compound [Local]
-    | Continue
-    | Default Statement
-    | DoWhile Statement Expression
-    | EmptyS
-    | ExpressionS Expression
-    | For (Maybe Local) (Maybe Expression) (Maybe Expression) Statement
-    | GoTo Expression
-    | IfThen Expression Statement
-    | IfThenElse Expression Statement Statement
-    | Labeled Name [Attribute] Statement
-    | Return (Maybe Expression)
-    | Switch Expression Statement
-    | While Expression Statement 
-    deriving (Show, Eq, Typeable, Data)
+    = Asm Bool Expression [AsmOp] [AsmOp] [Expression] BoundVariables
+    | Break BoundVariables
+    | Case Expression Statement BoundVariables
+    | Compound [Local] BoundVariables
+    | Continue BoundVariables
+    | Default Statement BoundVariables
+    | DoWhile Statement Expression BoundVariables
+    | EmptyS BoundVariables
+    | ExpressionS Expression BoundVariables
+    | For (Maybe Local) (Maybe Expression) (Maybe Expression) Statement BoundVariables
+    | GoTo Expression BoundVariables
+    | IfThen Expression Statement BoundVariables
+    | IfThenElse Expression Statement Statement BoundVariables
+    | Labeled Name [Attribute] Statement BoundVariables
+    | Return (Maybe Expression) BoundVariables
+    | Switch Expression Statement BoundVariables
+    | While Expression Statement  BoundVariables
+    deriving (Show, Eq, Typeable, Data) 
     
   data Expression
-    = Literal CLiteral
-    | CStr String
-    | Ident Name
-    | Brackets Expression Expression
-    | FunctionCall Expression [Expression]
-    | Cast SType Expression
-    | Unary Name Expression
-    | Binary Expression Name Expression
-    | Ternary Expression Expression Expression
-    | SizeOfSType SType
-    | Builtin AST.CBuiltinExpr
+    = Literal CLiteral BoundVariables
+    | CStr String BoundVariables
+    | Ident Name BoundVariables
+    | Brackets Expression Expression BoundVariables
+    | FunctionCall Expression [Expression] BoundVariables
+    | Cast SType Expression BoundVariables
+    | Unary Name Expression BoundVariables
+    | Binary Expression Name Expression BoundVariables
+    | Ternary Expression Expression Expression BoundVariables
+    | SizeOfSType SType BoundVariables
+    | Builtin AST.CBuiltinExpr BoundVariables
     -- | Initializers can *only* appear on the right hand side of an assignment expression.
     -- Woe betide you if you do not abide by this rule.
-    | InitializerList InitList
+    | InitializerList InitList BoundVariables
     deriving (Show, Eq, Typeable, Data)
   
   data Designator 
@@ -128,7 +128,7 @@ module Semantics.C.ASG where
   
   
   intToLiteral :: Int -> Expression
-  intToLiteral i = Literal (CInteger (toInteger i))
+  intToLiteral i = Literal (CInteger (toInteger i)) []
   
   data Attribute 
     = Auto

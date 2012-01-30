@@ -8,17 +8,18 @@ module Language.Pony.Transformations.Utilities where
   import Data.Maybe
   import GHC.Exts ( IsString(..) )
   import Semantics.C
-  import Data.Unique
-  import System.IO.Unsafe
-
-  instance IsString Expression where fromString = Ident
+  import Data.Generics
+  import Semantics.C.HasBound.Instances
+  import Semantics.C.HasBound
+  
+  instance IsString Expression where fromString = flip Ident []
   
   countWhere :: (a -> Bool) -> [a] -> Int
   countWhere pred x = length $ filter pred x
   
   -- | The post-processed representation of NULL
   sNull :: Expression
-  sNull = Cast (SPointerTo (SVoid []) []) (intToLiteral 0)
+  sNull = Cast (SPointerTo (SVoid []) []) (intToLiteral 0) []
   
   emptyStruct :: String -> SType
   emptyStruct s = SComposite (CompositeInfo Struct (Just s) []) []
@@ -47,57 +48,13 @@ module Language.Pony.Transformations.Utilities where
       var = (Variable n t (Just v))
   
   (.=.) :: Expression -> Expression -> Expression
-  a .=. b = Binary a "=" b
+  a .=. b = Binary a "=" b (getBoundNames a ++ getBoundNames b)
   
   (.->.) :: Expression -> Expression -> Expression
-  a .->. b = Binary a "->" b
+  a .->. b = Binary a "->" b (getBoundNames a ++ getBoundNames b)
   
   stmt :: Expression -> Local
-  stmt = (flip LStatement []) . ExpressionS 
-  
---  namesInGlobalScope :: Program -> [Name]
---  namesInGlobalScope p = nub $ p >>= nameOf where
---    nameOf (GFunction (Function _ _ n _ _ _) _) = [n]
---    nameOf (GVariable (Variable n _ _) _) = [n]
---    nameOf (GFunctionPrototype _ n _ _ _) = [n]
---    nameOf _ = []
-  
---  namesInLocalScope :: Program -> Function -> [Name]
---  namesInLocalScope p (Function _ _ n pms ls _) =  nub (namesInGlobalScope p ++ catMaybes (paramNames <$> pms) ++ (localNames =<< ls)) where
---    paramNames (Parameter n _) = n
---    localNames (LDeclaration (Variable n _ _) _) = [n]
---    localNames _ = []
-     
-  namesInLocalScope :: Local -> [Name]
-  namesInLocalScope (LDeclaration _ b) = b
-  namesInLocalScope (LStatement _ b)   = b
-  
-  namesInGlobalScope :: SGlobal -> [Name]
-  namesInGlobalScope (GFunction _ b)                = b
-  namesInGlobalScope (GVariable _ b)                = b
-  namesInGlobalScope (GFunctionPrototype _ _ _ _ b) = b
-  namesInGlobalScope (GTypedef _ _ b)               = b
-  namesInGlobalScope (GEnumeration _ b)             = b
-  namesInGlobalScope (GComposite _ b)               = b
-
-
-  getFreeVariable :: Name -> Local -> Name
-  getFreeVariable n l = if n `elem` namesInLocalScope l
-                        then getFreeVariable (upid ++ n) l
-                        else upid ++ n
-                          where upid = "__pony_" ++ (unsafePerformIO $ newUnique >>= (\u -> return $ hashUnique u) >>= (\i -> return $ show i)) ++ "__"
-  
-  getFreeVariable' :: Name -> SGlobal -> Name
-  getFreeVariable' n g = if n `elem` namesInGlobalScope g
-                         then getFreeVariable' ( upid ++ n) g
-                         else upid ++ n
-                           where upid = "__pony_" ++ (unsafePerformIO $ newUnique >>= (\u -> return $ hashUnique u) >>= (\i -> return $ show i)) ++ "__"
-
---  makeHygenicName :: Name -> Program -> Function -> Name
---  makeHygenicName n p f 
---    = if n `elem` namesInLocalScope p f
---      then makeHygenicName ("__pony" ++ n) p f
---      else n
+  stmt = (flip LStatement []) . flip ExpressionS []
   
   enum :: [String] -> SType
   enum vals = SEnum info [] where
@@ -111,12 +68,20 @@ module Language.Pony.Transformations.Utilities where
   fillASG' :: Program -> BoundVariables -> Program
   fillASG' (i:is) b = 
     let
-      filled = fill i b
+      filled = doFill i b
     in
      (fst filled) : fillASG' is (snd filled)
   fillASG' [] _ = []
 
-  fill :: SGlobal -> BoundVariables -> (SGlobal, BoundVariables)
+  doFill :: SGlobal -> BoundVariables -> (SGlobal, BoundVariables)
+  doFill full@(GFunction f@(Function as st n ps ls bl) bv') bv = (GFunction filledF new, new)
+    where
+      filledF = Function as st n ps (map (\x -> fst (fill  x bv)) ls) bl
+      new = snd $ fill full bv
+  doFill full bv = fill full bv
+
+
+{-  fill :: SGlobal -> BoundVariables -> (SGlobal, BoundVariables)
   fill (GVariable var@(Variable name _ _) _) b = let bound = b ++ [name] in ((GVariable var bound), bound)
   fill (GFunctionPrototype t n ps bool _) b = let
     bound = b ++ [n]
@@ -138,3 +103,4 @@ module Language.Pony.Transformations.Utilities where
   fill' :: Local -> BoundVariables -> (Local, BoundVariables)
   fill' (LStatement s _) b = ((LStatement s b), b)
   fill' (LDeclaration var@(Variable n _ _) _) b = ((LDeclaration var (b ++ [n])), b ++ [n])
+-}

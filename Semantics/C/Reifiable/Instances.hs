@@ -42,51 +42,51 @@ module Semantics.C.Reifiable.Instances
   
   instance Reifiable CStatement Statement where
     convert (AsmStmt tq (Simple s)) 
-      = Asm (isJust tq) (convert s) [] [] []
+      = Asm (isJust tq) (convert s) [] [] [] []
     convert (AsmStmt tq (GCCAsm s inR outR clobber)) 
-      = Asm (isJust tq) (convert s) (convert <$> inR) (convert <$> outR) (convert <$> clobber) 
-    convert BreakStmt = Break
-    convert (CaseStmt ex st) = Case (convert ex) (convert st)
-    convert (CompoundStmt bis) = Compound (bis >>= convert)
-    convert ContinueStmt = Continue
-    convert (DefaultStmt st) = Default (convert st)
-    convert (DoWhileStmt st e) = DoWhile (convert st) (convert e)
-    convert EmptyStmt = EmptyS
-    convert (ExpressionStmt ex) = ExpressionS (convert ex)
-    convert (ForStmt e1 e2 e3 s) = For 
+      = Asm (isJust tq) (convert s) (convert <$> inR) (convert <$> outR) (convert <$> clobber) []
+    convert BreakStmt = Break []
+    convert (CaseStmt ex st) = Case (convert ex) (convert st) []
+    convert (CompoundStmt bis) = Compound (bis >>= convert) []
+    convert ContinueStmt = Continue []
+    convert (DefaultStmt st) = Default (convert st) []
+    convert (DoWhileStmt st e) = DoWhile (convert st) (convert e) []
+    convert EmptyStmt = EmptyS []
+    convert (ExpressionStmt ex) = ExpressionS (convert ex) []
+    convert (ForStmt e1 e2 e3 s) = For
       (convertExpressionToLocal <$> e1)
       (convert <$> e2)
       (convert <$> e3)
-      (convert s)
+      (convert s) []
     convert (ForDeclStmt d e2 e3 s) = For
       (convertDeclarationToLocal d)
       (convert <$> e2)
       (convert <$> e3)
-      (convert s)
-    convert (GotoStmt s) = GoTo (convert s)
+      (convert s) []
+    convert (GotoStmt s) = GoTo (convert s) []
     convert (IfStmt e s mS) = case mS of
-      (Just s') -> IfThenElse (convert e) (convert s) (convert s')
-      Nothing -> IfThen (convert e) (convert s)
-    convert (LabeledStmt l attrs s) = Labeled l (convert <$> attrs) (convert s)
-    convert (ReturnStmt mE) = Return (convert <$> mE)
-    convert (SwitchStmt ex st) = Switch (convert ex) (convert st)
-    convert (WhileStmt ex st) = While (convert ex) (convert st)
+      (Just s') -> IfThenElse (convert e) (convert s) (convert s') []
+      Nothing -> IfThen (convert e) (convert s) []
+    convert (LabeledStmt l attrs s) = Labeled l (convert <$> attrs) (convert s) []
+    convert (ReturnStmt mE) = Return (convert <$> mE) []
+    convert (SwitchStmt ex st) = Switch (convert ex) (convert st) []
+    convert (WhileStmt ex st) = While (convert ex) (convert st) []
   
   instance Reifiable CExpr Expression where
-    convert (Constant l) = Literal l
-    convert (Identifier i) = Ident i
-    convert (Index l r) = Brackets (convert l) (convert r)
-    convert (Call f args) = FunctionCall (convert f) (convert <$> args)
-    convert (CCast tn arg) = Cast (convert tn) (convert arg)
-    convert (UnaryOp n arg) = Unary n (convert arg)
-    convert (BinaryOp n lhs rhs) = Binary (convert lhs) n (convert rhs)
-    convert (TernaryOp a b c) = Ternary (convert a) (convert b) (convert c)
-    convert (SizeOfType decl) = SizeOfSType (convert decl)
-    convert (CBuiltin t) = Builtin t
+    convert (Constant l) = Literal l []
+    convert (Identifier i) = Ident i []
+    convert (Index l r) = Brackets (convert l) (convert r) []
+    convert (Call f args) = FunctionCall (convert f) (convert <$> args) []
+    convert (CCast tn arg) = Cast (convert tn) (convert arg) []
+    convert (UnaryOp n arg) = Unary n (convert arg) []
+    convert (BinaryOp n lhs rhs) = Binary (convert lhs) n (convert rhs) []
+    convert (TernaryOp a b c) = Ternary (convert a) (convert b) (convert c) []
+    convert (SizeOfType decl) = SizeOfSType (convert decl) []
+    convert (CBuiltin t) = Builtin t []
   
   instance Reifiable CStringLiteral Expression where
-    convert lit = CStr s where
-      (Constant (CString s)) = getExpr lit
+    convert lit = CStr s [] where
+      (Constant (CString s)) = getExpr lit 
   
   instance Reifiable CAsmArgument AsmOp where
     convert (CAsmArgument x y) = AsmOp (convert x) (convert <$> y)
@@ -260,7 +260,7 @@ module Semantics.C.Reifiable.Instances
   convertDeclarationToType _ = Nothing
   
   convertExpressionToLocal :: CExpr -> Local
-  convertExpressionToLocal e = flip LStatement [] $ ExpressionS $ convert e 
+  convertExpressionToLocal e = flip LStatement [] $ flip ExpressionS [] $ convert e 
 
   convertDeclarationToLocal :: CDeclaration -> Maybe Local
   convertDeclarationToLocal d = flip LDeclaration [] <$> convertDeclarationToVariable d
