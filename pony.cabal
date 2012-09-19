@@ -33,19 +33,21 @@ Library {
                    parsec >= 3.1.0, 
                    pretty >= 1.0,
                    process > 1.0,
+                   regular,
+                   rewriting == 0.2.2,
                    syb >= 0.1
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Exposed-modules: Language.Pony, Semantics.C
   Extensions:     DeriveDataTypeable,
+                  FlexibleContexts,
+                  FlexibleInstances,            
+                  FunctionalDependencies,
+                  GeneralizedNewtypeDeriving,
+                  MultiParamTypeClasses,
                   NamedFieldPuns,
                   Rank2Types,
-                  GeneralizedNewtypeDeriving,
-                  FlexibleContexts,
-                  TypeSynonymInstances,
-                  MultiParamTypeClasses,
                   TypeOperators,
-                  FunctionalDependencies,
-                  FlexibleInstances             
+                  TypeSynonymInstances
 }
 
 Executable check-malloc {
