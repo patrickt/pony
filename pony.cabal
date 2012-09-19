@@ -39,6 +39,7 @@ Library {
   Extensions:     DeriveDataTypeable,
                   NamedFieldPuns,
                   Rank2Types,
+                  GeneralizedNewtypeDeriving,
                   FlexibleContexts,
                   TypeSynonymInstances,
                   MultiParamTypeClasses,
@@ -119,7 +120,7 @@ Executable test {
   LD-Options:          -w
   Build-depends:       QuickCheck >= 2.3,
                        HUnit == 1.2.2.3,
-                       test-framework == 0.3.3,
+                       test-framework >= 0.6,
                        test-framework-quickcheck2 >= 0.2.7,
                        test-framework-hunit == 0.2.6
   if flag(tests) {
