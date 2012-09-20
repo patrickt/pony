@@ -19,6 +19,7 @@ module Semantics.C.ASG
   , Name
   , Parameter (..)
   , Program
+  , SBuiltin (..)
   , SGlobal (..)
   , Signedness (..)
   , Statement (..)
@@ -50,7 +51,6 @@ module Semantics.C.ASG
   import Data.Generics
   import Language.Pony.MachineSizes
   import Language.C99.Literals
-  import qualified Language.C99.AST as AST
   
   type Name = String
   
@@ -161,7 +161,7 @@ module Semantics.C.ASG
     | Binary Expression Name Expression
     | Ternary Expression Expression Expression
     | SizeOfSType SType
-    | Builtin AST.CBuiltinExpr
+    | Builtin SBuiltin
     -- | Initializers can *only* appear on the right hand side of an assignment expression.
     -- Woe betide you if you do not abide by this rule.
     | InitializerList InitList
@@ -180,6 +180,9 @@ module Semantics.C.ASG
   data InitList = InitList [([Designator], Initializer)]
     deriving (Show, Eq, Typeable, Data)
   
+  data SBuiltin
+    = SVaArg Expression SType
+    deriving (Eq, Show, Typeable, Data)
   
   intToLiteral :: Int -> Expression
   intToLiteral i = Literal (CInteger (toInteger i))

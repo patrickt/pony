@@ -83,7 +83,10 @@ module Semantics.C.Reifiable.Instances
     convert (BinaryOp n lhs rhs) = Binary (convert lhs) n (convert rhs)
     convert (TernaryOp a b c) = Ternary (convert a) (convert b) (convert c)
     convert (SizeOfType decl) = SizeOfSType (convert decl)
-    convert (CBuiltin t) = Builtin t
+    convert (CBuiltin t) = Builtin (convert t)
+  
+  instance Reifiable CBuiltinExpr SBuiltin where
+    convert (BuiltinVaArg ex ty) = SVaArg (convert ex) (convert ty)
   
   instance Reifiable CStringLiteral Expression where
     convert lit = CStr s where

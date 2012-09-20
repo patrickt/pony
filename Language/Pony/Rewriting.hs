@@ -4,8 +4,6 @@
 module Language.Pony.Rewriting where
 
   import Semantics.C
-  import Language.C99.AST (CBuiltinExpr (BuiltinVaArg), CExpr (Constant), CTypeName (..), CDeclaration (..), 
-    CSpecifier (..), CTypeQualifier (..), CTypeSpecifier (..), CStorageSpecifier (..), CDeclInfo (..))
   import Language.C99.Literals
   import Generics.Regular.Rewriting
   import Generics.Regular.TH
@@ -46,38 +44,17 @@ module Language.Pony.Rewriting where
   deriveAll ''Expression "PFExpression"
   type instance PF Expression = PFExpression
 
-  deriveAll ''CBuiltinExpr "PFCBuiltinExpr"
-  type instance PF CBuiltinExpr = PFCBuiltinExpr
-
   deriveAll ''InitList "PFInitList"
   type instance PF InitList = PFInitList
 
   deriveAll ''SType "PFSType"
   type instance PF SType = PFSType
-
-  deriveAll ''CExpr "PFCExpr"
-  type instance PF CExpr = PFCExpr
-
-  deriveAll ''CTypeName "PFCTypeName"
-  type instance PF CTypeName = PFCTypeName
-
-  deriveAll ''CDeclaration "PFCDeclaration"
-  type instance PF CDeclaration = PFCDeclaration
-
-  deriveAll ''CSpecifier "PFCSpecifier"
-  type instance PF CSpecifier = PFCSpecifier
-
-  deriveAll ''CTypeSpecifier "PFCTypeSpecifier"
-  type instance PF CTypeSpecifier = PFCTypeSpecifier
-
-  deriveAll ''CStorageSpecifier "PFCStorageSpecifier"
-  type instance PF CStorageSpecifier = PFCStorageSpecifier
-
-  deriveAll ''CTypeQualifier "PFCTypeQualifier"
-  type instance PF CTypeQualifier = PFCTypeQualifier
-
-  deriveAll ''CDeclInfo "PFCDeclInfo"
-  type instance PF CDeclInfo = PFCDeclInfo
+  
+  deriveAll ''SGlobal "PFSGlobal"
+  type instance PF SGlobal = PFSGlobal
+  
+  deriveAll ''SBuiltin "PFSBuiltin"
+  type instance PF SBuiltin = PFSBuiltin
 
   instance (LRBase a) => LRBase (Maybe a) where
     leftb = Just leftb
@@ -135,26 +112,10 @@ module Language.Pony.Rewriting where
     leftb = Field leftb leftb leftb
     rightb = Field rightb rightb rightb
 
-  instance LRBase CExpr where
-    leftb = Constant leftb
-    rightb = Constant rightb
-
   instance LRBase InitList where
     leftb = InitList leftb
     rightb = InitList rightb
-
-  instance LRBase CTypeName where
-    leftb = CTypeName leftb
-    rightb = CTypeName rightb
-
-  instance LRBase CBuiltinExpr where
-    leftb = BuiltinVaArg leftb leftb
-    rightb = BuiltinVaArg rightb rightb
-
-  instance LRBase CDeclaration where
-    leftb = CDeclaration leftb leftb
-    rightb = CDeclaration rightb rightb
-
+  
   instance LRBase Designator where
     leftb = ArrayDesignator leftb
     rightb = ArrayDesignator rightb
@@ -162,34 +123,19 @@ module Language.Pony.Rewriting where
   instance LRBase Initializer where
     leftb = InitExpression leftb
     rightb = InitExpression rightb
-
-
-  instance LRBase CTypeSpecifier where
-    leftb = TVoid
-    rightb = TChar
-
-
-  instance LRBase CTypeQualifier where
-    leftb = CConst
-    rightb = CVolatile
-
-  instance LRBase CSpecifier where
-    leftb = TSpec leftb
-    rightb = TQual rightb
-
-  instance LRBase CStorageSpecifier where
-    leftb = CAuto
-    rightb = CRegister
-
-  instance LRBase CDeclInfo where
-    leftb = CDeclInfo Nothing Nothing leftb
-    rightb = CDeclInfo Nothing Nothing rightb
+  
+  instance LRBase SGlobal where
+    leftb = GTypedef leftb leftb
+    rightb = GEnumeration rightb
+  
+  instance LRBase SBuiltin where
+    leftb = SVaArg leftb leftb
+    rightb = SVaArg rightb rightb
 
   instance (LRBase a, LRBase b) => LRBase (a, b) where
     leftb = (leftb, leftb)
     rightb = (rightb, rightb)
-
-  instance Rewrite CSpecifier
+    
   instance Rewrite Enumeration
   instance Rewrite CompositeType
   instance Rewrite EnumerationInfo
@@ -201,6 +147,4 @@ module Language.Pony.Rewriting where
   instance Rewrite Parameter
   instance Rewrite CLiteral
   instance Rewrite SType
-  instance Rewrite CBuiltinExpr
-  instance Rewrite CDeclaration
   instance Rewrite Expression
