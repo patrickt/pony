@@ -17,7 +17,7 @@ module Semantics.C.Pretty
       <+> lbrace 
         $$ bodyContents 
       $$ rbrace
-        where parameters = hsep $ punctuate comma (pretty <$> params)
+        where parameters = commaSep params
               bodyContents = nest 2 (vcat $ pretty <$> body)
               ellipsis = if isVariadic then ", ..." else empty
   
@@ -47,7 +47,7 @@ module Semantics.C.Pretty
     pretty (SEnum i _) = pretty i
     pretty (STypedef s _ _) = text s
     pretty (SBuiltinType n _) = text n
-    pretty (SFunctionPointer t vs _) = parens' t <> parens (hsep $ punctuate comma (pretty <$> vs))
+    pretty (SFunctionPointer t vs _) = parens' t <> commaSep vs
     pretty whoops = error ("pretty-print not defined for " ++ show whoops)
   
   instance Pretty CompositeType where
@@ -63,7 +63,7 @@ module Semantics.C.Pretty
     pretty Restrict = "restrict"
     pretty Static = "static"
     pretty Volatile = "volatile"
-    pretty (Custom es) = "__attribute__" <> parens (parens (hsep $ punctuate comma (pretty <$> es)))
+    pretty (Custom es) = "__attribute__" <> parens (parens $ commaSep es)
   
   instance Pretty [Attribute] where
     pretty = hsep'
@@ -89,15 +89,15 @@ module Semantics.C.Pretty
     pretty (Variable n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
       pretty t <+> pretty n' <+> star <> pretty n
     -- stupid C and its stupid decision to put array sizes after the variable name
-    pretty (Variable n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
+    pretty (Variable n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (commaSep params) <> semicolon
     pretty (Variable n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size)
     pretty (Variable n t Nothing) = pretty t <+> pretty n
     pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
 
   instance Pretty Parameter where
-    pretty (Parameter Nothing (SFunctionPointer rt params _)) = pretty rt <+> parens star <> parens (hsep $ punctuate comma (pretty <$> params))
+    pretty (Parameter Nothing (SFunctionPointer rt params _)) = pretty rt <+> parens star <> parens (commaSep params)
     pretty (Parameter Nothing t) = pretty t
-    pretty (Parameter (Just n) (SFunctionPointer rt params _)) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params))
+    pretty (Parameter (Just n) (SFunctionPointer rt params _)) = pretty rt <+> parens (star <> pretty n) <> parens (commaSep params)
     pretty (Parameter (Just n) (SArray t Nothing _)) = pretty t <+> text n <> "[]"
     pretty (Parameter (Just n) t) = pretty t <+> text n
   
@@ -106,7 +106,7 @@ module Semantics.C.Pretty
       pretty t <+> pretty n' <+> star <> pretty n <> semicolon
     -- function pointer syntax is the devil, and when I say the devil, I actually mean
     -- Satan. You know, the guy who lives in Hell.
-    pretty (Field n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> pretty n) <> parens (hsep $ punctuate comma (pretty <$> params)) <> semicolon
+    pretty (Field n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> pretty n) <> parens (commaSep params) <> semicolon
     -- stupid C and its stupid decision to put array sizes after the variable name
     pretty (Field n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size) <> semicolon
     pretty (Field n t Nothing) = pretty t <+> pretty n <> semicolon
@@ -115,16 +115,14 @@ module Semantics.C.Pretty
   instance Pretty Statement where
     pretty (Asm True a b c d) = 
       "asm volatile" <> parens (pretty a <:> 
-                                csep b <:> 
-                                csep c <:> 
-                                csep d) where
-                                  csep x = hsep $ punctuate comma (pretty <$> x)
+                                commaSep b <:> 
+                                commaSep c <:> 
+                                commaSep d) where
     pretty (Asm False a b c d) = 
       "asm" <> parens (pretty a <:> 
-                       csep b <:> 
-                       csep c <:> 
-                       csep d) where
-                         csep x = hsep $ punctuate comma (pretty <$> x)
+                       commaSep b <:> 
+                       commaSep c <:> 
+                       commaSep d) where
     pretty Break = "break;" 
     pretty (Case e s) = "case" <+> pretty e <> colon <+> pretty s
     pretty (Compound b) = lbrace $$ nest 2 (vcat (pretty <$> b)) $$ rbrace
@@ -148,14 +146,14 @@ module Semantics.C.Pretty
     pretty (CInteger i) = textS i
     pretty (CChar c) = textS c
     pretty (CFloat f) = textS f
-    pretty (CString s) = textS   s
+    pretty (CString s) = textS s
 
   instance Pretty Expression where
     pretty (Literal l) = pretty l
     pretty (Ident n) = text n
     pretty (CStr n) = doubleQuotes $ text n
     pretty (Brackets lhs rhs) = pretty lhs <> brackets (pretty rhs)
-    pretty (FunctionCall lhs args) = pretty lhs <> parens (hcat $ punctuate comma (pretty <$> args))
+    pretty (FunctionCall lhs args) = pretty lhs <> parens (commaSep args)
     pretty (Cast t e) = parens' t <> pretty e
     pretty (Unary "++ post" e) = pretty e <> "++"
     pretty (Unary "-- post" e) = pretty e <> "--"
