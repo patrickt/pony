@@ -165,8 +165,11 @@ module Semantics.C.Pretty
     pretty (Binary lhs op rhs) = pretty lhs <+> text op <+> pretty rhs
     pretty (Ternary a b c) = pretty a <+> question <+> pretty b <+> colon <+> pretty c
     pretty (SizeOfSType t) = "sizeof" <> parens' t
-    pretty (Builtin b) = textS b
+    pretty (Builtin b) = pretty b
     pretty (InitializerList i) = braces $ pretty i
+  
+  instance Pretty SBuiltin where
+    pretty (SVaArg expr ty) = "va_arg" <> parens (pretty expr <> comma <+> pretty ty)
     
   instance Pretty InitList where
     pretty (InitList i) = braces $ hcat $ (r <$> i) where
