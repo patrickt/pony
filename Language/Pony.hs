@@ -1,71 +1,28 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
 module Language.Pony 
-  ( module Data.Generics
-  , module Language.Pony.Transformations
-  , module Language.Pony.Transformations.Utilities
-  , module Semantics.C
-  , module Language.C99.Literals
+  ( module Semantics.C.ASG
   , run
   , pony
-  , Operator (..)
-  , PonyOptions (..)
   ) 
   
   where
+    -- 
+    -- import Data.Generics hiding (empty)
+  -- import Language.C99
+    -- import Language.C99.Literals
+    -- import Language.Pony.Transformations
+    -- import Language.Pony.Transformations.Utilities
+  import Semantics.C.ASG
+  import Semantics.C.Reifiable
+  import Semantics.C.Reifiable.Instances
+  -- import System.Environment
   
-  import Data.Generics hiding (empty)
-  import Language.C99
-  import Language.C99.Literals
-  import Language.Pony.Transformations
-  import Language.Pony.Transformations.Utilities
-  import Semantics.C
-  import System.Environment
-  
-  data Operator 
-    = Arithmetic String
-    | Bitwise String 
-    | Comparative String
-    | Logical String
+  pony :: IO ()
+  pony = print "yay"
   
   run :: PonyOptions -> IO ()
-  run PonyOptions { output, operators, transformations } = do
-    -- todo support more than one output file.
-    args <- getArgs
-    let input = last args
-    let internals = internalsFromOperators operators
-    let trans = head transformations
-    result <- preprocessAndParse preprocessedC input internals
-    case result of
-      (Left parseError) -> print parseError
-      Right externs -> do
-        let converted = convert externs
-        let (MkTrans _ direction t) = trans
-        case direction of 
-          TopDown -> writeFile output (show $ pretty $ everywhere t converted)
-          BottomUp -> writeFile output (show $ pretty $ everywhere' t converted)
+  run _ = print "woo"
   
-  internalsFromOperators :: [Operator] -> Internals
-  internalsFromOperators ops = emptyInternals {
-    arithmeticOps = ariths,
-    comparativeOps = compars,
-    bitwiseOps = bitwises,
-    logicalOps = logics
-  } where 
-    ariths = [ a | (Arithmetic a) <- ops ]
-    compars = [ c | (Comparative c) <- ops ]
-    bitwises = [ b | (Bitwise b) <- ops ]
-    logics = [ q | (Logical q) <- ops ]
+  data PonyOptions = PonyOptions
   
-  data PonyOptions = PonyOptions 
-    { output :: FilePath
-    , operators :: [Operator]
-    , transformations :: [Transformation]
-    }
-  
-  pony :: PonyOptions
-  pony = PonyOptions 
-    { output          = "/dev/stdout"
-    , operators       = []
-    , transformations = []
-    }

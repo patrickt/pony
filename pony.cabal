@@ -24,7 +24,7 @@ Flag tests {
 
 Flag examples {
   Description:       Build example programs
-  Default:           True
+  Default:           False
 }
 
 Library {

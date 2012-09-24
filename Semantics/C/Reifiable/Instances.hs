@@ -5,6 +5,71 @@ module Semantics.C.Reifiable.Instances
 
   where
   
+  import Semantics.C.ASG
+  import Semantics.C.Reifiable
+  import Language.C99 hiding (char)
+  
+  instance Reifiable CAttribute
+  
+  instance Reifiable CTypeQualifier where
+    convert CConst    = In Const
+    convert CRestrict = In Restrict
+    convert CVolatile = In Volatile
+    convert CInline   = In Inline
+  
+  instance Reifiable CStorageSpecifier where
+    convert CAuto     = In Auto
+    convert CRegister = In Register
+    convert CStatic   = In Static
+    convert CExtern   = In Extern
+    convert (CAttr c) = In $ Custom (convert c)
+    convert CTypedef  = error "stray CTypedef passed to `convert`"
+  
+  -- This is where type aliases go, as defined in C99, 6.7.2.2
+  instance Reifiable [CTypeSpecifier] where
+    convert [TVoid]                         = In Void
+    convert [TChar]                         = In $ CharT (In Signed)
+        -- 
+        -- convert [TSigned, TChar]                = signedChar
+        -- convert [TUnsigned, TChar]              = unsignedChar
+        -- convert [TShort]                        = shortSignedInt
+        -- convert [TSigned, TShort]               = shortSignedInt
+        -- convert [TShort, TInt]                  = shortSignedInt
+        -- convert [TSigned, TShort, TInt]         = shortSignedInt
+        -- convert [TBool]                         = shortSignedInt
+        -- convert [TUnsigned, TShort]             = shortUnsignedInt
+        -- convert [TUnsigned, TShort, TInt]       = shortUnsignedInt
+        -- convert [TInt]                          = signedInt
+        -- convert [TSigned]                       = signedInt
+        -- convert [TSigned, TInt]                 = signedInt
+        -- convert [TUnsigned]                     = unsignedInt
+        -- convert [TUnsigned, TInt]               = unsignedInt
+        -- convert [TLong]                         = longSignedInt
+        -- convert [TSigned, TLong]                = longSignedInt
+        -- convert [TLong, TInt]                   = longSignedInt
+        -- convert [TSigned, TLong, TInt]          = longSignedInt
+        -- convert [TUnsigned, TLong]              = longUnsignedInt
+        -- convert [TLong, TUnsigned, TInt]        = longUnsignedInt
+        -- convert [TUnsigned, TLong, TInt]        = longUnsignedInt
+        -- convert [TLong, TLong]                  = longLongSignedInt
+        -- convert [TSigned, TLong, TLong]         = longLongSignedInt
+        -- convert [TLong, TLong, TInt]            = longLongSignedInt
+        -- convert [TSigned, TLong, TLong, TInt]   = longLongSignedInt
+        -- convert [TUnsigned, TLong, TLong]       = longLongSignedInt
+        -- convert [TUnsigned, TLong, TLong, TInt] = longLongSignedInt
+        -- convert [TInt128]                       = int128
+        -- convert [TUInt128]                      = uint128
+        -- convert [TFloat]                        = float
+        -- convert [TDouble]                       = double
+        -- convert [TLong, TDouble]                = longDouble
+        -- convert [t@(TStructOrUnion _ _ _ as)]   = SComposite (convertComposite t) (convert <$> as)
+        -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
+        -- convert [TTypedef n d]                  = STypedef n (convert d) []
+        -- convert [TBuiltin s]                    = SBuiltinType s []
+        -- convert other                           = error ("unknown type " ++ show other)
+  
+  {-
+  
   import Language.C99 hiding (char)
   import Semantics.C.ASG
   import Semantics.C.Reifiable
@@ -97,20 +162,6 @@ module Semantics.C.Reifiable.Instances
   
   instance Reifiable CAttribute Attribute where
     convert (CAttribute e) = Custom (convert <$> e)
-  
-  instance Reifiable CStorageSpecifier Attribute where
-    convert CAuto     = Auto
-    convert CRegister = Register
-    convert CStatic   = Static
-    convert CExtern   = Extern
-    convert (CAttr c) = convert c
-    convert CTypedef  = error "stray CTypedef passed to `convert`"
-    
-  instance Reifiable CTypeQualifier Attribute where
-    convert CConst    = Const
-    convert CRestrict = Restrict
-    convert CVolatile = Volatile
-    convert CInline   = Inline
   
   instance Reifiable CTypeSpecifier SType where
     convert x = convert [x]
@@ -273,3 +324,5 @@ module Semantics.C.Reifiable.Instances
 
   convertDeclarationToLocal :: CDeclaration -> Maybe Local
   convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
+  
+  -}
