@@ -4,10 +4,14 @@ module Semantics.C.Reifiable.Instances
   ( Reifiable(..) )
 
   where
+    
+  -- TODO: CaseStmt is broken, needs to have a list of locals? I think?
+  -- and switchstmt
   
   import Semantics.C.ASG
   import Semantics.C.Reifiable
-  import Language.C99 hiding (char)
+  import Language.C99 hiding (char, Empty)
+  import Language.Pony.MachineSizes
   
   instance Reifiable CAttribute
   
@@ -24,49 +28,99 @@ module Semantics.C.Reifiable.Instances
     convert CExtern   = In Extern
     convert (CAttr c) = In $ Custom (convert c)
     convert CTypedef  = error "stray CTypedef passed to `convert`"
+    
+  instance Reifiable CTypeSpecifier where
+    convert x = convert [x]
   
   -- This is where type aliases go, as defined in C99, 6.7.2.2
   instance Reifiable [CTypeSpecifier] where
-    convert [TVoid]                         = In Void
-    convert [TChar]                         = In $ CharT (In Signed)
-        -- 
-        -- convert [TSigned, TChar]                = signedChar
-        -- convert [TUnsigned, TChar]              = unsignedChar
-        -- convert [TShort]                        = shortSignedInt
-        -- convert [TSigned, TShort]               = shortSignedInt
-        -- convert [TShort, TInt]                  = shortSignedInt
-        -- convert [TSigned, TShort, TInt]         = shortSignedInt
-        -- convert [TBool]                         = shortSignedInt
-        -- convert [TUnsigned, TShort]             = shortUnsignedInt
-        -- convert [TUnsigned, TShort, TInt]       = shortUnsignedInt
-        -- convert [TInt]                          = signedInt
-        -- convert [TSigned]                       = signedInt
-        -- convert [TSigned, TInt]                 = signedInt
-        -- convert [TUnsigned]                     = unsignedInt
-        -- convert [TUnsigned, TInt]               = unsignedInt
-        -- convert [TLong]                         = longSignedInt
-        -- convert [TSigned, TLong]                = longSignedInt
-        -- convert [TLong, TInt]                   = longSignedInt
-        -- convert [TSigned, TLong, TInt]          = longSignedInt
-        -- convert [TUnsigned, TLong]              = longUnsignedInt
-        -- convert [TLong, TUnsigned, TInt]        = longUnsignedInt
-        -- convert [TUnsigned, TLong, TInt]        = longUnsignedInt
-        -- convert [TLong, TLong]                  = longLongSignedInt
-        -- convert [TSigned, TLong, TLong]         = longLongSignedInt
-        -- convert [TLong, TLong, TInt]            = longLongSignedInt
-        -- convert [TSigned, TLong, TLong, TInt]   = longLongSignedInt
-        -- convert [TUnsigned, TLong, TLong]       = longLongSignedInt
-        -- convert [TUnsigned, TLong, TLong, TInt] = longLongSignedInt
-        -- convert [TInt128]                       = int128
-        -- convert [TUInt128]                      = uint128
-        -- convert [TFloat]                        = float
-        -- convert [TDouble]                       = double
-        -- convert [TLong, TDouble]                = longDouble
-        -- convert [t@(TStructOrUnion _ _ _ as)]   = SComposite (convertComposite t) (convert <$> as)
-        -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
-        -- convert [TTypedef n d]                  = STypedef n (convert d) []
-        -- convert [TBuiltin s]                    = SBuiltinType s []
-        -- convert other                           = error ("unknown type " ++ show other)
+    convert [TVoid]                         = void'
+    convert [TChar]                         = signed' CharT
+    convert [TSigned, TChar]                = signed' CharT
+    convert [TUnsigned, TChar]              = unsigned' CharT
+    convert [TShort]                        = int' sizeOfShort Signed
+    convert [TSigned, TShort]               = int' sizeOfShort Signed
+    convert [TShort, TInt]                  = int' sizeOfShort Signed
+    convert [TSigned, TShort, TInt]         = int' sizeOfShort Signed
+    convert [TBool]                         = int' sizeOfShort Signed -- this is probably wrong
+    convert [TUnsigned, TShort]             = int' sizeOfShort Unsigned
+    convert [TUnsigned, TShort, TInt]       = int' sizeOfShort Unsigned
+    convert [TInt]                          = int' sizeOfInt Signed
+    convert [TSigned]                       = int' sizeOfInt Signed
+    convert [TSigned, TInt]                 = int' sizeOfInt Signed
+    convert [TUnsigned]                     = int' sizeOfInt Unsigned
+    convert [TUnsigned, TInt]               = int' sizeOfInt Unsigned
+    convert [TLong]                         = int' sizeOfLong Signed
+    convert [TSigned, TLong]                = int' sizeOfLong Signed
+    convert [TLong, TInt]                   = int' sizeOfLong Signed
+    convert [TSigned, TLong, TInt]          = int' sizeOfLong Signed
+    convert [TUnsigned, TLong]              = int' sizeOfLong Unsigned
+    convert [TLong, TUnsigned, TInt]        = int' sizeOfLong Unsigned
+    convert [TUnsigned, TLong, TInt]        = int' sizeOfLong Unsigned
+    convert [TLong, TLong]                  = int' sizeOfLongLong Signed
+    convert [TSigned, TLong, TLong]         = int' sizeOfLongLong Signed
+    convert [TLong, TLong, TInt]            = int' sizeOfLongLong Signed
+    convert [TSigned, TLong, TLong, TInt]   = int' sizeOfLongLong Unsigned
+    convert [TUnsigned, TLong, TLong]       = int' sizeOfLongLong Unsigned
+    convert [TUnsigned, TLong, TLong, TInt] = int' sizeOfLongLong Unsigned
+    convert [TInt128]                       = int' sizeOfInt128 Signed
+    convert [TUInt128]                      = int' sizeOfInt128 Unsigned
+    -- convert [TFloat]                        = float
+    -- convert [TDouble]                       = double
+    -- convert [TLong, TDouble]                = longDouble
+    -- convert [t@(TStructOrUnion _ _ _ as)]   = SComposite (convertComposite t) (convert <$> as)
+    -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
+    -- convert [TTypedef n d]                  = STypedef n (convert d) []
+    -- convert [TBuiltin s]                    = SBuiltinType s []
+    convert other                           = error ("unknown type " ++ show other)
+  
+  instance Reifiable CStatement where
+    -- convert (AsmStmt tq (Simple s)) = Asm (isJust tq) (convert s) [] [] []
+    -- convert (AsmStmt tq (GCCAsm s inR outR clobber)) 
+      -- = Asm (isJust tq) (convert s) (convert <$> inR) (convert <$> outR) (convert <$> clobber) 
+    convert BreakStmt = In Break
+    convert (CaseStmt ex st) = In $ Case (convert ex) [convert st]
+    convert (CompoundStmt bis) = In $ Compound (convert <$> bis)
+    convert ContinueStmt = In Continue
+    convert (DefaultStmt st) = In $ Default (convert st)
+    convert (DoWhileStmt st e) = In $ DoWhile (convert st) (convert e)
+    convert EmptyStmt = In Empty
+    convert (ExpressionStmt ex) = convert ex
+    convert (ForStmt e1 e2 e3 s) = In $ For 
+      (convert <$> e1)
+      (convert <$> e2)
+      (convert <$> e3)
+      (convert s)
+    convert (ForDeclStmt d e2 e3 s) = In $ For
+      (Just $ convert d)
+      (convert <$> e2)
+      (convert <$> e3)
+      (convert s)
+    convert (GotoStmt s) = In $ Goto (convert s)
+    convert (IfStmt e s Nothing) = In $ IfThen (convert e) (convert s)
+    convert (IfStmt e s (Just s2)) = In $ IfThenElse (convert e) (convert s) (convert s2)
+    -- convert (LabeledStmt l attrs s) = Labeled l (convert <$> attrs) (convert s)
+    convert (ReturnStmt mE) = In $ Return (convert <$> mE)
+    convert (SwitchStmt ex st) = In $ Switch (convert ex) [convert st]
+    convert (WhileStmt ex st) = In $ While (convert ex) (convert st)
+  
+  instance Reifiable CExpr where
+    convert (Comma _)            = error "BUG: COMMA NOT DEFINED YET"
+    convert (Constant l)         = convert l
+    convert (Identifier i)       = name' i
+    convert (Index l r)          = In $ Brackets (convert l) (convert r)
+    convert (Call f args)        = In $ FunCall (convert f) (convert <$> args)
+    convert (CCast tn arg)       = In $ Cast (convert tn) (convert arg)
+    convert (UnaryOp n arg)      = In $ Unary (name' n) (convert arg)
+    convert (BinaryOp n lhs rhs) = In $ Binary (convert lhs) (name' n) (convert rhs)
+    convert (TernaryOp a b c)    = In $ Ternary (convert a) (convert b) (convert c)
+    convert (SizeOfType decl)    = In $ Unary (name' "sizeof") (convert decl)
+    -- convert (CBuiltin t)      = Builtin (convert t)
+  
+  instance Reifiable CBlockItem
+  instance Reifiable CDeclaration
+  instance Reifiable CLiteral
+  instance Reifiable CTypeName
   
   {-
   

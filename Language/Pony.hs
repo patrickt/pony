@@ -9,7 +9,7 @@ module Language.Pony
   where
     -- 
     -- import Data.Generics hiding (empty)
-  -- import Language.C99
+  import Language.C99
     -- import Language.C99.Literals
     -- import Language.Pony.Transformations
     -- import Language.Pony.Transformations.Utilities

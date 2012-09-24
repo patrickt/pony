@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, GADTs, KindSignatures #-}
+{-# LANGUAGE DeriveDataTypeable, GADTs, KindSignatures, StandaloneDeriving, DeriveFunctor #-}
 
 module Semantics.C.ASG where
   
@@ -61,11 +61,12 @@ module Semantics.C.ASG where
     -- statements
     Break      :: SStatement a
     Case       :: a -> [a] -> SStatement a
+    Continue   :: SStatement a
     Compound   :: [a] -> SStatement a
     Default    :: a -> SStatement a
     DoWhile    :: a -> a -> SStatement a
     Empty      :: SStatement a
-    For        :: Maybe a -> Maybe a -> Maybe a -> SStatement a
+    For        :: Maybe a -> Maybe a -> Maybe a -> a -> SStatement a
     Goto       :: a -> SStatement a
     IfThen     :: a -> a -> SStatement a
     IfThenElse :: a -> a -> a -> SStatement a
@@ -75,13 +76,15 @@ module Semantics.C.ASG where
     While      :: a -> a -> SStatement a
   
     -- expressions
-    CStr    :: String -> SExpr a
-    CInt    :: Integer -> SExpr a
-    CFloat  :: Double -> SExpr a
-    Unary   :: a -> SExpr a
-    Binary  :: a -> a -> a -> SExpr a
-    Ternary :: a -> a -> a -> SExpr a
-    Cast    :: a -> a -> SExpr a
+    CStr     :: String -> SExpr a
+    CInt     :: Integer -> SExpr a
+    CFloat   :: Double -> SExpr a
+    Unary    :: a -> a -> SExpr a
+    Binary   :: a -> a -> a -> SExpr a
+    Ternary  :: a -> a -> a -> SExpr a
+    Cast     :: a -> a -> SExpr a
+    Brackets :: a -> a -> SExpr a
+    FunCall  :: a -> [a] -> SExpr a
   
     -- attributes
     Auto     :: SAttr a
@@ -97,5 +100,15 @@ module Semantics.C.ASG where
     -- other stuff
     Variable :: a -> a -> Maybe a -> Sem a
   
-
+  deriving instance (Show a) => Show (Sem a)
+  deriving instance Functor Sem
+  
+  signed' t = In (t (In Signed))
+  unsigned' t = In (t (In Unsigned))
+  int' size sign = In (IntT (In (Size size)) (In sign))
+  
+  void' = In Void
+  char' s = In (CharT s)
+  name' n = In (Name n)
+  
   
