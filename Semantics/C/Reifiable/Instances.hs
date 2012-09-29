@@ -9,7 +9,8 @@ module Semantics.C.Reifiable.Instances
   import Language.C99 hiding (char, Empty)
   import qualified Language.C99.Literals as Lit
   import Language.Pony.MachineSizes
-  import Data.List (find)
+  import Data.List (find, foldl')
+  import Data.Functor.Fix
   
   -- CTranslationUnit -> Program.
   -- hits: CExternal -> global
@@ -30,15 +31,23 @@ module Semantics.C.Reifiable.Instances
   -- so that we don't have to define a bunch of helper functions
   newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
   newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
-  newtype TypeDeclaration              = TD  { unTD  :: CDeclaration }
+  
+  
   newtype DerivedTypeDeclaration       = DTD { unDT  :: ([CSpecifier], CDeclarator)}
+  instance Reifiable DerivedTypeDeclaration where
+    convert (DTD (specs, decl)) = foldl' augment (convert specs) (derived decl) where
+      -- so buggy, ignores qualifiers and sizes
+      augment :: Fix Sem -> CDerivedDeclarator -> Fix Sem
+      augment t (Pointer qs) = tie $ PointerToT t
+      augment t (Array qs size) = tie $ ArrayT t (tie Empty)
+      augment t (DerivedFunction args variadic) = tie $ FunctionPointerT t (convert <$> args)
   
   -- CExternal -> Typedef
   -- hits: TypeDeclaration -> Type
   newtype TypedefDeclaration = TdD { unTdD  :: CDeclaration }
-  instance Reifiable TypedefDeclaration where
-    convert (TdD decl) = tie $ Typedef n $ convert $ TD $ dropTypedef decl
-      where (Just n) = name' <$> nameOfDeclaration decl
+  instance Reifiable TypedefDeclaration -- where
+  --   convert (TdD decl) = tie $ Typedef n $ convert $ DTD ([], dropTypedef decl)
+  --     where (Just n) = name' <$> nameOfDeclaration decl
   
   -- CExternal -> Variable 
   -- the more and more I go on the less and less sure I am about the Variable/Declarations split
@@ -55,8 +64,6 @@ module Semantics.C.Reifiable.Instances
     
   instance Reifiable CompositeDeclaration
   instance Reifiable FunctionPrototypeDeclaration
-  instance Reifiable TypeDeclaration
-  instance Reifiable DerivedTypeDeclaration
   instance Reifiable CDeclaration
   
   instance Reifiable CInitializer
@@ -75,9 +82,11 @@ module Semantics.C.Reifiable.Instances
   -- hits: declaration + specifiers -> type
   newtype FunctionType = FT { unFT :: CFunction }
   instance Reifiable FunctionType where
-    -- In the old code we dropped the first derived declarator. Why did we do that?
-    convert (FT (CFunction specs decl _)) = convert $ DTD (relevantSpecs, decl) where
+    -- We have to drop the first derived declarator from `decl` here because function declarators
+    -- are parsed as function pointers (makes sense, really) but we don't want to consider them as such here.
+    convert (FT (CFunction specs decl _)) = convert $ DTD (relevantSpecs, prunedDecl) where
       relevantSpecs = filter (not . specifierBelongsToFunction) specs
+      prunedDecl = decl { derived = tail $ derived decl }
   
   -- CFunction -> Declarations
   -- hits: CParameter -> Variable

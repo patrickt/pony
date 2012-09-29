@@ -6,6 +6,7 @@ module Semantics.C.Reifiable
   
   import Data.Generics
   import Semantics.C.ASG
+  import Data.Functor.Fix
   
   class Reifiable abstract where
     convert :: abstract -> Fix Sem

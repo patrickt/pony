@@ -6,11 +6,10 @@ module Semantics.C.ASG where
   import Language.Pony.Prelude
   import Data.Generics
   import Language.Pony.MachineSizes
+  import Data.Functor.Fix
   
   catamorph :: Functor f => (f a -> a) -> Fix f -> a
   catamorph f (In t) = f (fmap (catamorph f) t)
-
-  newtype Fix f = In { out :: f (Fix f) }
   
   type SName       = Sem
   type SFunction   = Sem
@@ -54,6 +53,8 @@ module Semantics.C.ASG where
   
     -- Array :: Type -> Length -> Type
     ArrayT :: a -> a -> SType a
+    
+    FunctionPointerT :: a -> [a] -> SType a
     
     -- Builtin :: Name -> Type
     BuiltinT :: a -> SType a
@@ -112,8 +113,6 @@ module Semantics.C.ASG where
   
   deriving instance (Show a) => Show (Sem a)
   deriving instance Functor Sem
-  
-  
   
   tie = In
   
