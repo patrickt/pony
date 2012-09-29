@@ -37,7 +37,6 @@ module Semantics.C.ASG where
     Attributed :: [a] -> a -> Sem a
   
     -- types
-    
     VoidT :: SType a
   
     -- Int :: Size -> Signedness -> Type

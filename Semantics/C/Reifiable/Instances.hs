@@ -2,11 +2,7 @@
 
 module Semantics.C.Reifiable.Instances 
   ( Reifiable(..) )
-
   where
-    
-  -- TODO: CaseStmt is broken, needs to have a list of locals? I think?
-  -- and switchstmt
   
   import Semantics.C.ASG as ASG
   import Semantics.C.Reifiable
@@ -16,7 +12,7 @@ module Semantics.C.Reifiable.Instances
   import Data.List (find)
   
   -- CTranslationUnit -> Program.
-  -- hits: list of CExternals
+  -- hits: CExternal -> global
   instance Reifiable CTranslationUnit where
     convert ts = tie $ Program $ convert <$> ts
   
@@ -83,7 +79,8 @@ module Semantics.C.Reifiable.Instances
     convert (FT (CFunction specs decl _)) = convert $ DTD (relevantSpecs, decl) where
       relevantSpecs = filter (not . specifierBelongsToFunction) specs
   
-  
+  -- CFunction -> Declarations
+  -- hits: CParameter -> Variable
   newtype FunctionArgs = FA { unFA :: CDeclarator }
   instance Reifiable FunctionArgs where
     -- we're going to find one and only one (assuming the parser is right) 
@@ -93,11 +90,14 @@ module Semantics.C.Reifiable.Instances
             isFunction (DerivedFunction _ _) = True
             isFunction _ = False
   
+  -- CParameter -> Variable
+  -- hits: declaration+specifiers -> type
   instance Reifiable CParameter where
     convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = 
       tie $ Variable n (convert (DTD (specs, contents))) Nothing where (Just n) = name' <$> declName contents
     convert (CParameter (CDeclaration specs _)) = tie $ Variable (tie Empty) (convert specs) Nothing
   
+  -- CBlockItem -> Variable | Expression
   instance Reifiable CBlockItem where
     convert (Left decl)  = convert (VD decl)
     convert (Right stmt) = convert stmt
@@ -193,7 +193,8 @@ module Semantics.C.Reifiable.Instances
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
     convert other                           = error ("unknown type " ++ show other)
   
-
+  -- CExpr -> expression
+  -- hits: CLiteral -> constant, CBuiltInExpr -> expression
   instance Reifiable CExpr where
     convert (Comma _)            = error "BUG: COMMA NOT DEFINED YET"
     convert (Constant l)         = convert l
