@@ -44,8 +44,9 @@ module Semantics.C.ASG where
     -- Int :: Size -> Signedness -> Type
     IntT :: a -> a -> SType a
   
-    -- Float :: Size -> Type
-    FloatT :: a -> SType a
+    FloatT :: SType a
+    DoubleT :: SType a
+    LongDoubleT :: SType a
   
     -- Char  :: Signedness -> Type
     CharT :: a -> SType a
@@ -101,8 +102,12 @@ module Semantics.C.ASG where
   
     -- other stuff
     Program :: [a] -> Sem a
+    
+    -- gotta be a nicer way to do this
+    -- name -> type -> initial value?
     Variable :: a -> a -> Maybe a -> Sem a
     Declarations :: [a] -> Sem a
+    Typedef :: a -> a -> Sem a
   
   deriving instance (Show a) => Show (Sem a)
   deriving instance Functor Sem
