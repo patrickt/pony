@@ -37,9 +37,8 @@ module Semantics.C.ASG where
     Attributed :: [a] -> a -> Sem a
   
     -- types
-  
-    -- it's void
-    Void :: SType a
+    
+    VoidT :: SType a
   
     -- Int :: Size -> Signedness -> Type
     IntT :: a -> a -> SType a
@@ -52,10 +51,13 @@ module Semantics.C.ASG where
     CharT :: a -> SType a
   
     -- Pointer :: Type -> Type
-    PointerTo :: a -> SType a
+    PointerToT :: a -> SType a
   
     -- Array :: Type -> Length -> Type
-    Array :: a -> a -> SType a
+    ArrayT :: a -> a -> SType a
+    
+    -- Builtin :: Name -> Type
+    BuiltinT :: a -> SType a
   
     -- TODO: composite types
   
@@ -120,7 +122,7 @@ module Semantics.C.ASG where
   unsigned' t = In (t (In Unsigned))
   int' size sign = In (IntT (In (Size size)) (In sign))
   
-  void' = In Void
+  void' = In VoidT
   char' s = In (CharT s)
   name' n = In (Name n)
   

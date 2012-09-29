@@ -25,27 +25,49 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CExternal where
     convert (FunctionDecl f) = convert f
     convert (ExternDecl d) 
-      | declarationIsTypedef d                                    = convert (TD d)
+      | declarationIsTypedef d                                    = convert (TdD d)
       | declarationIsComposite d && not (declarationHasPointer d) = convert (CD d)
       | declarationIsFunctionPrototype d                          = convert (FPD d)
       | otherwise                                                 = convert d
   
   -- here we get very clever and define newtypes for the different parts of a function
   -- so that we don't have to define a bunch of helper functions
-  newtype TypedefDeclaration           = TD  { unTD  :: CDeclaration }
   newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
   newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
-  newtype MultiVariableDeclaration     = MVD { unMVD :: CDeclaration }
+  newtype TypeDeclaration              = TD  { unTD  :: CDeclaration }
   newtype DerivedTypeDeclaration       = DTD { unDT  :: ([CSpecifier], CDeclarator)}
   
-  instance Reifiable TypedefDeclaration
+  -- CExternal -> Typedef
+  -- hits: TypeDeclaration -> Type
+  newtype TypedefDeclaration = TdD { unTdD  :: CDeclaration }
+  instance Reifiable TypedefDeclaration where
+    convert (TdD decl) = tie $ Typedef n $ convert $ TD $ dropTypedef decl
+      where (Just n) = name' <$> nameOfDeclaration decl
+  
+  -- CExternal -> Variable 
+  -- the more and more I go on the less and less sure I am about the Variable/Declarations split
+  -- hits: TypeDeclaration -> Type, CInitializer -> ???
+  newtype VariableDeclaration = VD  { unVD  :: CDeclaration }
+  instance Reifiable VariableDeclaration where
+    -- if there's just a declaration, just get the name and compute the type
+    convert (VD (CDeclaration specs [CDeclInfo { contents = Just decl, initVal, .. }])) 
+      = tie $ Variable n vartype initial
+        where 
+          (Just n) = name' <$> declName decl
+          vartype = convert (DTD (specs, decl))
+          initial = convert <$> initVal
+    
   instance Reifiable CompositeDeclaration
   instance Reifiable FunctionPrototypeDeclaration
+  instance Reifiable TypeDeclaration
   instance Reifiable DerivedTypeDeclaration
   instance Reifiable CDeclaration
   
-  -- TODO: deal with variadicity
+  instance Reifiable CInitializer
   
+  -- TODO: deal with variadicity
+  -- CFunction -> Function
+  -- hits: CFunction -> Type, FunctionArgs -> Declarations, BlockItem -> Declarations | Statement
   instance Reifiable CFunction where
     convert f@(CFunction _ decl (CompoundStmt body)) = tie $ Function ftype fname fargs fbody
       where ftype        = convert  $  FT f
@@ -53,16 +75,19 @@ module Semantics.C.Reifiable.Instances
             fargs        = convert  $  FA decl
             fbody        = convert <$> body
   
-  -- In the old code we dropped the first derived declarator. Why did we do that?
+  -- CFunction -> Type
+  -- hits: declaration + specifiers -> type
   newtype FunctionType = FT { unFT :: CFunction }
   instance Reifiable FunctionType where
+    -- In the old code we dropped the first derived declarator. Why did we do that?
     convert (FT (CFunction specs decl _)) = convert $ DTD (relevantSpecs, decl) where
       relevantSpecs = filter (not . specifierBelongsToFunction) specs
-
-  -- we're going to find one and only one (assuming the parser is right) 
-  -- DerivedFunction derived declarator inside here, and it's going to have a list of CParameters. we convert those into Variables.
+  
+  
   newtype FunctionArgs = FA { unFA :: CDeclarator }
   instance Reifiable FunctionArgs where
+    -- we're going to find one and only one (assuming the parser is right) 
+    -- DerivedFunction derived declarator inside here, and it's going to have a list of CParameters. we convert those into Variables.
     convert (FA (CDeclarator _ derived _ _)) = tie $ Declarations $ convert <$> args
       where (Just (DerivedFunction args _)) = find isFunction derived
             isFunction (DerivedFunction _ _) = True
@@ -74,22 +99,22 @@ module Semantics.C.Reifiable.Instances
     convert (CParameter (CDeclaration specs _)) = tie $ Variable (tie Empty) (convert specs) Nothing
   
   instance Reifiable CBlockItem where
-    convert (Left decl)  = convert decl
+    convert (Left decl)  = convert (VD decl)
     convert (Right stmt) = convert stmt
   
   instance Reifiable CStatement where
     -- convert (AsmStmt tq (Simple s)) = Asm (isJust tq) (convert s) [] [] []
     -- convert (AsmStmt tq (GCCAsm s inR outR clobber)) 
       --                         = Asm (isJust tq) (convert s) (convert <$> inR) (convert <$> outR) (convert <$> clobber) 
-    convert BreakStmt            = In Break
-    convert (CaseStmt ex st)     = In $ Case (convert ex) [convert st]
-    convert (CompoundStmt bis)   = In $ Compound (convert <$> bis)
-    convert ContinueStmt         = In Continue
-    convert (DefaultStmt st)     = In $ Default (convert st)
-    convert (DoWhileStmt st e)   = In $ DoWhile (convert st) (convert e)
-    convert EmptyStmt            = In Empty
+    convert BreakStmt            = tie Break
+    convert (CaseStmt ex st)     = tie $ Case (convert ex) [convert st]
+    convert (CompoundStmt bis)   = tie $ Compound (convert <$> bis)
+    convert ContinueStmt         = tie Continue
+    convert (DefaultStmt st)     = tie $ Default (convert st)
+    convert (DoWhileStmt st e)   = tie $ DoWhile (convert st) (convert e)
+    convert EmptyStmt            = tie Empty
     convert (ExpressionStmt ex)  = convert ex
-    convert (ForStmt e1 e2 e3 s) = In $ For 
+    convert (ForStmt e1 e2 e3 s) = tie $ For 
       (convert <$> e1)
       (convert <$> e2)
       (convert <$> e3)
@@ -99,30 +124,30 @@ module Semantics.C.Reifiable.Instances
       (convert <$> e2)
       (convert <$> e3)
       (convert s)
-    convert (GotoStmt s)            = In $ Goto (convert s)
-    convert (IfStmt e s Nothing)    = In $ IfThen (convert e) (convert s)
-    convert (IfStmt e s (Just s2))  = In $ IfThenElse (convert e) (convert s) (convert s2)
+    convert (GotoStmt s)            = tie $ Goto (convert s)
+    convert (IfStmt e s Nothing)    = tie $ IfThen (convert e) (convert s)
+    convert (IfStmt e s (Just s2))  = tie $ IfThenElse (convert e) (convert s) (convert s2)
     convert (LabeledStmt l [] s)    = tie $ Labeled (name' l) (convert s)
     convert (LabeledStmt l attrs s) = tie $ Attributed (convert <$> attrs) $ convert (LabeledStmt l [] s)
-    convert (ReturnStmt mE)         = In $ Return (convert <$> mE)
-    convert (SwitchStmt ex st)      = In $ Switch (convert ex) [convert st]
-    convert (WhileStmt ex st)       = In $ While (convert ex) (convert st)
+    convert (ReturnStmt mE)         = tie $ Return (convert <$> mE)
+    convert (SwitchStmt ex st)      = tie $ Switch (convert ex) [convert st]
+    convert (WhileStmt ex st)       = tie $ While (convert ex) (convert st)
   
   
   instance Reifiable CAttribute where
     convert (CAttribute a) = tie $ Custom (convert <$> a)
   
   instance Reifiable CTypeQualifier where
-    convert CConst    = In Const
-    convert CRestrict = In Restrict
-    convert CVolatile = In Volatile
-    convert CInline   = In Inline
+    convert CConst    = tie Const
+    convert CRestrict = tie Restrict
+    convert CVolatile = tie Volatile
+    convert CInline   = tie Inline
   
   instance Reifiable CStorageSpecifier where
-    convert CAuto     = In Auto
-    convert CRegister = In Register
-    convert CStatic   = In Static
-    convert CExtern   = In Extern
+    convert CAuto     = tie Auto
+    convert CRegister = tie Register
+    convert CStatic   = tie Static
+    convert CExtern   = tie Extern
     convert (CAttr c) = convert c
     convert CTypedef  = error "stray CTypedef passed to `convert`"
   
@@ -165,7 +190,7 @@ module Semantics.C.Reifiable.Instances
     -- convert [t@(TStructOrUnion _ _ _ as)]   = SComposite (convertComposite t) (convert <$> as)
     -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
     convert [TTypedef n d]                  = tie $ Typedef (name' n) (convert d)
-    -- convert [TBuiltin s]                    = SBuiltinType s []
+    convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
     convert other                           = error ("unknown type " ++ show other)
   
 
@@ -223,20 +248,6 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CEnumerator Enumeration where
     convert (EnumIdent s) = Enumeration s Nothing
     convert (EnumAssign s expr) = Enumeration s (Just (convert expr))
-  
-  -- TODO: Handle initializer lists here.
-  convertDeclarationToVariable :: CDeclaration -> Maybe Variable
-  convertDeclarationToVariable (CDeclaration specs [CDeclInfo { contents = Just decl
-                                                              , initVal = Just (CInitExpression e)
-                                                              , size = Nothing}]) = 
-                                                                let (Just name) = declName decl
-                                                                in Just (Variable name (extractTypeFromComponents specs decl) (Just (convert e)))
-  convertDeclarationToVariable (CDeclaration specs [CDeclInfo { contents = Just decl
-                                                              , initVal = Nothing
-                                                              , size = Nothing }]) = 
-                                                                let (Just name) = declName decl
-                                                                in Just (Variable name (extractTypeFromComponents specs decl) Nothing)
-  convertDeclarationToVariable _ = Nothing
   
   -- | A declaration can refer to multiple variables, for example:
   -- @int foo, bar, baz;@
