@@ -8,12 +8,14 @@ module Semantics.C.Reifiable.Instances
   -- TODO: CaseStmt is broken, needs to have a list of locals? I think?
   -- and switchstmt
   
-  import Semantics.C.ASG
+  import Semantics.C.ASG as ASG
   import Semantics.C.Reifiable
   import Language.C99 hiding (char, Empty)
+  import qualified Language.C99.Literals as Lit
   import Language.Pony.MachineSizes
   
-  instance Reifiable CAttribute
+  instance Reifiable CAttribute where
+    convert (CAttribute a) = tie $ Custom (convert <$> a)
   
   instance Reifiable CTypeQualifier where
     convert CConst    = In Const
@@ -26,7 +28,7 @@ module Semantics.C.Reifiable.Instances
     convert CRegister = In Register
     convert CStatic   = In Static
     convert CExtern   = In Extern
-    convert (CAttr c) = In $ Custom (convert c)
+    convert (CAttr c) = convert c
     convert CTypedef  = error "stray CTypedef passed to `convert`"
     
   instance Reifiable CTypeSpecifier where
@@ -115,12 +117,64 @@ module Semantics.C.Reifiable.Instances
     convert (BinaryOp n lhs rhs) = In $ Binary (convert lhs) (name' n) (convert rhs)
     convert (TernaryOp a b c)    = In $ Ternary (convert a) (convert b) (convert c)
     convert (SizeOfType decl)    = In $ Unary (name' "sizeof") (convert decl)
-    -- convert (CBuiltin t)      = Builtin (convert t)
+    convert (CBuiltin t)         = convert t
   
-  instance Reifiable CBlockItem
+  instance Reifiable CStringLiteral where
+    convert = convert . getExpr
+    
+  instance Reifiable CLiteral where
+    convert (Lit.CInteger i) = tie $ ASG.CInt i
+    convert (Lit.CChar c)    = tie $ ASG.CChar c
+    convert (Lit.CFloat f)   = tie $ ASG.CFloat f
+    convert (Lit.CString s)  = tie $ ASG.CStr s
+    
   instance Reifiable CDeclaration
-  instance Reifiable CLiteral
-  instance Reifiable CTypeName
+  
+  instance Reifiable CBlockItem where
+    convert (Left decl)  = convert decl
+    convert (Right stmt) = convert stmt
+  
+  instance Reifiable [CSpecifier] where
+    convert them = case (specs, quals) of
+      ([], [])  -> baseT
+      otherwise -> tie $ Attributed (specs ++ quals) baseT
+      where 
+        baseT    = convert a
+        specs    = convert <$> b
+        quals    = convert <$> c
+        (a, b, c) = partitionSpecifiers them
+  
+  instance Reifiable CTypeName where
+    convert (CTypeName (CDeclaration specs [CDeclInfo { contents = Just decl, ..}])) = undefined -- TODO: FIGURE THIS OUT
+    convert (CTypeName (CDeclaration specs _)) = convert specs
+  
+  
+  instance Reifiable CBuiltinExpr where
+    convert (BuiltinVaArg ex ty) = tie $ VaArg (convert ex) (convert ty)
+  
+  -- here we get very clever and define newtypes for the different parts of a function
+  -- so that we don't have to define a bunch of helper functions
+  newtype FunctionType = FunctionType { unFT :: CFunction }
+  newtype FunctionArgs = FunctionArgs { unFA :: CDeclarator }
+  
+  instance Reifiable FunctionType
+  instance Reifiable FunctionArgs
+  
+  instance Reifiable CTranslationUnit where
+    convert ts = tie $ Program $ convert <$> ts
+  
+  instance Reifiable CExternal where
+    convert (FunctionDecl f) = convert f
+    convert (ExternDecl d) = undefined -- TODO: FIGURE ME OUT!
+  
+  -- TODO: deal with variadicity
+  -- TODO: most of this is wrong
+  instance Reifiable CFunction where
+    convert f@(CFunction specs decl (CompoundStmt body)) = tie $ Function ftype fname fargs fbody
+      where ftype        = convert (FunctionType f)
+            (Just fname) = name' <$> declName decl 
+            fargs        = convert (FunctionArgs decl)
+            fbody        = convert <$> body
   
   {-
   
@@ -159,114 +213,11 @@ module Semantics.C.Reifiable.Instances
     convert (Left decl) = LDeclaration <$> convertDeclarationToVariables decl
     convert (Right stmt) = LStatement <$> [convert stmt]
   
-  instance Reifiable CStatement Statement where
-    convert (AsmStmt tq (Simple s)) 
-      = Asm (isJust tq) (convert s) [] [] []
-    convert (AsmStmt tq (GCCAsm s inR outR clobber)) 
-      = Asm (isJust tq) (convert s) (convert <$> inR) (convert <$> outR) (convert <$> clobber) 
-    convert BreakStmt = Break
-    convert (CaseStmt ex st) = Case (convert ex) (convert st)
-    convert (CompoundStmt bis) = Compound (bis >>= convert)
-    convert ContinueStmt = Continue
-    convert (DefaultStmt st) = Default (convert st)
-    convert (DoWhileStmt st e) = DoWhile (convert st) (convert e)
-    convert EmptyStmt = EmptyS
-    convert (ExpressionStmt ex) = ExpressionS (convert ex)
-    convert (ForStmt e1 e2 e3 s) = For 
-      (convertExpressionToLocal <$> e1)
-      (convert <$> e2)
-      (convert <$> e3)
-      (convert s)
-    convert (ForDeclStmt d e2 e3 s) = For
-      (convertDeclarationToLocal d)
-      (convert <$> e2)
-      (convert <$> e3)
-      (convert s)
-    convert (GotoStmt s) = GoTo (convert s)
-    convert (IfStmt e s mS) = case mS of
-      (Just s') -> IfThenElse (convert e) (convert s) (convert s')
-      Nothing -> IfThen (convert e) (convert s)
-    convert (LabeledStmt l attrs s) = Labeled l (convert <$> attrs) (convert s)
-    convert (ReturnStmt mE) = Return (convert <$> mE)
-    convert (SwitchStmt ex st) = Switch (convert ex) (convert st)
-    convert (WhileStmt ex st) = While (convert ex) (convert st)
-  
-  instance Reifiable CExpr Expression where
-    convert (Comma _) = error "BUG: COMMA NOT DEFINED YET"
-    convert (Constant l) = Literal l
-    convert (Identifier i) = Ident i
-    convert (Index l r) = Brackets (convert l) (convert r)
-    convert (Call f args) = FunctionCall (convert f) (convert <$> args)
-    convert (CCast tn arg) = Cast (convert tn) (convert arg)
-    convert (UnaryOp n arg) = Unary n (convert arg)
-    convert (BinaryOp n lhs rhs) = Binary (convert lhs) n (convert rhs)
-    convert (TernaryOp a b c) = Ternary (convert a) (convert b) (convert c)
-    convert (SizeOfType decl) = SizeOfSType (convert decl)
-    convert (CBuiltin t) = Builtin (convert t)
-  
   instance Reifiable CBuiltinExpr SBuiltin where
     convert (BuiltinVaArg ex ty) = SVaArg (convert ex) (convert ty)
   
-  instance Reifiable CStringLiteral Expression where
-    convert lit = CStr s where
-      (Constant (CString s)) = getExpr lit
-  
   instance Reifiable CAsmArgument AsmOp where
     convert (CAsmArgument x y) = AsmOp (convert x) (convert <$> y)
-  
-  instance Reifiable CAttribute Attribute where
-    convert (CAttribute e) = Custom (convert <$> e)
-  
-  instance Reifiable CTypeSpecifier SType where
-    convert x = convert [x]
-    
-  -- This is where type aliases go, as defined in C99, 6.7.2.2
-  instance Reifiable [CTypeSpecifier] SType where
-    convert [TVoid]                         = void
-    convert [TChar]                         = char
-    convert [TSigned, TChar]                = signedChar
-    convert [TUnsigned, TChar]              = unsignedChar
-    convert [TShort]                        = shortSignedInt
-    convert [TSigned, TShort]               = shortSignedInt
-    convert [TShort, TInt]                  = shortSignedInt
-    convert [TSigned, TShort, TInt]         = shortSignedInt
-    convert [TBool]                         = shortSignedInt
-    convert [TUnsigned, TShort]             = shortUnsignedInt
-    convert [TUnsigned, TShort, TInt]       = shortUnsignedInt
-    convert [TInt]                          = signedInt
-    convert [TSigned]                       = signedInt
-    convert [TSigned, TInt]                 = signedInt
-    convert [TUnsigned]                     = unsignedInt
-    convert [TUnsigned, TInt]               = unsignedInt
-    convert [TLong]                         = longSignedInt
-    convert [TSigned, TLong]                = longSignedInt
-    convert [TLong, TInt]                   = longSignedInt
-    convert [TSigned, TLong, TInt]          = longSignedInt
-    convert [TUnsigned, TLong]              = longUnsignedInt
-    convert [TLong, TUnsigned, TInt]        = longUnsignedInt
-    convert [TUnsigned, TLong, TInt]        = longUnsignedInt
-    convert [TLong, TLong]                  = longLongSignedInt
-    convert [TSigned, TLong, TLong]         = longLongSignedInt
-    convert [TLong, TLong, TInt]            = longLongSignedInt
-    convert [TSigned, TLong, TLong, TInt]   = longLongSignedInt
-    convert [TUnsigned, TLong, TLong]       = longLongSignedInt
-    convert [TUnsigned, TLong, TLong, TInt] = longLongSignedInt
-    convert [TInt128]                       = int128
-    convert [TUInt128]                      = uint128
-    convert [TFloat]                        = float
-    convert [TDouble]                       = double
-    convert [TLong, TDouble]                = longDouble
-    convert [t@(TStructOrUnion _ _ _ as)]   = SComposite (convertComposite t) (convert <$> as)
-    convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
-    convert [TTypedef n d]                  = STypedef n (convert d) []
-    convert [TBuiltin s]                    = SBuiltinType s []
-    convert other                           = error ("unknown type " ++ show other)
-  
-  instance Reifiable [CSpecifier] SType where
-    convert specs = setAttributes typ quals where
-      (typeSpecs, typeQuals, storageSpecs) = partitionSpecifiers specs
-      typ = convert typeSpecs
-      quals = (convert <$> typeQuals) ++ (convert <$> storageSpecs)
   
   instance Reifiable CTypeName SType where
     convert (CTypeName (CDeclaration specs [CDeclInfo { contents = Just decl, ..}])) = extractTypeFromComponents specs decl
@@ -373,9 +324,6 @@ module Semantics.C.Reifiable.Instances
                                                          in Just (extractTypeFromComponents specs contents')
   convertDeclarationToType _ = Nothing
   
-  convertExpressionToLocal :: CExpr -> Local
-  convertExpressionToLocal e = LStatement $ ExpressionS $ convert e
-
   convertDeclarationToLocal :: CDeclaration -> Maybe Local
   convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
   

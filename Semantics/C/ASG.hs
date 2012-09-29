@@ -30,8 +30,8 @@ module Semantics.C.ASG where
     Signed   :: SSignedness a
     Size     :: Int -> SSize a
   
-    -- Function :: Name -> Type -> [Param] -> [Local] -> Function
-    Function :: a -> a -> [a] -> [a] -> SFunction a
+    -- Function :: Name -> Type -> Declarations -> [Anything localish] -> Function
+    Function :: a -> a -> a -> [a] -> SFunction a
   
     -- Attributed :: Attribute -> Anything -> Anything
     Attributed :: [a] -> a -> Sem a
@@ -78,13 +78,15 @@ module Semantics.C.ASG where
     -- expressions
     CStr     :: String -> SExpr a
     CInt     :: Integer -> SExpr a
-    CFloat   :: Double -> SExpr a
+    CFloat   :: String -> SExpr a
+    CChar    :: Char -> SExpr a
     Unary    :: a -> a -> SExpr a
     Binary   :: a -> a -> a -> SExpr a
     Ternary  :: a -> a -> a -> SExpr a
     Cast     :: a -> a -> SExpr a
     Brackets :: a -> a -> SExpr a
     FunCall  :: a -> [a] -> SExpr a
+    VaArg    :: a -> a -> SExpr a
   
     -- attributes
     Auto     :: SAttr a
@@ -95,13 +97,19 @@ module Semantics.C.ASG where
     Restrict :: SAttr a
     Static   :: SAttr a
     Volatile :: SAttr a
-    Custom   :: a -> SAttr a
+    Custom   :: [a] -> SAttr a
   
     -- other stuff
+    Program :: [a] -> Sem a
     Variable :: a -> a -> Maybe a -> Sem a
+    Declarations :: [a] -> Sem a
   
   deriving instance (Show a) => Show (Sem a)
   deriving instance Functor Sem
+  
+  
+  
+  tie = In
   
   signed' t = In (t (In Signed))
   unsigned' t = In (t (In Unsigned))
