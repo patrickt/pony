@@ -225,10 +225,9 @@ module Language.C99.AST
   -- | C declarations (C99 6.7).
   -- This method of structuring declarations was innovated by Benedikt Huber.
   data CDeclaration = CDeclaration {
-    declarationSpecifiers :: [CSpecifier],
-    declarationInfos :: [CDeclInfo]
-  }
-    deriving (Eq, Show, Typeable, Data)
+      declrSpecifiers :: [CSpecifier],
+      declrInfos :: [CDeclInfo]
+  } deriving (Eq, Show, Typeable, Data)
   
   -- | Represents C type names. These have a number of invariants: there will 
   -- be at least one 'CSpecifier', at most one 'CDeclInfo', which may contain a 

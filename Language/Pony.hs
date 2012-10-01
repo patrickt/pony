@@ -8,6 +8,7 @@ module Language.Pony
   
   where
     -- 
+  import Data.Functor.Fix
     -- import Data.Generics hiding (empty)
   import Language.C99
     -- import Language.C99.Literals
@@ -16,6 +17,7 @@ module Language.Pony
   import Semantics.C.ASG
   import Semantics.C.Reifiable
   import Semantics.C.Reifiable.Instances
+  import Semantics.C.Pretty
   -- import System.Environment
   
   pony :: IO ()

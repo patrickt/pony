@@ -1,7 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, NamedFieldPuns, RecordWildCards #-}
 
 module Semantics.C.Reifiable.Instances 
-  ( Reifiable(..) )
   where
   
   import Semantics.C.ASG as ASG
@@ -27,6 +26,18 @@ module Semantics.C.Reifiable.Instances
       | declarationIsFunctionPrototype d                          = convert (FPD d)
       | otherwise                                                 = convert d
   
+  -- CExternal -> Typedef
+  -- hits: TypeDeclaration -> Type
+  newtype TypedefDeclaration = TdD { unTdD  :: CDeclaration }
+  instance Reifiable TypedefDeclaration where
+      convert (TdD decl) = tie $ Typedef alias aliasedType
+        where 
+          aliasedType = convert $ DTD (specs, declarator)
+          specs = declrSpecifiers $ dropTypedef decl
+          (Just alias) = name' <$> nameOfDeclaration decl
+          (Just declarator) = contents $ head $ declrInfos decl
+  
+  
   -- here we get very clever and define newtypes for the different parts of a function
   -- so that we don't have to define a bunch of helper functions
   newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
@@ -41,13 +52,6 @@ module Semantics.C.Reifiable.Instances
       augment t (Pointer qs) = tie $ PointerToT t
       augment t (Array qs size) = tie $ ArrayT t (tie Empty)
       augment t (DerivedFunction args variadic) = tie $ FunctionPointerT t (convert <$> args)
-  
-  -- CExternal -> Typedef
-  -- hits: TypeDeclaration -> Type
-  newtype TypedefDeclaration = TdD { unTdD  :: CDeclaration }
-  instance Reifiable TypedefDeclaration -- where
-  --   convert (TdD decl) = tie $ Typedef n $ convert $ DTD ([], dropTypedef decl)
-  --     where (Just n) = name' <$> nameOfDeclaration decl
   
   -- CExternal -> Variable 
   -- the more and more I go on the less and less sure I am about the Variable/Declarations split
@@ -103,7 +107,7 @@ module Semantics.C.Reifiable.Instances
   -- hits: declaration+specifiers -> type
   instance Reifiable CParameter where
     convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = 
-      tie $ Variable n (convert (DTD (specs, contents))) Nothing where (Just n) = name' <$> declName contents
+      tie $ Variable (convert (DTD (specs, contents))) n Nothing where (Just n) = name' <$> declName contents
     convert (CParameter (CDeclaration specs _)) = tie $ Variable (tie Empty) (convert specs) Nothing
   
   -- CBlockItem -> Variable | Expression
@@ -159,6 +163,8 @@ module Semantics.C.Reifiable.Instances
     convert CExtern   = tie Extern
     convert (CAttr c) = convert c
     convert CTypedef  = error "stray CTypedef passed to `convert`"
+    
+  dieInBreakpoint x = error $ "dying: " ++ x
   
   -- This is where type aliases go, as defined in C99, 6.7.2.2
   instance Reifiable [CTypeSpecifier] where
@@ -200,7 +206,7 @@ module Semantics.C.Reifiable.Instances
     -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
     convert [TTypedef n d]                  = tie $ Typedef (name' n) (convert d)
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
-    convert other                           = error ("unknown type " ++ show other)
+    convert other                           = dieInBreakpoint $ show other
   
   -- CExpr -> expression
   -- hits: CLiteral -> constant, CBuiltInExpr -> expression

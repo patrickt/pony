@@ -8,9 +8,6 @@ module Semantics.C.ASG where
   import Language.Pony.MachineSizes
   import Data.Functor.Fix
   
-  catamorph :: Functor f => (f a -> a) -> Fix f -> a
-  catamorph f (In t) = f (fmap (catamorph f) t)
-  
   type SName       = Sem
   type SFunction   = Sem
   type SType       = Sem
@@ -22,7 +19,7 @@ module Semantics.C.ASG where
   type SStatement  = Sem
   type SExpr       = Sem
   
-  data Sem :: (* -> *) where
+  data Sem a where
     -- logical constructs
     Name     :: String -> SName a -- used for binary operators as well as identifiers
     Unsigned :: SSignedness a
@@ -106,7 +103,7 @@ module Semantics.C.ASG where
     Program :: [a] -> Sem a
     
     -- gotta be a nicer way to do this
-    -- name -> type -> initial value?
+    -- type -> name -> initial value?
     Variable :: a -> a -> Maybe a -> Sem a
     Declarations :: [a] -> Sem a
     Typedef :: a -> a -> Sem a
@@ -116,10 +113,12 @@ module Semantics.C.ASG where
   
   tie = In
   
+
   signed' t = In (t (In Signed))
   unsigned' t = In (t (In Unsigned))
   int' size sign = In (IntT (In (Size size)) (In sign))
   
+  void' :: Fix SType
   void' = In VoidT
   char' s = In (CharT s)
   name' n = In (Name n)

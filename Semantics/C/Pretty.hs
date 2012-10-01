@@ -1,15 +1,76 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings #-}
 
 module Semantics.C.Pretty 
-  ( Pretty (..)
+  ( PrettyAlg (..)
   )
   where
   
   import Control.Applicative ((<$>))
+  import Data.Monoid hiding ((<>))
   import Semantics.C.ASG
   import Language.Pony.MachineSizes
   import Language.C99.Literals
   import Text.Pretty
+  
+  class (Functor f) => PrettyAlg f where
+    evalPretty :: f Doc -> Doc
+  
+  instance PrettyAlg Sem where
+    evalPretty (Name n) = text n
+    evalPretty Unsigned = "unsigned"
+    evalPretty Signed   = "signed"
+    
+    evalPretty (Size t) = "A SIZE LOL"
+  
+    evalPretty (Function typ name params body) = 
+      typ <+> name <> (parens params) <+> "{" $$ (nest 4 $ vcat body) $$ "}"
+    
+    evalPretty VoidT           = "void"
+    evalPretty (IntT _ sign)   = sign <+> "int"
+    evalPretty FloatT          = "float"
+    evalPretty DoubleT         = "double"
+    evalPretty LongDoubleT     = "long double"
+    evalPretty (CharT sign)    = sign <+> "char"
+    evalPretty (PointerToT a)  = a <> "*"
+    -- arrays need to have three parts: their modifier, their size, and their original type
+    evalPretty (ArrayT size t) = size <> "[]"
+    
+    evalPretty (Variable t n Nothing) = t <+> n
+    evalPretty (Variable t n (Just init)) = t <+> n <+> equals <+> init
+    
+    -- statements
+    evalPretty Break = "break"
+    evalPretty (Compound sts) = braces $ hsep sts 
+    -- evalPretty (Default sts) = "default:" $$ hsep sts
+    evalPretty (Case a b) = "case" <+> a <> ":" $$ hsep b
+    evalPretty (Return Nothing) = "return;"
+    evalPretty (Return (Just a)) = "return" <+> a <> semi
+    
+    -- literals
+    evalPretty (CInt t) = textS t
+    evalPretty (CStr s) = doubleQuotes $ text s
+    
+    evalPretty (Attributed as t) = (hsep as) <+> t
+    
+    evalPretty Auto     = "auto"
+    evalPretty Const    = "const"
+    evalPretty Extern   = "extern"
+    evalPretty Inline   = "inline"
+    evalPretty Register = "register"
+    evalPretty Restrict = "restrict"
+    evalPretty Static   = "static"
+    evalPretty Volatile = "volatile"
+    
+    evalPretty (Declarations t) = hsep $ punctuate comma t
+    
+    evalPretty Empty = mempty
+    
+    evalPretty (Program p) = vcat p
+    evalPretty (Typedef name typ) = "typedef " <> name <+> typ 
+    
+    evalPretty x = error $ "not defined for " ++ show x
+  
+  {-
   
   instance Pretty Function where
     pretty (Function attrs retType name params body isVariadic) = 
@@ -199,5 +260,7 @@ module Semantics.C.Pretty
     
   instance Pretty Program where
     pretty a = vcat $ pretty <$> a
+    
+  -}
 
   
