@@ -22,36 +22,50 @@ module Semantics.C.Reifiable.Instances
     convert (FunctionDecl f) = convert f
     convert (ExternDecl d) 
       | declarationIsTypedef d                                    = convert (TdD d)
-      | declarationIsComposite d && not (declarationHasPointer d) = convert (CD d)
-      | declarationIsFunctionPrototype d                          = convert (FPD d)
+      -- | declarationIsComposite d && not (declarationHasPointer d) = convert (CD d)
+      -- | declarationIsFunctionPrototype d                          = convert (FPD d)
       | otherwise                                                 = convert d
   
   -- CExternal -> Typedef
   -- hits: TypeDeclaration -> Type
+  -- Possible bug I don't care about: `typedef foo;` on its own is legal, 
+  -- declaring foo as a type for int (curse you, implicit int)
   newtype TypedefDeclaration = TdD { unTdD  :: CDeclaration }
   instance Reifiable TypedefDeclaration where
       convert (TdD decl) = tie $ Typedef alias aliasedType
         where 
-          aliasedType = convert $ DTD (specs, declarator)
-          specs = declrSpecifiers $ dropTypedef decl
-          (Just alias) = name' <$> nameOfDeclaration decl
+          (Just alias)      = name' <$> nameOfDeclaration decl
+          aliasedType       = convert $ DTD (specs, declarator)
+          specs             = declrSpecifiers $ dropTypedef decl
           (Just declarator) = contents $ head $ declrInfos decl
   
+  newtype DerivedTypeDeclaration       = DTD { unDT  :: ([CSpecifier], CDeclarator)}
+  instance Reifiable DerivedTypeDeclaration where
+    convert (DTD (specs, decl)) = foldl' buildDerivedType (convert specs) (derived decl) where
+      -- there are two steps in building a real type out of a declarator. 
+      -- first we convert the provided specifiers to a type, then we fold the derived declarators
+      -- (pointers, arrays, function declarations) around that type. 
+      -- however during the fold we need to convert any specifiers that those derived declarators 
+      -- may have (e.g. const or volatile pointers).
+      -- FIXME: ignoring variadicity in DerivedFunction
+      -- Possible bug: cdecl(1) describes "static int* foo" as "static pointer to int", but 
+      -- this parses it as "pointer to static int", which makes sense from a pretty-printing POV
+      -- but possibly not from a semantic point of view
+      buildDerivedType :: Fix Sem -> CDerivedDeclarator -> Fix Sem
+      buildDerivedType t (Pointer qs)                    = wrapQualifiers qs $ tie $ PointerToT t
+      buildDerivedType t (Array qs Nothing)              = wrapQualifiers qs $ tie $ ArrayT t (tie Empty)
+      buildDerivedType t (Array qs (Just size))          = wrapQualifiers qs $ tie $ ArrayT t (convert size)
+      buildDerivedType t (DerivedFunction args variadic) = tie $ FunctionPointerT t (convert <$> args)
+      wrapQualifiers :: [CTypeQualifier] -> Fix Sem -> Fix Sem
+      wrapQualifiers [] t = t
+      wrapQualifiers qs t = tie $ Attributed (convert <$> qs) t
+  
+  -- THE LINE OF BULLSHIT. FROM HERE ON EVERYTHING SUCKS.
   
   -- here we get very clever and define newtypes for the different parts of a function
   -- so that we don't have to define a bunch of helper functions
   newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
   newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
-  
-  
-  newtype DerivedTypeDeclaration       = DTD { unDT  :: ([CSpecifier], CDeclarator)}
-  instance Reifiable DerivedTypeDeclaration where
-    convert (DTD (specs, decl)) = foldl' augment (convert specs) (derived decl) where
-      -- so buggy, ignores qualifiers and sizes
-      augment :: Fix Sem -> CDerivedDeclarator -> Fix Sem
-      augment t (Pointer qs) = tie $ PointerToT t
-      augment t (Array qs size) = tie $ ArrayT t (tie Empty)
-      augment t (DerivedFunction args variadic) = tie $ FunctionPointerT t (convert <$> args)
   
   -- CExternal -> Variable 
   -- the more and more I go on the less and less sure I am about the Variable/Declarations split
