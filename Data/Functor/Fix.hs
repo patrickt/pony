@@ -32,3 +32,4 @@ module Data.Functor.Fix
   -- an anamorphism is an unfold 
   ana :: Functor f => (a -> f a) -> a -> Fix f
   ana f = hylo In f
+  

@@ -232,7 +232,7 @@ module Semantics.C.Reifiable.Instances
     convert [TDouble]                       = tie DoubleT
     convert [TLong, TDouble]                = tie LongDoubleT
     -- FIXME: ignoring attributes in these conversions
-    convert [t@(TStructOrUnion mName True fields attrs)] = tie $ CompositeT (fromMaybe (tie Empty) (name' <$> mName)) (tie Struct) (convert <$> fields)
+    -- convert [t@(TStructOrUnion mName True fields attrs)] = tie $ CompositeT (fromMaybe (tie Empty) (name' <$> mName)) (tie Struct) (convert <$> fields)
     -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
     convert [TTypedef n d]                  = tie $ Typedef (name' n) (convert d)
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
