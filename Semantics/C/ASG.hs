@@ -7,118 +7,100 @@ module Semantics.C.ASG where
   import Data.Generics
   import Language.Pony.MachineSizes
   import Data.Functor.Fix
-  
-  type SName       = Sem
-  type SFunction   = Sem
-  type SType       = Sem
-  type SParam      = Sem
-  type SAttr       = Sem
-  type SLocal      = Sem
-  type SSignedness = Sem
-  type SSize       = Sem
-  type SStatement  = Sem
-  type SExpr       = Sem
-  
+
   data Sem a where
     -- logical constructs
-    Name     :: String -> SName a -- used for binary operators as well as identifiers
-    Unsigned :: SSignedness a
-    Signed   :: SSignedness a
-    Size     :: Int -> SSize a
+    Name     :: String -> Sem a -- used for binary operators as well as identifiers
+    Unsigned :: Sem a
+    Signed   :: Sem a
+    Size     :: Int -> Sem a
+    Struct   :: Sem a
+    Union    :: Sem a
   
-    -- Function :: Name -> Type -> Declarations -> [Anything localish] -> Function
-    Function :: a -> a -> a -> [a] -> SFunction a
+    -- Function :: Name -> Type -> Arguments -> Group -> Function
+    Function :: a -> a -> a -> a -> Sem a
+    
+    Arguments :: [a] -> Sem a
   
     -- Attributed :: Attribute -> Anything -> Anything
     Attributed :: [a] -> a -> Sem a
   
     -- types
-    VoidT :: SType a
+    VoidT :: Sem a
+    IntT :: a -> a -> Sem a -- Int :: Size -> Signedness -> Type
+    FloatT :: Sem a
+    DoubleT :: Sem a
+    LongDoubleT :: Sem a
+    CharT :: a -> Sem a -- Char  :: Signedness -> Type
+    PointerToT :: a -> Sem a -- Pointer :: Type -> Type
+    ArrayT :: a -> a -> Sem a -- Array :: Type -> Length -> Type
+    FunctionPointerT :: a -> [a] -> Sem a
+    BuiltinT :: a -> Sem a -- Builtin :: Name -> Type
+    CompositeT :: a -> a -> [a] -> Sem a -- (Struct | Union) -> Name? -> Member
   
-    -- Int :: Size -> Signedness -> Type
-    IntT :: a -> a -> SType a
-  
-    FloatT :: SType a
-    DoubleT :: SType a
-    LongDoubleT :: SType a
-  
-    -- Char  :: Signedness -> Type
-    CharT :: a -> SType a
-  
-    -- Pointer :: Type -> Type
-    PointerToT :: a -> SType a
-  
-    -- Array :: Type -> Length -> Type
-    ArrayT :: a -> a -> SType a
     
-    FunctionPointerT :: a -> [a] -> SType a
-    
-    -- Builtin :: Name -> Type
-    BuiltinT :: a -> SType a
-  
-    -- TODO: composite types
   
     -- statements
-    Break      :: SStatement a
-    Case       :: a -> [a] -> SStatement a
-    Continue   :: SStatement a
-    Compound   :: [a] -> SStatement a
-    Default    :: a -> SStatement a
-    DoWhile    :: a -> a -> SStatement a
-    Empty      :: SStatement a
-    For        :: Maybe a -> Maybe a -> Maybe a -> a -> SStatement a
-    Goto       :: a -> SStatement a
-    IfThen     :: a -> a -> SStatement a
-    IfThenElse :: a -> a -> a -> SStatement a
-    Labeled    :: a -> a -> SStatement a
-    Return     :: Maybe a -> SStatement a
-    Switch     :: a -> [a] -> SStatement a
-    While      :: a -> a -> SStatement a
+    Break      :: Sem a
+    Case       :: a -> [a] -> Sem a
+    Continue   :: Sem a
+    Compound   :: [a] -> Sem a
+    Default    :: a -> Sem a
+    DoWhile    :: a -> a -> Sem a
+    Empty      :: Sem a
+    For        :: Maybe a -> Maybe a -> Maybe a -> a -> Sem a
+    Goto       :: a -> Sem a
+    IfThen     :: a -> a -> Sem a
+    IfThenElse :: a -> a -> a -> Sem a
+    Labeled    :: a -> a -> Sem a
+    Return     :: Maybe a -> Sem a
+    Switch     :: a -> [a] -> Sem a
+    While      :: a -> a -> Sem a
   
     -- expressions
-    CStr     :: String -> SExpr a
-    CInt     :: Integer -> SExpr a
-    CFloat   :: String -> SExpr a
-    CChar    :: Char -> SExpr a
-    Unary    :: a -> a -> SExpr a
-    Binary   :: a -> a -> a -> SExpr a
-    Ternary  :: a -> a -> a -> SExpr a
-    Cast     :: a -> a -> SExpr a
-    Brackets :: a -> a -> SExpr a
-    FunCall  :: a -> [a] -> SExpr a
-    VaArg    :: a -> a -> SExpr a
+    CStr     :: String -> Sem a
+    CInt     :: Integer -> Sem a
+    CFloat   :: String -> Sem a
+    CChar    :: Char -> Sem a
+    Unary    :: a -> a -> Sem a
+    Binary   :: a -> a -> a -> Sem a
+    Ternary  :: a -> a -> a -> Sem a
+    Cast     :: a -> a -> Sem a
+    Brackets :: a -> a -> Sem a
+    FunCall  :: a -> [a] -> Sem a
+    VaArg    :: a -> a -> Sem a
   
     -- attributes
-    Auto     :: SAttr a
-    Const    :: SAttr a
-    Extern   :: SAttr a
-    Inline   :: SAttr a
-    Register :: SAttr a
-    Restrict :: SAttr a
-    Static   :: SAttr a
-    Volatile :: SAttr a
-    Custom   :: [a] -> SAttr a
+    Auto     :: Sem a
+    Const    :: Sem a
+    Extern   :: Sem a
+    Inline   :: Sem a
+    Register :: Sem a
+    Restrict :: Sem a
+    Static   :: Sem a
+    Volatile :: Sem a
+    Custom   :: [a] -> Sem a
   
     -- other stuff
     Program :: [a] -> Sem a
+    Group :: [a] -> Sem a
     
     -- gotta be a nicer way to do this
     -- type -> name -> initial value?
     Variable :: a -> a -> Maybe a -> Sem a
-    Declarations :: [a] -> Sem a
     Typedef :: a -> a -> Sem a
+    Sized :: a -> a -> a -> Sem a
   
   deriving instance (Show a) => Show (Sem a)
   deriving instance Functor Sem
   
   tie = In
   
-
   signed' t = In (t (In Signed))
   unsigned' t = In (t (In Unsigned))
   int' size sign = In (IntT (In (Size size)) (In sign))
   
-  void' :: Fix SType
+  void' :: Fix Sem
   void' = In VoidT
   char' s = In (CharT s)
   name' n = In (Name n)

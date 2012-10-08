@@ -10,6 +10,7 @@ module Semantics.C.Reifiable.Instances
   import Language.Pony.MachineSizes
   import Data.List (find, foldl')
   import Data.Functor.Fix
+  import Data.Maybe (fromMaybe)
   
   -- CTranslationUnit -> Program.
   -- hits: CExternal -> global
@@ -39,6 +40,7 @@ module Semantics.C.Reifiable.Instances
           specs             = declrSpecifiers $ dropTypedef decl
           (Just declarator) = contents $ head $ declrInfos decl
   
+  -- (Specifiers x Declarator) -> Type
   newtype DerivedTypeDeclaration       = DTD { unDT  :: ([CSpecifier], CDeclarator)}
   instance Reifiable DerivedTypeDeclaration where
     convert (DTD (specs, decl)) = foldl' buildDerivedType (convert specs) (derived decl) where
@@ -60,44 +62,32 @@ module Semantics.C.Reifiable.Instances
       wrapQualifiers [] t = t
       wrapQualifiers qs t = tie $ Attributed (convert <$> qs) t
   
-  -- THE LINE OF BULLSHIT. FROM HERE ON EVERYTHING SUCKS.
-  
-  -- here we get very clever and define newtypes for the different parts of a function
-  -- so that we don't have to define a bunch of helper functions
-  newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
-  newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
-  
-  -- CExternal -> Variable 
-  -- the more and more I go on the less and less sure I am about the Variable/Declarations split
+  -- Declaration -> Variable | Group of Variables
   -- hits: TypeDeclaration -> Type, CInitializer -> ???
   newtype VariableDeclaration = VD  { unVD  :: CDeclaration }
   instance Reifiable VariableDeclaration where
-    -- if there's just a declaration, just get the name and compute the type
+    -- if there's just one DeclInfo -- i.e. a declaration like `int foo;` we return a Variable
     convert (VD (CDeclaration specs [CDeclInfo { contents = Just decl, initVal, .. }])) 
-      = tie $ Variable n vartype initial
-        where 
-          (Just n) = name' <$> declName decl
-          vartype = convert (DTD (specs, decl))
-          initial = convert <$> initVal
-    
-  instance Reifiable CompositeDeclaration
-  instance Reifiable FunctionPrototypeDeclaration
-  instance Reifiable CDeclaration
+      = tie $ Variable vartype varname initial where 
+          (Just varname) = name' <$> declName decl
+          vartype        = convert (DTD (specs, decl))
+          initial        = convert <$> initVal
+    -- if there are more infos, e.g. statements of the form `int foo, bar, *baz;`
+    -- then we loop around and convert each of them to Variables and stick them in a Group
+    convert (VD (CDeclaration specs infos)) = tie $ Group $ [ convert (VD (CDeclaration specs [i])) | i <- infos ]
   
-  instance Reifiable CInitializer
-  
-  -- TODO: deal with variadicity
+  -- FIXME: ignoring variadicity here too
   -- CFunction -> Function
-  -- hits: CFunction -> Type, FunctionArgs -> Declarations, BlockItem -> Declarations | Statement
+  -- hits: CFunction -> Type, FunctionArgs -> Declarations, BlockItem -> Group
   instance Reifiable CFunction where
     convert f@(CFunction _ decl (CompoundStmt body)) = tie $ Function ftype fname fargs fbody
       where ftype        = convert  $  FT f
             (Just fname) = name'   <$> declName decl 
             fargs        = convert  $  FA decl
-            fbody        = convert <$> body
-  
+            fbody        = tie      $ Group $ convert <$> body
+    
   -- CFunction -> Type
-  -- hits: declaration + specifiers -> type
+  -- hits: derived type declaration -> type
   newtype FunctionType = FT { unFT :: CFunction }
   instance Reifiable FunctionType where
     -- We have to drop the first derived declarator from `decl` here because function declarators
@@ -105,17 +95,42 @@ module Semantics.C.Reifiable.Instances
     convert (FT (CFunction specs decl _)) = convert $ DTD (relevantSpecs, prunedDecl) where
       relevantSpecs = filter (not . specifierBelongsToFunction) specs
       prunedDecl = decl { derived = tail $ derived decl }
-  
-  -- CFunction -> Declarations
+      
+  -- CFunction -> Arguments
   -- hits: CParameter -> Variable
   newtype FunctionArgs = FA { unFA :: CDeclarator }
   instance Reifiable FunctionArgs where
     -- we're going to find one and only one (assuming the parser is right) 
     -- DerivedFunction derived declarator inside here, and it's going to have a list of CParameters. we convert those into Variables.
-    convert (FA (CDeclarator _ derived _ _)) = tie $ Declarations $ convert <$> args
+    convert (FA (CDeclarator _ derived _ _)) = tie $ Arguments $ convert <$> args
       where (Just (DerivedFunction args _)) = find isFunction derived
             isFunction (DerivedFunction _ _) = True
             isFunction _ = False
+  
+  -- CTypeName -> Type
+  -- hits: derived type declaration -> type
+  -- CTypeNames are only hit in casts and sizeof(type) and the like. 
+  instance Reifiable CTypeName where
+    convert (CTypeName (CDeclaration specs [CDeclInfo { contents = Just decl, ..}])) = convert $ DTD (specs, decl)
+    convert (CTypeName (CDeclaration specs _)) = convert specs
+  
+  instance (Reifiable a) => Reifiable (Maybe a) where
+    convert (Just a) = convert a
+    convert _ = In Empty
+  
+  -- THE LINE OF BULLSHIT. FROM HERE ON EVERYTHING SUCKS.
+  
+  -- here we get very clever and define newtypes for the different parts of a function
+  -- so that we don't have to define a bunch of helper functions
+  newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
+  newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
+    
+    
+  instance Reifiable CompositeDeclaration
+  instance Reifiable FunctionPrototypeDeclaration
+  instance Reifiable CDeclaration
+  
+  instance Reifiable CInitializer
   
   -- CParameter -> Variable
   -- hits: declaration+specifiers -> type
@@ -216,7 +231,8 @@ module Semantics.C.Reifiable.Instances
     convert [TFloat]                        = tie FloatT
     convert [TDouble]                       = tie DoubleT
     convert [TLong, TDouble]                = tie LongDoubleT
-    -- convert [t@(TStructOrUnion _ _ _ as)]   = SComposite (convertComposite t) (convert <$> as)
+    -- FIXME: ignoring attributes in these conversions
+    convert [t@(TStructOrUnion mName True fields attrs)] = tie $ CompositeT (fromMaybe (tie Empty) (name' <$> mName)) (tie Struct) (convert <$> fields)
     -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
     convert [TTypedef n d]                  = tie $ Typedef (name' n) (convert d)
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
@@ -256,13 +272,11 @@ module Semantics.C.Reifiable.Instances
         quals    = convert <$> c
         (a, b, c) = partitionSpecifiers them
   
-  instance Reifiable CTypeName where
-    convert (CTypeName (CDeclaration specs [CDeclInfo { contents = Just decl, ..}])) = convert $ DTD (specs, decl)
-    convert (CTypeName (CDeclaration specs _)) = convert specs
-  
   
   instance Reifiable CBuiltinExpr where
     convert (BuiltinVaArg ex ty) = tie $ VaArg (convert ex) (convert ty)
+  
+  instance Reifiable CField
   
   {-
   

@@ -24,6 +24,10 @@ module Data.Functor.Fix
   cata f = hylo f out
 
   -- a paramorphism is a catamorphism combined with a copy of the input, useful for pattern matching
+  -- there appears to be a way of expressing paramorphisms in terms of hylomorphisms but damned if I can figure it out
   para :: Functor f => (Fix f -> f b -> b) -> Fix f -> b
   para h = go where go t = h t (fmap go $ out t)
 
+  -- an anamorphism is an unfold 
+  ana :: Functor f => (a -> f a) -> a -> Fix f
+  ana f = hylo In f
