@@ -42,7 +42,7 @@ module Semantics.C.Pretty
     evalPretty _ (CharT sign)    = sign <+> "char"
     evalPretty _ (PointerToT a)  = a <+> "*"
     -- arrays need to have three parts: their modifier, their size, and their original type
-    evalPretty _ (ArrayT size t) = size <> "[]"
+    evalPretty _ (ArrayT t size) = t <> brackets size
     
     evalPretty _ (Variable t n Nothing) = t <+> n
     evalPretty _ (Variable t n (Just init)) = t <+> n <+> equals <+> init

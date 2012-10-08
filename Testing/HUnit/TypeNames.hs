@@ -28,4 +28,7 @@ module Testing.HUnit.TypeNames
           , roundTrip "int * *"
           , roundTrip "int * const *"
           , roundTrip "const int * const *"
-          , roundTrip "const int * const * restrict"]
+          , roundTrip "const int * const * restrict"
+          , roundTrip "char"
+          , roundTrip "char[]"
+          , roundTrip "char[5]"]
