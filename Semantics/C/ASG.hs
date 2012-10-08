@@ -1,12 +1,11 @@
-{-# LANGUAGE DeriveDataTypeable, GADTs, KindSignatures, StandaloneDeriving, DeriveFunctor #-}
+{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 module Semantics.C.ASG where
   
-  import Data.Monoid
-  import Language.Pony.Prelude
-  import Data.Generics
-  import Language.Pony.MachineSizes
+  import Data.Foldable (Foldable)
   import Data.Functor.Fix
+  import Data.Traversable (Traversable)
+
 
   data Sem a where
     -- logical constructs
@@ -92,7 +91,10 @@ module Semantics.C.ASG where
     Sized :: a -> a -> a -> Sem a
   
   deriving instance (Show a) => Show (Sem a)
+  deriving instance (Eq a) => Eq (Sem a)
   deriving instance Functor Sem
+  deriving instance Foldable Sem
+  deriving instance Traversable Sem
   
   tie = In
   

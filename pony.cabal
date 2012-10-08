@@ -50,27 +50,27 @@ Library {
                   TypeSynonymInstances
 }
 
-Executable check-malloc {
-  Main-is: Main.hs
-  Hs-source-dirs: examples/check-malloc .
-  LD-Options: -w
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
+-- Executable check-malloc {
+--   Main-is: Main.hs
+--   Hs-source-dirs: examples/check-malloc .
+--   LD-Options: -w
+--   if flag(examples) {
+--     Buildable: True
+--   } else {
+--     Buildable: False
+--   }
+-- }
                    
-Executable concat {
-  Main-is:  Main.hs
-  Hs-source-dirs: examples/concat .
-  LD-Options:          -w
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
+-- Executable concat {
+--   Main-is:  Main.hs
+--   Hs-source-dirs: examples/concat .
+--   LD-Options:          -w
+--   if flag(examples) {
+--     Buildable: True
+--   } else {
+--     Buildable: False
+--   }
+-- }
 
 Executable hello {
   Main-is:  Main.hs
@@ -83,38 +83,38 @@ Executable hello {
   }
 }
 
-Executable logical-shift {
-  Main-is:  Main.hs
-  Hs-source-dirs: examples/logical-shift .
-  LD-Options:          -w
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
+-- Executable logical-shift {
+--   Main-is:  Main.hs
+--   Hs-source-dirs: examples/logical-shift .
+--   LD-Options:          -w
+--   if flag(examples) {
+--     Buildable: True
+--   } else {
+--     Buildable: False
+--   }
+-- }
 
-Executable precise-gc {
-  Main-is: Main.hs
-  Hs-source-dirs: examples/precise-gc .
-  LD-Options:          -w
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
+-- Executable precise-gc {
+--   Main-is: Main.hs
+--   Hs-source-dirs: examples/precise-gc .
+--   LD-Options:          -w
+--   if flag(examples) {
+--     Buildable: True
+--   } else {
+--     Buildable: False
+--   }
+-- }
 
-Executable separate-declarations {
-  Main-is: Main.hs
-  Hs-source-dirs: examples/separate-declarations .
-  LD-Options:          -w
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
+-- Executable separate-declarations {
+--   Main-is: Main.hs
+--   Hs-source-dirs: examples/separate-declarations .
+--   LD-Options:          -w
+--   if flag(examples) {
+--     Buildable: True
+--   } else {
+--     Buildable: False
+--   }
+-- }
 
 Executable test {
   Main-is:             Testing/Main.hs

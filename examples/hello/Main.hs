@@ -20,4 +20,4 @@ module Main where
     print asg
     let transformed = ana changeHello asg
     let done = para evalPretty transformed
-    print $ done
+    print done
