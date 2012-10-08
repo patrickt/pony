@@ -1,7 +1,8 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings, ViewPatterns #-}
 
 module Semantics.C.Pretty 
   ( PrettyAlg (..)
+  , prettyPrint
   )
   where
   
@@ -12,6 +13,9 @@ module Semantics.C.Pretty
   import Language.C99.Literals
   import Text.Pretty
   import Data.Functor.Fix
+  
+  prettyPrint :: (PrettyAlg f) => Fix f -> Doc
+  prettyPrint = para evalPretty
   
   class (Functor f) => PrettyAlg f where
     evalPretty :: Fix f -> f Doc -> Doc
@@ -36,7 +40,7 @@ module Semantics.C.Pretty
     -- same with 'char'
     evalPretty (In (CharT (In Signed))) (CharT _) = "char"
     evalPretty _ (CharT sign)    = sign <+> "char"
-    evalPretty _ (PointerToT a)  = a <> "*"
+    evalPretty _ (PointerToT a)  = a <+> "*"
     -- arrays need to have three parts: their modifier, their size, and their original type
     evalPretty _ (ArrayT size t) = size <> "[]"
     
@@ -57,6 +61,7 @@ module Semantics.C.Pretty
     evalPretty _ (CInt t) = textS t
     evalPretty _ (CStr s) = doubleQuotes $ text s
     
+    evalPretty (out -> (Attributed _ (out -> PointerToT _))) (Attributed as t) = t <+> hsep as
     evalPretty _ (Attributed as t) = (hsep as) <+> t
     
     evalPretty _ Auto     = "auto"

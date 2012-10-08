@@ -265,7 +265,7 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable [CSpecifier] where
     convert them = case (specs, quals) of
       ([], [])  -> baseT
-      otherwise -> tie $ Attributed (specs ++ quals) baseT
+      otherwise -> tie $ Attributed (quals ++ specs) baseT
       where 
         baseT    = convert a
         specs    = convert <$> b

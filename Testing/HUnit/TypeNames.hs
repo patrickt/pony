@@ -4,15 +4,28 @@ module Testing.HUnit.TypeNames
   import Test.Framework
   import Test.Framework.Providers.HUnit
   import Test.HUnit hiding (Test)
-  import Language.C99
-  import Semantics.C
+  import Language.Pony
+  import Text.Pretty
+  
+  instance Eq Doc where
+    a == b = (show a) == (show b)
+  
+  roundTrip :: String -> Test
+  roundTrip s = testCase s $ assertEqual s theory practice where
+    theory = text s
+    practice = para evalPretty $ convert $ parseUnsafe typeName s
   
   tests :: [Test]
-  tests = [] -- testCase "const int * const * restrict => restrict pointer to const pointer to const int" testRestrictPtrToConstPtrToInt ]
-  --     
-  --   testRestrictPtrToConstPtrToInt :: Assertion
-  --   testRestrictPtrToConstPtrToInt = assertEqual "whatever" theory practice where
-  --     practice = convert $ parseUnsafe typeName "const int * const * restrict "
-  --     theory = SPointerTo (SPointerTo (SInt (IntegerFlags Signed 32) [Const]) [Const]) [Restrict]
-  --   
-  --   
+  tests = [ roundTrip "int"
+          , roundTrip "int *"
+          , roundTrip "const int"
+          , roundTrip "const int *"
+          , roundTrip "static const int"
+          , roundTrip "static const int *"
+          , roundTrip "int * const"
+          , roundTrip "const int * const"
+          , roundTrip "static const int * const"
+          , roundTrip "int * *"
+          , roundTrip "int * const *"
+          , roundTrip "const int * const *"
+          , roundTrip "const int * const * restrict"]
