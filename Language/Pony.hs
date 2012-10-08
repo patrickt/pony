@@ -14,6 +14,8 @@ module Language.Pony
     -- import Language.C99.Literals
     -- import Language.Pony.Transformations
     -- import Language.Pony.Transformations.Utilities
+  import Data.Traversable (Traversable)
+  import qualified Data.Traversable as T
   import Semantics.C.ASG
   import Semantics.C.Reifiable
   import Semantics.C.Reifiable.Instances

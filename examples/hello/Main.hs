@@ -1,4 +1,4 @@
-
+{-# LANGUAGE ViewPatterns #-}
 
 module Main where
   
@@ -9,7 +9,7 @@ module Main where
   import Semantics.C.Pretty
   
   changeHello :: Fix Sem -> Sem (Fix Sem)
-  changeHello (In (Name "hello")) = FunCall (name' "printf") [str' "Hello from Pony"]
+  changeHello (out -> Name "hello") = FunCall (name' "printf") [str' "Hello from Pony"]
   changeHello otherwise = out otherwise
   
   main :: IO ()
