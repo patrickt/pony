@@ -51,6 +51,8 @@ module Semantics.C.Pretty
     evalPretty _ (Return Nothing) = "return"
     evalPretty _ (Return (Just a)) = "return" <+> a
     
+    evalPretty _ (FunCall a bs) = a <> parens (sep $ punctuate comma bs)
+    
     -- literals
     evalPretty _ (CInt t) = textS t
     evalPretty _ (CStr s) = doubleQuotes $ text s

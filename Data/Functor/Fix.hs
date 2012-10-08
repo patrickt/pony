@@ -4,7 +4,8 @@ module Data.Functor.Fix
   ( Fix (..)
   , cata
   , hylo
-  , para ) 
+  , para
+  , ana ) 
   where
     
   import Control.Category ((<<<))

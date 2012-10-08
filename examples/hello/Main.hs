@@ -1,21 +1,23 @@
-{-# LANGUAGE TemplateHaskell, EmptyDataDecls, TypeOperators, TypeFamilies, FlexibleContexts, UndecidableInstances #-}
+
 
 module Main where
   
-  import Generics.Regular.Rewriting
   import Language.Pony
-  import Language.Pony.Rewriting
-
-  helloRule :: Rule Expression
-  helloRule = rule $ (Ident "hello") :~> FunctionCall (Ident "printf") [(CStr "Hello from Pony!")]
-
-  helloToPrintf :: Expression -> Expression
-  helloToPrintf x = rewrite helloRule x
+  import Data.Functor.Fix
+  import Language.C99
+  import Semantics.C.Reifiable
+  import Semantics.C.Pretty
   
-  helloT :: GenericT
-  helloT = mkT helloToPrintf
+  changeHello :: Fix Sem -> Sem (Fix Sem)
+  changeHello (In (Name "hello")) = FunCall (name' "printf") [str' "Hello from Pony"]
+  changeHello otherwise = out otherwise
   
   main :: IO ()
-  main = run $ pony {
-    transformations = [MkTrans "Hello" TopDown helloT ]
-  }
+  main = do 
+    f <- readFile "examples/hello/hello.pony.c"
+    let ast = parseUnsafe preprocessedC f
+    let asg = convert ast
+    print asg
+    let transformed = ana changeHello asg
+    let done = para evalPretty transformed
+    print $ done

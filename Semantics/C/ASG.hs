@@ -104,5 +104,6 @@ module Semantics.C.ASG where
   void' = In VoidT
   char' s = In (CharT s)
   name' n = In (Name n)
+  str' = In . CStr
   
   
