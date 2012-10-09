@@ -6,11 +6,8 @@ module Semantics.C.Pretty
   )
   where
   
-  import Control.Applicative ((<$>))
   import Data.Monoid hiding ((<>))
   import Semantics.C.ASG
-  import Language.Pony.MachineSizes
-  import Language.C99.Literals
   import Text.Pretty
   import Data.Functor.Fix
   
@@ -27,25 +24,24 @@ module Semantics.C.Pretty
     
     evalPretty _ (Size t) = "A SIZE LOL"
   
-    evalPretty _ (Function typ name params body) = 
-      typ <+> name <> (parens params) <+> "{" $$ (nest 4 body) $$ "}"
+    evalPretty _ (Function typ name params body) = typ <+> name <> (parens params) <+> "{" $$ (nest 4 body) $$ "}"
     
     evalPretty _ VoidT           = "void"
+    -- FIXME: sizes of integers are being ignored
     -- no need to print 'signed int' when 'int' will do
-    evalPretty (In (IntT _ (In Signed))) (IntT size _) = "int"
-    evalPretty _ (IntT _ sign)   = sign <+> "int"
-    evalPretty _ FloatT          = "float"
-    evalPretty _ DoubleT         = "double"
-    evalPretty _ LongDoubleT     = "long double"
+    evalPretty (out -> IntT _ (out -> Signed)) (IntT size _) = "int"
+    evalPretty _ (IntT _ sign) = sign <+> "int"
+    evalPretty _ FloatT        = "float"
+    evalPretty _ DoubleT       = "double"
+    evalPretty _ LongDoubleT   = "long double"
     -- same with 'char'
-    evalPretty (In (CharT (In Signed))) (CharT _) = "char"
-    evalPretty _ (CharT sign)    = sign <+> "char"
-    evalPretty _ (PointerToT a)  = a <+> "*"
-    -- arrays need to have three parts: their modifier, their size, and their original type
-    evalPretty _ (ArrayT t size) = t <> brackets size
+    evalPretty (out -> CharT (out -> Signed)) _          = "char"
+    evalPretty _ (CharT sign)                            = sign <+> "char"
+    evalPretty _ (PointerToT a)                          = a <+> "*"
+    evalPretty _ (ArrayT t size)                         = t <> brackets size
     
-    evalPretty _ (Variable t n Nothing) = t <+> n
-    evalPretty _ (Variable t n (Just init)) = t <+> n <+> equals <+> init
+    evalPretty _ (Variable t n Nothing)        = t <+> n
+    evalPretty _ (Variable t n (Just initial)) = t <+> n <+> equals <+> initial
     
     -- statements
     evalPretty _ Break = "break"

@@ -36,9 +36,9 @@ module Semantics.C.Reifiable.Instances
       convert (TdD decl) = tie $ Typedef alias aliasedType
         where 
           (Just alias)      = name' <$> nameOfDeclaration decl
-          aliasedType       = convert $ DTD (specs, declarator)
+          aliasedType       = convert $ DTD (specs, declar)
           specs             = declrSpecifiers $ dropTypedef decl
-          (Just declarator) = contents $ head $ declrInfos decl
+          (Just declar)     = contents $ head $ declrInfos decl
   
   -- (Specifiers x Declarator) -> Type
   newtype DerivedTypeDeclaration       = DTD { unDT  :: ([CSpecifier], CDeclarator)}
@@ -85,6 +85,7 @@ module Semantics.C.Reifiable.Instances
             (Just fname) = name'   <$> declName decl 
             fargs        = convert  $  FA decl
             fbody        = tie      $ Group $ convert <$> body
+    convert other = error $ "converting function " ++ show other ++ " failed: invariants not respected"
     
   -- CFunction -> Type
   -- hits: derived type declaration -> type
@@ -265,7 +266,7 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable [CSpecifier] where
     convert them = case (specs, quals) of
       ([], [])  -> baseT
-      otherwise -> tie $ Attributed (quals ++ specs) baseT
+      _ -> tie $ Attributed (quals ++ specs) baseT
       where 
         baseT    = convert a
         specs    = convert <$> b

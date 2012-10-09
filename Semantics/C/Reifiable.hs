@@ -4,7 +4,6 @@ module Semantics.C.Reifiable
  ( Reifiable (..) )
  where
   
-  import Data.Generics
   import Semantics.C.ASG
   import Data.Functor.Fix
   
