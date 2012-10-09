@@ -40,16 +40,16 @@ module Semantics.C.Pretty
     evalPretty _ (PointerToT a)                          = a <+> "*"
     evalPretty _ (ArrayT t size)                         = t <> brackets size
     
-    evalPretty _ (Variable t n Nothing)        = t <+> n
-    evalPretty _ (Variable t n (Just initial)) = t <+> n <+> equals <+> initial
+    evalPretty (out -> Variable _ _ (out -> Empty)) (Variable t n _) = t <+> n
+    evalPretty _                                    (Variable t n x) = t <+> n <+> equals <+> x
     
     -- statements
-    evalPretty _ Break = "break"
-    evalPretty _ (Compound sts) = braces $ hsep sts 
-    -- evalPretty (Default sts) = "default:" $$ hsep sts
-    evalPretty _ (Case a b) = "case" <+> a <> ":" $$ hsep b
-    evalPretty _ (Return Nothing) = "return"
-    evalPretty _ (Return (Just a)) = "return" <+> a
+    evalPretty _ Break                          = "break"
+    evalPretty _ (Compound sts)                 = braces $ hsep sts 
+    -- evalPretty (Default sts)                 = "default:" $$ hsep sts
+    evalPretty _ (Case a b)                     = "case" <+> a <> ":" $$ hsep b
+    evalPretty (out -> Return (out -> Empty)) _ = "return"
+    evalPretty _ (Return a)                     = "return" <+> a
     
     evalPretty _ (FunCall a bs) = a <> parens (sep $ punctuate comma bs)
     

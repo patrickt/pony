@@ -71,7 +71,7 @@ module Semantics.C.Reifiable.Instances
       = tie $ Variable vartype varname initial where 
           (Just varname) = name' <$> declName decl
           vartype        = convert (DTD (specs, decl))
-          initial        = convert <$> initVal
+          initial        = convert initVal
     -- if there are more infos, e.g. statements of the form `int foo, bar, *baz;`
     -- then we loop around and convert each of them to Variables and stick them in a Group
     convert (VD (CDeclaration specs infos)) = tie $ Group $ [ convert (VD (CDeclaration specs [i])) | i <- infos ]
@@ -137,8 +137,8 @@ module Semantics.C.Reifiable.Instances
   -- hits: declaration+specifiers -> type
   instance Reifiable CParameter where
     convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = 
-      tie $ Variable (convert (DTD (specs, contents))) n Nothing where (Just n) = name' <$> declName contents
-    convert (CParameter (CDeclaration specs _)) = tie $ Variable (tie Empty) (convert specs) Nothing
+      tie $ Variable (convert (DTD (specs, contents))) n (tie Empty) where (Just n) = name' <$> declName contents
+    convert (CParameter (CDeclaration specs _)) = tie $ Variable (tie Empty) (convert specs) (tie Empty)
   
   -- CBlockItem -> Variable | Expression
   instance Reifiable CBlockItem where
@@ -158,21 +158,21 @@ module Semantics.C.Reifiable.Instances
     convert EmptyStmt            = tie Empty
     convert (ExpressionStmt ex)  = convert ex
     convert (ForStmt e1 e2 e3 s) = tie $ For 
-      (convert <$> e1)
-      (convert <$> e2)
-      (convert <$> e3)
+      (convert e1)
+      (convert e2)
+      (convert e3)
       (convert s)
     convert (ForDeclStmt d e2 e3 s) = In $ For
-      (Just $ convert d)
-      (convert <$> e2)
-      (convert <$> e3)
+      (convert d)
+      (convert e2)
+      (convert e3)
       (convert s)
     convert (GotoStmt s)            = tie $ Goto (convert s)
     convert (IfStmt e s Nothing)    = tie $ IfThen (convert e) (convert s)
     convert (IfStmt e s (Just s2))  = tie $ IfThenElse (convert e) (convert s) (convert s2)
     convert (LabeledStmt l [] s)    = tie $ Labeled (name' l) (convert s)
     convert (LabeledStmt l attrs s) = tie $ Attributed (convert <$> attrs) $ convert (LabeledStmt l [] s)
-    convert (ReturnStmt mE)         = tie $ Return (convert <$> mE)
+    convert (ReturnStmt mE)         = tie $ Return (convert mE)
     convert (SwitchStmt ex st)      = tie $ Switch (convert ex) [convert st]
     convert (WhileStmt ex st)       = tie $ While (convert ex) (convert st)
   

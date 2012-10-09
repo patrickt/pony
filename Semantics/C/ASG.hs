@@ -25,20 +25,18 @@ module Semantics.C.ASG where
     Attributed :: [a] -> a -> Sem a
   
     -- types
-    VoidT :: Sem a
-    IntT :: a -> a -> Sem a -- Int :: Size -> Signedness -> Type
-    FloatT :: Sem a
-    DoubleT :: Sem a
-    LongDoubleT :: Sem a
-    CharT :: a -> Sem a -- Char  :: Signedness -> Type
-    PointerToT :: a -> Sem a -- Pointer :: Type -> Type
-    ArrayT :: a -> a -> Sem a -- Array :: Type -> Length -> Type
+    VoidT            :: Sem a
+    IntT             :: a -> a -> Sem a -- Int :: Size -> Signedness -> Type
+    FloatT           :: Sem a
+    DoubleT          :: Sem a
+    LongDoubleT      :: Sem a
+    CharT            :: a -> Sem a -- Char  :: Signedness -> Type
+    PointerToT       :: a -> Sem a -- Pointer :: Type -> Type
+    ArrayT           :: a -> a -> Sem a -- Array :: Type -> Length -> Type
     FunctionPointerT :: a -> [a] -> Sem a
-    BuiltinT :: a -> Sem a -- Builtin :: Name -> Type
-    CompositeT :: a -> a -> [a] -> Sem a -- (Struct | Union) -> Name? -> Member
-  
+    BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
+    CompositeT       :: a -> a -> [a] -> Sem a -- (Struct | Union) -> Name? -> Member
     
-  
     -- statements
     Break      :: Sem a
     Case       :: a -> [a] -> Sem a
@@ -47,12 +45,12 @@ module Semantics.C.ASG where
     Default    :: a -> Sem a
     DoWhile    :: a -> a -> Sem a
     Empty      :: Sem a
-    For        :: Maybe a -> Maybe a -> Maybe a -> a -> Sem a
+    For        :: a -> a -> a -> a -> Sem a
     Goto       :: a -> Sem a
     IfThen     :: a -> a -> Sem a
     IfThenElse :: a -> a -> a -> Sem a
     Labeled    :: a -> a -> Sem a
-    Return     :: Maybe a -> Sem a
+    Return     :: a -> Sem a
     Switch     :: a -> [a] -> Sem a
     While      :: a -> a -> Sem a
   
@@ -86,7 +84,7 @@ module Semantics.C.ASG where
     
     -- gotta be a nicer way to do this
     -- type -> name -> initial value?
-    Variable :: a -> a -> Maybe a -> Sem a
+    Variable :: a -> a -> a -> Sem a
     Typedef :: a -> a -> Sem a
     Sized :: a -> a -> a -> Sem a
   
