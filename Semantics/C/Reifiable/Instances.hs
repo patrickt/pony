@@ -127,11 +127,17 @@ module Semantics.C.Reifiable.Instances
   newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
     
     
-  instance Reifiable CompositeDeclaration
-  instance Reifiable FunctionPrototypeDeclaration
-  instance Reifiable CDeclaration
+  instance Reifiable CompositeDeclaration where
+    convert = error "convert is not defined for composite types yet"
   
-  instance Reifiable CInitializer
+  instance Reifiable FunctionPrototypeDeclaration where
+    convert = error "convert is not defined for function prototypes yet"
+  
+  instance Reifiable CInitializer where
+    convert = error "convert is not defined for initializer yet"
+  
+  instance Reifiable CDeclaration where
+    convert = error "BUG: C declaration has gone unclassified"
   
   -- CParameter -> Variable
   -- hits: declaration+specifiers -> type
