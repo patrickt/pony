@@ -88,18 +88,22 @@ where
                                    <*> optional (L.colon *> expression)
                                   
   designator :: Parser CDesignator
-  designator =  pure ArrayDesignator <*> L.brackets constant
-            <|> pure MemberDesignator <*> (L.dot *> L.identifier)
+  designator =  pure ArrayDesignator <*> ((L.brackets constant) <?> "array declaration")
+            <|> pure MemberDesignator <*> ((L.dot *> L.identifier) <?> "dotted declaration")  
   
-  initlist :: Parser CInitList
-  initlist = L.braces (L.commaSep1 initList') <?> "initializer list" where
-    initList' = do
-      desigs <- many designator
-      initValue <- (L.reservedOp "=" *> initializer)
-      return (desigs, initValue)
+  initList :: Parser [CInitializerSubfield]
+  initList = L.braces (L.commaSep1 initSubfield)
+  
+  initSubfield :: Parser CInitializerSubfield
+  initSubfield = do 
+    -- first we look for the designators: .x for membership. don't think an array designator could get in here.
+    desigs <- many designator
+    -- if there are designators, e.g. .x, we require an explicit = statement to make an assignment.
+    when (desigs /= []) $ (L.reservedOp "=")
+    CInitializerSubfield <$> pure desigs <*> initializer
   
   initializer :: Parser CInitializer
-  initializer = (CInitList <$> initlist) <|> (CInitExpression <$> expression)
+  initializer = (CInitExpression <$> expression) <|> (CInitList <$> initList) 
 
   -- hack hack hack
   data DirectDeclarator 

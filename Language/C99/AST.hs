@@ -19,7 +19,7 @@ module Language.C99.AST
   , CField (..)
   , CFunction (..)
   , CInitializer (..)
-  , CInitList
+  , CInitializerSubfield (..)
   , CParameter (..)
   , CSpecifier (..)
   , CStatement(..) 
@@ -267,11 +267,13 @@ module Language.C99.AST
   -- expression or a bracketed list of initializers.
   data CInitializer 
     = CInitExpression CExpr
-    | CInitList CInitList
+    | CInitList [CInitializerSubfield]
     deriving (Eq, Show, Typeable, Data)
   
   -- | Represents the deconstructed initializers.
-  type CInitList = [([CDesignator], CInitializer)]
+  data CInitializerSubfield = CInitializerSubfield [CDesignator] CInitializer
+    deriving (Show, Eq, Typeable, Data)
+  
   
   -- | Indirectly derived declarators used inside the 'CDeclarator' type.
   -- In the future, Apple's extension for blocks (declared with @^@) may be added.
