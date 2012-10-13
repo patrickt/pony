@@ -6,6 +6,7 @@ module Semantics.C.Pretty
   )
   where
   
+  
   import Data.Monoid hiding ((<>))
   import Semantics.C.ASG
   import Text.Pretty
@@ -14,34 +15,44 @@ module Semantics.C.Pretty
   prettyPrint :: (PrettyAlg f) => Fix f -> Doc
   prettyPrint = para evalPretty
   
+  mayEquals :: Doc -> Doc
+  mayEquals a = if isEmpty a then a else space <> equals <+> a
+    
   class (Functor f) => PrettyAlg f where
     evalPretty :: Fix f -> f Doc -> Doc
+    
+  foldArrays :: (Sem (Fix Sem)) -> Doc
+  foldArrays (ArrayT a@(In (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
+  foldArrays (ArrayT _ size) = brackets $ prettyPrint size
+  
+  -- FIXME: sizes of integers are being ignored
   
   instance PrettyAlg Sem where
     evalPretty _ (Name n) = text n
     evalPretty _ Unsigned = "unsigned"
     evalPretty _ Signed   = "signed"
-    
-    evalPretty _ (Size t) = "A SIZE LOL"
+    evalPretty _ (Size t) = "TOD"
   
     evalPretty _ (Function typ name params body) = typ <+> name <> (parens params) <+> "{" $$ (nest 4 body) $$ "}"
     
-    evalPretty _ VoidT           = "void"
-    -- FIXME: sizes of integers are being ignored
+    evalPretty _ VoidT = "void"
+
     -- no need to print 'signed int' when 'int' will do
-    evalPretty (out -> IntT _ (out -> Signed)) (IntT size _) = "int"
+    evalPretty (out -> IntT _ (out -> Signed)) (IntT _ _) = "int"
     evalPretty _ (IntT _ sign) = sign <+> "int"
-    evalPretty _ FloatT        = "float"
-    evalPretty _ DoubleT       = "double"
-    evalPretty _ LongDoubleT   = "long double"
-    -- same with 'char'
-    evalPretty (out -> CharT (out -> Signed)) _          = "char"
-    evalPretty _ (CharT sign)                            = sign <+> "char"
-    evalPretty _ (PointerToT a)                          = a <+> "*"
-    evalPretty _ (ArrayT t size)                         = t <> brackets size
     
-    evalPretty (out -> Variable _ _ (out -> Empty)) (Variable t n _) = t <+> n
-    evalPretty _                                    (Variable t n x) = t <+> n <+> equals <+> x
+    evalPretty _ FloatT      = "float"
+    evalPretty _ DoubleT     = "double"
+    evalPretty _ LongDoubleT = "long double"
+    
+    -- same with 'char'
+    evalPretty (out -> CharT (out -> Signed)) _ = "char"
+    evalPretty _ (CharT sign)                   = sign <+> "char"
+    evalPretty _ (PointerToT a)                 = a <+> "*"
+    evalPretty _ (ArrayT t size)                = t -- we'll get to this later
+
+    evalPretty (out -> Variable (out -> a@(ArrayT _ _)) _ _) (Variable baseType name val) = baseType <+> name <> foldArrays a <> mayEquals val
+    evalPretty _  (Variable t n val) = t <+> n <> mayEquals val
     
     -- statements
     evalPretty _ Break                          = "break"
@@ -69,12 +80,13 @@ module Semantics.C.Pretty
     evalPretty _ Static   = "static"
     evalPretty _ Volatile = "volatile"
     
+    evalPretty _ (Program p) = vcat p
     evalPretty _ (Arguments t) = hsep $ punctuate comma t
+    evalPretty _ (List t) = braces $ hsep $ punctuate comma t
     evalPretty _ (Group ts) = vcat $ [t <> semi | t <- ts]
     
-    evalPretty _ Empty = mempty
+    evalPretty _ Empty = mempty 
     
-    evalPretty _ (Program p) = vcat p
     evalPretty _ (Typedef name typ) = "typedef " <> name <+> typ 
     
     evalPretty _ x = error $ "not defined for " ++ show x

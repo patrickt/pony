@@ -2,6 +2,7 @@ module Main where
   import Test.Framework
   import qualified Testing.HUnit.TypeNames as TN
   import qualified Testing.QuickCheck.Constants as QC
+  import qualified Testing.HUnit.DeclarationPrinting as DP
   import qualified Testing.HUnit.SpaceFreeParsing as SFP
   import qualified Testing.HUnit.PostfixExpressions as PE
   import qualified Testing.HUnit.SignalDeclaration as SD
@@ -10,6 +11,7 @@ module Main where
   tests :: [Test]
   tests = [ testGroup "HUnit: type names" TN.tests
           , testGroup "HUnit: utility functions" UF.tests
+          , testGroup "Hunit: array declaration" DP.tests
           -- , testGroup "QuickCheck: constants" QC.tests
           -- , testGroup "HUnit: space-free parsing" SFP.tests
           -- , testGroup "HUnit: postfix expressions" PE.tests

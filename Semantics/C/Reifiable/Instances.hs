@@ -15,7 +15,7 @@ module Semantics.C.Reifiable.Instances
   -- CTranslationUnit -> Program.
   -- hits: CExternal -> global
   instance Reifiable CTranslationUnit where
-    convert ts = tie $ Program $ convert <$> ts
+    convert ts = program $ convert <$> ts
   
   -- CExternal -> Function | Typedef | FunctionProto? | Variable | Declarations
   -- hits: CFunction -> Function
@@ -25,7 +25,7 @@ module Semantics.C.Reifiable.Instances
       | declarationIsTypedef d                                    = convert (TdD d)
       -- | declarationIsComposite d && not (declarationHasPointer d) = convert (CD d)
       -- | declarationIsFunctionPrototype d                          = convert (FPD d)
-      | otherwise                                                 = convert d
+      | otherwise                                                 = convert (VD d)
   
   -- CExternal -> Typedef
   -- hits: TypeDeclaration -> Type
@@ -134,7 +134,11 @@ module Semantics.C.Reifiable.Instances
     convert = error "convert is not defined for function prototypes yet"
   
   instance Reifiable CInitializer where
-    convert = error "convert is not defined for initializer yet"
+    convert (CInitExpression e) = convert e
+    convert (CInitList l) = list $ convert <$> l
+    
+  instance Reifiable CInitializerSubfield where
+    convert (CInitializerSubfield desigs initial) = convert initial
   
   instance Reifiable CDeclaration where
     convert = error "BUG: C declaration has gone unclassified"

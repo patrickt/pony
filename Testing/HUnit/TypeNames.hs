@@ -7,9 +7,6 @@ module Testing.HUnit.TypeNames
   import Language.Pony
   import Text.Pretty
   
-  instance Eq Doc where
-    a == b = (show a) == (show b)
-  
   roundTrip :: String -> Test
   roundTrip s = testCase s $ assertEqual s theory practice where
     theory = text s

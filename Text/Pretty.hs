@@ -19,6 +19,10 @@ module Text.Pretty
   
   import GHC.Exts ( IsString(..) )
   import Text.PrettyPrint.HughesPJ hiding (char, int, integer, float, double)
+  
+  
+  instance Eq Doc where
+    a == b = (show a) == (show b)
     
   textS :: (Show a) => a -> Doc
   textS = text . show

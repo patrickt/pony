@@ -23,6 +23,9 @@ module Language.Pony
   import Semantics.C.Pretty
   -- import System.Environment
   
+  repl = repl' preprocessedC
+  repl' p x = prettyPrint $ convert $ parseUnsafe p x
+  
   pony :: IO ()
   pony = print "yay"
   

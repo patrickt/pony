@@ -81,6 +81,7 @@ module Semantics.C.ASG where
     -- other stuff
     Program :: [a] -> Sem a
     Group :: [a] -> Sem a
+    List  :: [a] -> Sem a
     
     -- gotta be a nicer way to do this
     -- type -> name -> initial value?
@@ -93,6 +94,9 @@ module Semantics.C.ASG where
   deriving instance Functor Sem
   deriving instance Foldable Sem
   deriving instance Traversable Sem
+  
+  program = In . Program
+  list = In . List
   
   tie = In
   
