@@ -165,7 +165,7 @@ module Language.C99.Expressions
     , identifier
     , constant
     , getExpr <$> stringLiteral
-    , L.parens expression 
+    , CParen <$> L.parens expression 
     ]
   
   identifier :: Parser CExpr

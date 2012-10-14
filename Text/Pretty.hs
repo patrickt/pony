@@ -18,7 +18,7 @@ module Text.Pretty
   where
   
   import GHC.Exts ( IsString(..) )
-  import Text.PrettyPrint.HughesPJ hiding (char, int, integer, float, double)
+  import Text.PrettyPrint.HughesPJ hiding (int, integer, float, double)
   
   
   instance Eq Doc where

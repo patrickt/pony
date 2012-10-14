@@ -70,6 +70,13 @@ module Semantics.C.Pretty
     -- literals
     evalPretty _ (CInt t) = textS t
     evalPretty _ (CStr s) = doubleQuotes $ text s
+    evalPretty _ (CFloat s) = text s
+    evalPretty _ (CChar c) = quotes $ char c
+    
+    evalPretty _ (Unary op a) = op <> a
+    evalPretty _ (Binary a op b) = a <+> op <+> b
+    evalPretty _ (Ternary a b c) = a <> "?" <> b <> colon <> c
+    evalPretty _ (Paren a) = parens a
     
     evalPretty (out -> (Attributed _ (out -> PointerToT _))) (Attributed as t) = t <+> hsep as
     evalPretty _ (Attributed as t) = (hsep as) <+> t

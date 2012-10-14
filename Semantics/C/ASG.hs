@@ -2,11 +2,12 @@
 
 module Semantics.C.ASG where
   
+  import Data.Fixed
   import Data.Foldable (Foldable)
   import Data.Functor.Fix
   import Data.Traversable (Traversable)
 
-
+  
   data Sem a where
     -- logical constructs
     Name     :: String -> Sem a -- used for binary operators as well as identifiers
@@ -57,7 +58,7 @@ module Semantics.C.ASG where
     -- expressions
     CStr     :: String -> Sem a
     CInt     :: Integer -> Sem a
-    CFloat   :: String -> Sem a
+    CFloat   :: String -> Sem a -- Maybe a fixed-point type?
     CChar    :: Char -> Sem a
     Unary    :: a -> a -> Sem a
     Binary   :: a -> a -> a -> Sem a
@@ -66,6 +67,7 @@ module Semantics.C.ASG where
     Brackets :: a -> a -> Sem a
     FunCall  :: a -> [a] -> Sem a
     VaArg    :: a -> a -> Sem a
+    Paren    :: a -> Sem a
   
     -- attributes
     Auto     :: Sem a

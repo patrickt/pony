@@ -122,7 +122,7 @@ module Semantics.C.Reifiable.Instances
     convert (CTypeName (CDeclaration specs [CDeclInfo { contents = Just decl, ..}])) = convert $ DTD (specs, decl)
     convert (CTypeName (CDeclaration specs _)) = convert specs
   
-  -- this is pretty sus but cool also
+    -- this is pretty sus but cool also
   instance (Reifiable a) => Reifiable (Maybe a) where
     convert (Just a) = convert a
     convert _ = In Empty
@@ -161,6 +161,9 @@ module Semantics.C.Reifiable.Instances
   -- so that we don't have to define a bunch of helper functions
   newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
   newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
+    
+  instance Reifiable CompositeDeclaration where
+    convert = error "convert is not defined for composite types yet"
     
   instance Reifiable CDeclaration where
     convert = error "BUG: C declaration has gone unclassified"
@@ -273,6 +276,7 @@ module Semantics.C.Reifiable.Instances
     convert (TernaryOp a b c)    = tie $ Ternary (convert a) (convert b) (convert c)
     convert (SizeOfType decl)    = tie $ Unary (name' "sizeof") (convert decl)
     convert (CBuiltin t)         = convert t
+    convert (CParen s)           = tie $ Paren (convert s)
   
   instance Reifiable CStringLiteral where
     convert = convert . getExpr

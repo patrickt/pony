@@ -142,6 +142,7 @@ module Language.C99.AST
     -- | Whereas sizeof(variable) parses as a function call, sizeof(type) needs its own node.
     | SizeOfType CTypeName
     | CBuiltin CBuiltinExpr
+    | CParen CExpr -- parenthesized expressions
     deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | A string literal newtype to provide a modicum of type safety in the AST.

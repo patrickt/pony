@@ -23,7 +23,7 @@ module Language.Pony
   -- import System.Environment
   
   repl = repl' preprocessedC
-  repl' p x = prettyPrint $ convert $ parseUnsafe p x
+  repl' p x = prettyPrint $ convert $ parseUnsafe (p <* eof) x
   
   fuck = "static const int (*func)(int, float, char);"
   astfuck = parseUnsafe preprocessedC fuck
