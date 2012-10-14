@@ -28,24 +28,27 @@ module Semantics.C.Reifiable.Instances
       | otherwise                                                 = convert (VD d)
       
   -- CBlockItem -> Variable | Expression
+  -- Because in open recursion style, we can mix statements and declarations freely, the BlockItem class is not useful.
   instance Reifiable CBlockItem where
     convert (BlockDeclaration decl) = convert (VD decl)
     convert (BlockStatement stmt)   = convert stmt
   
   -- CExternal -> Typedef
   -- hits: TypeDeclaration -> Type
-  -- Possible bug I don't care about: `typedef foo;` on its own is legal, 
-  -- declaring foo as a type for int (curse you, implicit int)
+  -- SOMEDAY: `typedef foo;` on its own is legal, declaring foo as a type for int (curse you, implicit int)
   newtype TypedefDeclaration = TdD { unTdD  :: CDeclaration }
   instance Reifiable TypedefDeclaration where
-      convert (TdD decl) = tie $ Typedef alias aliasedType
+      convert (TdD decl@(CDeclaration _ [info])) = tie $ Typedef alias aliasedType
         where 
-          (Just alias)      = name' <$> nameOfDeclaration decl
-          aliasedType       = convert $ DTD (specs, declar)
-          -- get the specifiers minus the Typedef specifier
-          specs             = declrSpecifiers $ dropTypedef decl
-          -- get at the guts of the type
-          (Just declar)     = contents $ head $ declrInfos decl
+          -- first we drop the leading Typedef specifier from the declaration specifiers
+          specs = declrSpecifiers $ dropTypedef decl
+          -- now we extract the information about the type over which we're aliasing
+          (Just declar) = contents info
+          -- then convert that type along with its other specifiers
+          aliasedType = convert $ DTD (specs, declar)
+          -- lastly we find the name of the new typedef.
+          (Just alias) = name' <$> nameOfDeclaration decl
+
   
   -- (Specifiers x Declarator) -> Type
   newtype DerivedTypeDeclaration       = DTD { unDT  :: ([CSpecifier], CDeclarator)}
@@ -70,7 +73,7 @@ module Semantics.C.Reifiable.Instances
       wrapQualifiers qs t = tie $ Attributed (convert <$> qs) t
   
   -- Declaration -> Variable | Group of Variables
-  -- hits: TypeDeclaration -> Type, CInitializer -> ???
+  -- hits: TypeDeclaration -> Type, CInitializer -> List
   newtype VariableDeclaration = VD  { unVD  :: CDeclaration }
   instance Reifiable VariableDeclaration where
     -- if there's just one DeclInfo -- i.e. a declaration like `int foo;` we return a Variable
@@ -275,10 +278,14 @@ module Semantics.C.Reifiable.Instances
     convert [TLong, TDouble]                = tie LongDoubleT
     -- FIXME: ignoring attributes in these conversions
     convert [t@(TStructOrUnion mName sou fields attrs)] = tie $ Composite (tie comp) (fromMaybe nil (name' <$> mName)) (convert <$> fields) where comp = if sou then Struct else Union
-    -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
+    convert [TEnumeration n a attrs]        = tie $ Enumeration (fromMaybe nil $ name' <$> n) (convert <$> a)
     convert [TTypedef n d]                  = tie $ Typedef (name' n) (convert d)
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
     convert other                           = dieInBreakpoint $ show other
+  
+  instance Reifiable CEnumerator where
+    convert (EnumIdent s) = variable nil (name' s) nil
+    convert (EnumAssign s v) = variable nil (name' s) (convert v)
   
   instance Reifiable CStringLiteral where
     convert = convert . getExpr
@@ -306,48 +313,3 @@ module Semantics.C.Reifiable.Instances
   -- We just parse it as a regular declaration than 
   instance Reifiable CField where
     convert (CField d@(CDeclaration specs infos)) = tie $ Sized (convert (VD d)) (convert $ size $ head infos)
-  
-  {-
-  
-  instance Reifiable CAsmArgument AsmOp where
-    convert (CAsmArgument x y) = AsmOp (convert x) (convert <$> y)
-    
-  instance Reifiable CEnumerator Enumeration where
-    convert (EnumIdent s) = Enumeration s Nothing
-    convert (EnumAssign s expr) = Enumeration s (Just (convert expr))
-  
-  functionLevelSpecifiers :: [CSpecifier] -> [Attribute]
-  functionLevelSpecifiers specs = (convert <$> sspecs) ++ (convert <$> tquals) where
-    relevant = filter specifierBelongsToFunction specs
-    (_, tquals, sspecs) = partitionSpecifiers relevant 
-  
-  convertDeclarationToCompositeInfo :: CDeclaration -> CompositeInfo
-  convertDeclarationToCompositeInfo (CDeclaration [TSpec (TStructOrUnion mN isStruct fields _)] _) =
-    CompositeInfo (boolToCompositeType isStruct) mN (concatMap convert fields) where
-      boolToCompositeType True = Struct
-      boolToCompositeType False = Union
-  convertDeclarationToCompositeInfo _ = error "BUG: unexpected pattern passed to convertDeclarationToCompositeInfo"
-  
-  -- FIXME: ignoring attributes here
-  convertComposite :: CTypeSpecifier -> CompositeInfo
-  convertComposite (TStructOrUnion n b decls _) = CompositeInfo (boolToCompositeType b) n (concatMap convert decls) where
-    boolToCompositeType True = Struct
-    boolToCompositeType False = Union
-  convertComposite _ = error "BUG: non-composite type specifier passed to convertComposite"
-
-  removeSpuriousPointers :: [CDerivedDeclarator] -> [CDerivedDeclarator]
-  removeSpuriousPointers p = go p [] where
-      go [] acc = acc
-      go (f@(DerivedFunction _ _) : (Pointer _) : xs) acc = go xs (acc ++ [f])
-      go (x:xs) acc = go xs (acc ++ [x]) 
-  
-  functionPrototypeFromDeclaration :: CDeclaration -> SGlobal
-  functionPrototypeFromDeclaration (CDeclaration specs [CDeclInfo { contents = (Just contents), ..}]) 
-    = GFunctionPrototype rtype name params isVariadic where
-        (Just name) = declName contents
-        params = extractFunctionArguments contents
-        rtype = returnTypeOfFunction (CFunction specs contents undefined)
-        isVariadic = doesDeclaratorContainVariadicSpecifier contents
-  functionPrototypeFromDeclaration _ = error "BUG: invalid declaration passed to functionPrototypeFromDeclaration"
-  
-  -}

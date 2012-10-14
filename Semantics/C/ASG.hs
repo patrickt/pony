@@ -81,7 +81,8 @@ module Semantics.C.ASG where
     Custom   :: [a] -> Sem a
   
     -- other stuff
-    Composite :: a -> a -> [a] -> Sem a -- (Struct | Union) -> Name? -> Member
+    Composite :: a -> a -> [a] -> Sem a -- (Struct | Union) -> Name? -> Composite
+    Enumeration :: a -> [a] -> Sem a -- [Variables] -> Name? ->  Composite
     Program :: [a] -> Sem a
     Group :: [a] -> Sem a
     List  :: [a] -> Sem a
@@ -100,7 +101,6 @@ module Semantics.C.ASG where
   
   isFunction (Function _ _ _ _) = True
   isFunction _ = False
-  
   program = In . Program
   list = In . List
   nil = In Empty

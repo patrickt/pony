@@ -105,6 +105,8 @@ module Semantics.C.Pretty
     evalPretty _ Static   = "static"
     evalPretty _ Volatile = "volatile"
     
+    evalPretty _ (Enumeration a b) = a <+> semiBraces b
+    
     evalPretty (out -> Sized _ (out -> Empty)) (Sized t _) = t
     evalPretty _                        (Sized t s) = t <> ":" <> s
     
