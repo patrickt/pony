@@ -36,7 +36,6 @@ Library {
                    , pretty >= 1.0
                    , process > 1.0
                    , regular
-                   , rewriting == 0.2.2
                    , wl-pprint-extras >= 3.0.0.1
                    , syb >= 0.1
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
