@@ -48,8 +48,8 @@ whether it can consume input before failing.
   compoundStmt = L.braces (CompoundStmt <$> many blockItem) <?> "compound statement"
   
   blockItem :: Parser CBlockItem
-  blockItem  =  try (Left <$> declaration) 
-            <|> (Right <$> statement) 
+  blockItem  =  try (BlockDeclaration <$> declaration) 
+            <|> (BlockStatement <$> statement) 
             <?> "declaration or C statement"
             
   asmStmt :: Parser CStatement

@@ -1,12 +1,12 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
 
 module Language.C99.AST
-  ( CTranslationUnit
+  ( CTranslationUnit (..)
   , CAsmArgument (..)
   , CAsmName 
   , CAsmOperand (..)
   , CAttribute (..)
-  , CBlockItem
+  , CBlockItem (..)
   , CBuiltinExpr (..)
   , CDeclaration (..)
   , CDeclarator (..)
@@ -43,13 +43,15 @@ module Language.C99.AST
   -- where constructors and types have the same name (save for types with one constructor).
   
   -- | A translation unit is a nonempty list of external declarations (C99 9.6).
-  type CTranslationUnit   
-    = [CExternal]
+  newtype CTranslationUnit = CTranslationUnit [CExternal]
+    deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | A block item is either a declaration or statement (C99 6.8.3).
   -- Block items make up the bodies of compound statements ('CompoundStmt').
-  type CBlockItem 
-    = Either CDeclaration CStatement
+  data CBlockItem
+    = BlockDeclaration CDeclaration
+    | BlockStatement CStatement
+    deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | A statement specifies an action to be performed in sequence (C99 6.8.3).
   -- Unless specified otherwise, the semantics of statements (e.g. that 

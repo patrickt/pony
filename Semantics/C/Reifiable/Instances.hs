@@ -15,7 +15,7 @@ module Semantics.C.Reifiable.Instances
   -- CTranslationUnit -> Program.
   -- hits: CExternal -> global
   instance Reifiable CTranslationUnit where
-    convert ts = program $ convert <$> ts
+    convert (CTranslationUnit ts) = program $ convert <$> ts
   
   -- CExternal -> Function | Typedef | FunctionProto? | Variable | Declarations
   -- hits: CFunction -> Function
@@ -29,8 +29,8 @@ module Semantics.C.Reifiable.Instances
       
   -- CBlockItem -> Variable | Expression
   instance Reifiable CBlockItem where
-    convert (Left decl)  = convert (VD decl)
-    convert (Right stmt) = convert stmt
+    convert (BlockDeclaration decl) = convert (VD decl)
+    convert (BlockStatement stmt)   = convert stmt
   
   -- CExternal -> Typedef
   -- hits: TypeDeclaration -> Type

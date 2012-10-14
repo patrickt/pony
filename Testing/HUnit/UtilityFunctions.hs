@@ -9,7 +9,7 @@ module Testing.HUnit.UtilityFunctions
   
   isTypedef :: Bool -> String -> Test
   isTypedef b code = testCase code $ assertEqual "declarationIsTypedef is wrong" b $ declarationIsTypedef d where
-    [ExternDecl d] = parseUnsafe preprocessedC code
+    (CTranslationUnit [ExternDecl d]) = parseUnsafe preprocessedC code
   
   tests :: [Test]
   tests = [ isTypedef True "typedef int foo;"
