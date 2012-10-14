@@ -110,10 +110,12 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable FunctionArgs where
     -- we're going to find one and only one (assuming the parser is right) 
     -- DerivedFunction derived declarator inside here, and it's going to have a list of CParameters. we convert those into Variables.
-    convert (FA (CDeclarator _ derived _ _)) = tie $ Arguments $ convert <$> args
-      where (Just (DerivedFunction args _)) = find isFunction derived
+    convert (FA (CDeclarator _ derived _ _)) = tie $ Arguments fromArgs
+      where (Just (DerivedFunction args variad)) = find isFunction derived
             isFunction (DerivedFunction _ _) = True
             isFunction _ = False
+            params = convert <$> args
+            fromArgs = if variad then params ++ [In Ellipsis] else params
   
   -- CTypeName -> Type
   -- hits: derived type declaration -> type

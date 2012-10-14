@@ -39,6 +39,7 @@ module Semantics.C.Pretty
     evalPretty _ (Size _) = "TODO" 
     evalPretty _ Struct   = "struct"
     evalPretty _ Union    = "union"
+    evalPretty _ Ellipsis = "..."
   
     evalPretty _ (Function typ name params body) = typ <+> name <> (parens params) <+> "{" `above` (indent 2 body) `above` "}"
 
