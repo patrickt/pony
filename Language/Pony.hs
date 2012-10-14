@@ -24,7 +24,10 @@ module Language.Pony
   import Text.PrettyPrint.GenericPretty
   
   repl = repl' preprocessedC
-  repl' p x = prettyPrint $ convert $ parseUnsafe (p <* eof) x
+  repl' p x = prettyPrint $ conv' p x
+  
+  conv = conv' preprocessedC
+  conv' p x = convert $ parseUnsafe (p <* eof) x
   
   fuck = "static const int (*func)(int, float, char);"
   astfuck = parseUnsafe preprocessedC fuck

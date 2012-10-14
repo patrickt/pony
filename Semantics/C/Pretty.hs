@@ -106,6 +106,7 @@ module Semantics.C.Pretty
     evalPretty _ Volatile = "volatile"
     
     evalPretty _ (Enumeration a b) = a <+> semiBraces b
+    evalPretty _ (BuiltinT b) = b
     
     evalPretty (out -> Sized _ (out -> Empty)) (Sized t _) = t
     evalPretty _                        (Sized t s) = t <> ":" <> s
