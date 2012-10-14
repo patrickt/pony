@@ -21,6 +21,7 @@ module Language.Pony
   import Semantics.C.Reifiable.Instances
   import Semantics.C.Pretty
   -- import System.Environment
+  import Text.PrettyPrint.GenericPretty
   
   repl = repl' preprocessedC
   repl' p x = prettyPrint $ convert $ parseUnsafe (p <* eof) x

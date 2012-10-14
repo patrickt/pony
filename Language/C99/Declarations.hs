@@ -19,8 +19,9 @@ where
   -- | C99 6.7 - abstract and concrete declarations.
   declaration :: Parser CDeclaration
   declaration = declaration' >>= checkTypedefs
-    where declaration' = pure CDeclaration <*> some specifier <*> initDecls
-          initDecls = L.commaSep initDeclarator <* L.semi
+    where declaration' = pure CDeclaration <*> some specifier <*> initDeclaratorList <* L.semi
+  
+  initDeclaratorList = L.commaSep initDeclarator
   
   
   checkTypedefs :: CDeclaration -> Parser CDeclaration
@@ -39,8 +40,12 @@ where
   -- | Parameter declarations. Must have types, but may be anonymous if they appear
   -- as a forward declaration.
   parameter :: Parser CParameter
-  parameter = pure decl <*> some specifier <*> declarator where
-    decl s d = CParameter $ CDeclaration s [CDeclInfo {contents = Just d, initVal = Nothing, size = Nothing}]
+  parameter = do
+    specs <- some specifier
+    decl <- optional declarator
+    let needsAContents x = [CDeclInfo {contents = (Just x), initVal = Nothing, size = Nothing}]
+    let info = maybe [] needsAContents decl
+    return $ CParameter $ CDeclaration specs info
   
   -- | Type names, used in cast operations and typedefs.
   typeName :: Parser CTypeName
