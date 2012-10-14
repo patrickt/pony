@@ -161,6 +161,22 @@ module Semantics.C.Reifiable.Instances
   -- so that we don't have to define a bunch of helper functions
   newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
   newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
+  
+  -- CExpr -> expression
+  -- hits: CLiteral -> constant, CBuiltInExpr -> expression
+  instance Reifiable CExpr where
+    convert (Comma _)            = error "BUG: COMMA NOT DEFINED YET"
+    convert (Constant l)         = convert l
+    convert (Identifier i)       = name' i
+    convert (Index l r)          = tie $ Brackets (convert l) (convert r)
+    convert (Call f args)        = tie $ FunCall (convert f) (convert <$> args)
+    convert (CCast tn arg)       = tie $ Cast (convert tn) (convert arg)
+    convert (UnaryOp n arg)      = tie $ Unary (name' n) (convert arg)
+    convert (BinaryOp n lhs rhs) = tie $ Binary (convert lhs) (name' n) (convert rhs)
+    convert (TernaryOp a b c)    = tie $ Ternary (convert a) (convert b) (convert c)
+    convert (SizeOfType decl)    = tie $ Unary (name' "sizeof") (convert decl)
+    convert (CBuiltin t)         = convert t
+    convert (CParen s)           = tie $ Paren (convert s)
     
   instance Reifiable CompositeDeclaration where
     convert = error "convert is not defined for composite types yet"

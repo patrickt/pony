@@ -14,9 +14,9 @@ module Main where
           , testGroup "HUnit: utility functions" UF.tests
           , testGroup "HUnit: array declaration" DP.tests
           , testGroup "HUnit: assembly parsing" A.tests
-          -- , testGroup "QuickCheck: constants" QC.tests
+          , testGroup "QuickCheck: constants" QC.tests
           -- , testGroup "HUnit: space-free parsing" SFP.tests
-          -- , testGroup "HUnit: postfix expressions" PE.tests
+          , testGroup "HUnit: postfix expressions" PE.tests
           -- , testGroup "HUnit: signal(3) declaration" SD.tests
           ]
   
