@@ -26,6 +26,11 @@ module Semantics.C.Reifiable.Instances
       -- | declarationIsComposite d && not (declarationHasPointer d) = convert (CD d)
       | declarationIsFunctionPrototype d                          = convert (FPD d)
       | otherwise                                                 = convert (VD d)
+      
+  -- CBlockItem -> Variable | Expression
+  instance Reifiable CBlockItem where
+    convert (Left decl)  = convert (VD decl)
+    convert (Right stmt) = convert stmt
   
   -- CExternal -> Typedef
   -- hits: TypeDeclaration -> Type
@@ -37,7 +42,9 @@ module Semantics.C.Reifiable.Instances
         where 
           (Just alias)      = name' <$> nameOfDeclaration decl
           aliasedType       = convert $ DTD (specs, declar)
+          -- get the specifiers minus the Typedef specifier
           specs             = declrSpecifiers $ dropTypedef decl
+          -- get at the guts of the type
           (Just declar)     = contents $ head $ declrInfos decl
   
   -- (Specifiers x Declarator) -> Type
@@ -115,35 +122,10 @@ module Semantics.C.Reifiable.Instances
     convert (CTypeName (CDeclaration specs [CDeclInfo { contents = Just decl, ..}])) = convert $ DTD (specs, decl)
     convert (CTypeName (CDeclaration specs _)) = convert specs
   
+  -- this is pretty sus but cool also
   instance (Reifiable a) => Reifiable (Maybe a) where
     convert (Just a) = convert a
     convert _ = In Empty
-  
-  -- THE LINE OF BULLSHIT. FROM HERE ON EVERYTHING SUCKS.
-  
-  -- here we get very clever and define newtypes for the different parts of a function
-  -- so that we don't have to define a bunch of helper functions
-  newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
-  newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
-    
-    
-  instance Reifiable CompositeDeclaration where
-    convert = error "convert is not defined for composite types yet"
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  variable a b c = tie $ Variable a b c
-  fpointerto funcspecs params = tie $ FunctionPointerT funcspecs params
   
   instance Reifiable FunctionPrototypeDeclaration where
     convert (FPD d@(CDeclaration specs info)) = let 
@@ -155,51 +137,33 @@ module Semantics.C.Reifiable.Instances
       in 
       variable (fpointerto (convert returnTypeSpecs) (convert <$> params)) functionName nil
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   instance Reifiable CInitializer where
     convert (CInitExpression e) = convert e
     convert (CInitList l) = list $ convert <$> l
-    
+  
+  -- BUG: WE still need something to indicate .a=5 and whatnot
   instance Reifiable CInitializerSubfield where
     convert (CInitializerSubfield desigs initial) = convert initial
-  
-  instance Reifiable CDeclaration where
-    convert = error "BUG: C declaration has gone unclassified"
   
   -- CParameter -> Variable
   -- hits: declaration+specifiers -> type
   instance Reifiable CParameter where
+    -- we know thanks to the Parameter axioms that theres only going to be one info, with 
+    -- contents, but that it might not have a name. 
     convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = 
-      tie $ Variable (convert (DTD (specs, contents))) n (tie Empty) where n = maybe nil name' $ declName contents
-    convert (CParameter (CDeclaration specs _)) = tie $ Variable (tie Empty) (convert specs) (tie Empty)
+      variable (convert (DTD (specs, contents))) n nil where n = maybe nil name' $ declName contents
+    -- sometimes parameter names are just given type specifiers. spooky!
+    convert (CParameter (CDeclaration specs _)) = variable nil (convert specs) nil
   
-  -- CBlockItem -> Variable | Expression
-  instance Reifiable CBlockItem where
-    convert (Left decl)  = convert (VD decl)
-    convert (Right stmt) = convert stmt
+  -- THE LINE OF BULLSHIT. FROM HERE ON EVERYTHING SUCKS.
+  
+  -- here we get very clever and define newtypes for the different parts of a function
+  -- so that we don't have to define a bunch of helper functions
+  newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
+  newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
+    
+  instance Reifiable CDeclaration where
+    convert = error "BUG: C declaration has gone unclassified"
   
   instance Reifiable CStatement where
     -- convert (AsmStmt tq (Simple s)) = Asm (isJust tq) (convert s) [] [] []
@@ -333,7 +297,8 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CBuiltinExpr where
     convert (BuiltinVaArg ex ty) = tie $ VaArg (convert ex) (convert ty)
   
-  instance Reifiable CField
+  instance Reifiable CField where
+    convert (CField d@(CDeclaration specs infos)) = tie $ Sized (convert (VD d)) (convert $ size $ head infos)
   
   {-
   

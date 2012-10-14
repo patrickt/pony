@@ -25,5 +25,5 @@ module Language.Pony
   repl = repl' preprocessedC
   repl' p x = prettyPrint $ convert $ parseUnsafe p x
   
-  fuck = "static const int (*func)(int);"
+  fuck = "static const int (*func)(int, float, char);"
   astfuck = parseUnsafe preprocessedC fuck

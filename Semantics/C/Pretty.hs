@@ -55,7 +55,7 @@ module Semantics.C.Pretty
     evalPretty (out -> Variable (out -> a@(ArrayT _ _)) _ _) (Variable baseType name val) = baseType <+> name <> foldArrays a <> mayEquals val
     evalPretty _  (Variable t n val) = t <+> n <> mayEquals val
     
-    evalPretty _ (FunctionPointerT t b) = parens $ sep b
+    evalPretty _ (FunctionPointerT _ b) = parens $ sep $ punctuate comma b
     
     -- statements
     evalPretty _ Break                          = "break"
@@ -82,6 +82,8 @@ module Semantics.C.Pretty
     evalPretty _ Restrict = "restrict"
     evalPretty _ Static   = "static"
     evalPretty _ Volatile = "volatile"
+    
+    evalPretty _ (Sized t s) = t <:> s
     
     evalPretty _ (Program p) = vcat p
     evalPretty _ (Arguments t) = hsep $ punctuate comma t

@@ -87,7 +87,7 @@ module Semantics.C.ASG where
     -- type -> name -> initial value?
     Variable :: a -> a -> a -> Sem a
     Typedef :: a -> a -> Sem a
-    Sized :: a -> a -> a -> Sem a
+    Sized :: a -> a -> Sem a
   
   deriving instance (Show a) => Show (Sem a)
   deriving instance (Eq a) => Eq (Sem a)
@@ -103,7 +103,8 @@ module Semantics.C.ASG where
   signed' t = In (t (In Signed))
   unsigned' t = In (t (In Unsigned))
   int' size sign = In (IntT (In (Size size)) (In sign))
-  
+  variable a b c = tie $ Variable a b c
+  fpointerto funcspecs params = tie $ FunctionPointerT funcspecs params
   
   void' :: Fix Sem
   void' = In VoidT
