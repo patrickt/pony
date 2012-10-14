@@ -6,7 +6,6 @@ module Language.Pony
   , module Semantics.C.Pretty
   , module Semantics.C.Reifiable
   , module Language.C99
-  , pony
   ) 
   
   where
@@ -26,6 +25,5 @@ module Language.Pony
   repl = repl' preprocessedC
   repl' p x = prettyPrint $ convert $ parseUnsafe p x
   
-  pony :: IO ()
-  pony = print "yay"
-  
+  fuck = "static const int (*func)(int);"
+  astfuck = parseUnsafe preprocessedC fuck

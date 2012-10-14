@@ -51,8 +51,11 @@ module Semantics.C.Pretty
     evalPretty _ (PointerToT a)                 = a <+> "*"
     evalPretty _ (ArrayT t size)                = t -- we'll get to this later
 
+    evalPretty (out -> Variable (out -> FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ star <> name) <> t <> mayEquals val  
     evalPretty (out -> Variable (out -> a@(ArrayT _ _)) _ _) (Variable baseType name val) = baseType <+> name <> foldArrays a <> mayEquals val
     evalPretty _  (Variable t n val) = t <+> n <> mayEquals val
+    
+    evalPretty _ (FunctionPointerT t b) = parens $ sep b
     
     -- statements
     evalPretty _ Break                          = "break"

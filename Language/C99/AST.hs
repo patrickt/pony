@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
 
 module Language.C99.AST
   ( CTranslationUnit
@@ -32,7 +32,8 @@ module Language.C99.AST
   
   where
   
-  import Data.Generics
+  import GHC.Generics
+  import Data.Generics hiding (Generic)
   import Language.C99.Literals
   
   -- TODO: Add position information to all of the types, etc.
@@ -97,7 +98,7 @@ module Language.C99.AST
     | SwitchStmt CExpr CStatement
     -- | The @while@ statement, of the form @while expr statement@.
     | WhileStmt CExpr CStatement
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | There are two types of inline assembly: the first is the standard call to @asm()@, 
   -- which is identical to a function call in syntax (except for the fact that it can only 
@@ -106,25 +107,25 @@ module Language.C99.AST
   data CAsmOperand 
     = Simple CStringLiteral
     | GCCAsm CStringLiteral [CAsmArgument] [CAsmArgument] [CStringLiteral]
-    deriving (Show, Eq, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | Represents an output or input value in GCC assembly syntax. Takes the form of 
   -- | @string (variable)?@.
   data CAsmArgument 
     = CAsmArgument CStringLiteral (Maybe CExpr)
-    deriving (Show, Eq, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | A C function (C99 6.9.1).
   -- Invariant: The final 'CStatement' will always be a 'CompoundStmt', and the 
   -- provided 'CDeclarator' will always be named.
   data CFunction = CFunction [CSpecifier] CDeclarator CStatement
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | External declarations (C99 6.9). Wraps either a 'CFunction' or 'CDeclaration'.
   data CExternal 
     = FunctionDecl CFunction
     | ExternDecl CDeclaration
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | C expressions (C99 6.5).
   -- Please note that the comma operator is currently unimplemented.
@@ -141,19 +142,19 @@ module Language.C99.AST
     -- | Whereas sizeof(variable) parses as a function call, sizeof(type) needs its own node.
     | SizeOfType CTypeName
     | CBuiltin CBuiltinExpr
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | A string literal newtype to provide a modicum of type safety in the AST.
   newtype CStringLiteral = CStringLiteral {
     getExpr :: CExpr
-  } deriving (Eq, Typeable, Data, Show)
+  } deriving (Eq, Typeable, Data, Show, Generic)
   
   -- TODO: Expand this to include __builtin_offsetof and __builtin_types_compatible_p
   -- | GNU/clang built-in functions that are exposed after preprocessing.
   data CBuiltinExpr
     -- | Corresponds to @__builtin_va_arg(id, type)@.
     = BuiltinVaArg CExpr CTypeName
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | Storage class specifiers (C99 6.7.1).
   -- As an extension, @__attribute__(())@ is considered a storage specifier.
@@ -164,7 +165,7 @@ module Language.C99.AST
     | CExtern
     | CTypedef
     | CAttr CAttribute
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | Type qualifiers (C99 6.7.3) and function specifiers (C99 6.7.4).
   -- Please note that the 'FInline' qualifier must only be applied to functions.
@@ -173,14 +174,14 @@ module Language.C99.AST
     | CRestrict
     | CVolatile
     | CInline
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | C qualifiers and specifiers.
   data CSpecifier 
     = TSpec CTypeSpecifier
     | TQual CTypeQualifier
     | SSpec CStorageSpecifier
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | C type specifiers (6.7.2).
   -- As a GNU extension, @typeof(expr)@ is supported.
@@ -203,46 +204,46 @@ module Language.C99.AST
      | TEnumeration (Maybe String) [CEnumerator] [CAttribute]
      | TTypedef String CTypeName
      | TTypeOfExpr CExpr
-     deriving (Eq, Show, Typeable, Data)
+     deriving (Eq, Show, Typeable, Data, Generic)
 
   -- | C enumeration specifiers (C99 6.7.2.2).
   data CEnumerator 
     = EnumIdent String
     | EnumAssign String CExpr
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | C @__attribute__(())@ specifications. 
   data CAttribute = CAttribute [CExpr]
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | Record type that wraps the various fields a declaration may have.
   data CDeclInfo = CDeclInfo {
     contents :: Maybe CDeclarator,
     initVal :: Maybe CInitializer,
     size :: Maybe CExpr
-  } deriving (Show, Eq, Typeable, Data)
+  } deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | C declarations (C99 6.7).
   -- This method of structuring declarations was innovated by Benedikt Huber.
   data CDeclaration = CDeclaration {
       declrSpecifiers :: [CSpecifier],
       declrInfos :: [CDeclInfo]
-  } deriving (Eq, Show, Typeable, Data)
+  } deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | Represents C type names. These have a number of invariants: there will 
   -- be at least one 'CSpecifier', at most one 'CDeclInfo', which may contain a 
   -- declarator (if it is not 'Nothing', it will be unnamed) and will not have an 'Initializer' or be sized..
-  newtype CTypeName = CTypeName CDeclaration deriving (Show, Eq, Typeable, Data)
+  newtype CTypeName = CTypeName CDeclaration deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | Represents C parameters. There will be at least one 'Specifier', and only 
   -- one 'CDeclInfo', which will contain a possibly-named declarator
   -- and no initializer or size.
-  newtype CParameter = CParameter CDeclaration deriving (Show, Eq, Typeable, Data)
+  newtype CParameter = CParameter CDeclaration deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | Represents fields of structs or unions. There will be at least one specifier,
   -- at least one 'CDeclInfo', all of which will not have an initVal (but may be 
   -- named, sized, named and sized, or unnamed and sized.)
-  newtype CField = CField CDeclaration deriving (Show, Eq, Typeable, Data)
+  newtype CField = CField CDeclaration deriving (Show, Eq, Typeable, Data, Generic)
   
   -- As a GNU extension, the user can specify the assembly name for a C function 
   -- or variable.
@@ -255,24 +256,24 @@ module Language.C99.AST
       derived :: [CDerivedDeclarator],
       asmName :: CAsmName,
       declAttributes :: [CAttribute]
-   } deriving (Eq, Show, Typeable, Data)
+   } deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | C designators, i.e. that which can appear inside compound initialization statements.
   data CDesignator 
     = ArrayDesignator CExpr
     | MemberDesignator String
-    deriving (Show, Eq, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | C initializers (C99 6.7.8). Initialization types can contain one 
   -- expression or a bracketed list of initializers.
   data CInitializer 
     = CInitExpression CExpr
     | CInitList [CInitializerSubfield]
-    deriving (Eq, Show, Typeable, Data)
+    deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | Represents the deconstructed initializers.
   data CInitializerSubfield = CInitializerSubfield [CDesignator] CInitializer
-    deriving (Show, Eq, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data, Generic)
   
   
   -- | Indirectly derived declarators used inside the 'CDeclarator' type.
@@ -281,4 +282,4 @@ module Language.C99.AST
    = Pointer [CTypeQualifier]
    | Array [CTypeQualifier] (Maybe CExpr)
    | DerivedFunction [CParameter] Bool
-   deriving (Eq, Show, Typeable, Data)
+   deriving (Eq, Show, Typeable, Data, Generic)

@@ -3,6 +3,8 @@
 module Language.C99.Miscellany where
   
   import Language.C99.AST
+  import Control.Applicative
+  import Data.Monoid
   
   -- | A declaration is a typedef iff its first specifier is an 'STypedef'.
   declarationIsTypedef :: CDeclaration -> Bool
@@ -15,7 +17,8 @@ module Language.C99.Miscellany where
     isComposite (TSpec (TStructOrUnion _ _ _ _)) = True
     isComposite _ = False
   
-  -- A declaration is a function or function prototype if its derived declarations
+  -- A declaration is a function or function prototype if its derived declarations 
+  -- contain the DerivedFunction attribute.
   declarationIsFunctionPrototype :: CDeclaration -> Bool
   declarationIsFunctionPrototype (CDeclaration _ (CDeclInfo { contents = Just (CDeclarator (Just _) derived _ _), ..} : _)) = 
     any isFunction derived where
@@ -57,6 +60,11 @@ module Language.C99.Miscellany where
     typeQuals = [ a | (TQual a) <- them ]
     typeSpecs = [ a | (TSpec a) <- them ]
     storageSpecs = [ a | (SSpec a) <- them ]
+    
+  declaratorParameters :: CDeclarator -> [CParameter]
+  declaratorParameters (CDeclarator _ derived _ _) = mconcat $ go <$> derived where
+    go (DerivedFunction ps _) = ps
+    go _ = []
 
   specifierBelongsToFunction :: CSpecifier -> Bool
   specifierBelongsToFunction (SSpec CStatic) = True

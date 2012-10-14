@@ -97,12 +97,13 @@ module Semantics.C.ASG where
   
   program = In . Program
   list = In . List
-  
+  nil = In Empty
   tie = In
   
   signed' t = In (t (In Signed))
   unsigned' t = In (t (In Unsigned))
   int' size sign = In (IntT (In (Size size)) (In sign))
+  
   
   void' :: Fix Sem
   void' = In VoidT

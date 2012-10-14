@@ -8,7 +8,7 @@ module Semantics.C.Reifiable.Instances
   import Language.C99 hiding (char, Empty)
   import qualified Language.C99.Literals as Lit
   import Language.Pony.MachineSizes
-  import Data.List (find, foldl')
+  import Data.List (find, foldl', partition)
   import Data.Functor.Fix
   import Data.Maybe (fromMaybe)
   
@@ -24,7 +24,7 @@ module Semantics.C.Reifiable.Instances
     convert (ExternDecl d) 
       | declarationIsTypedef d                                    = convert (TdD d)
       -- | declarationIsComposite d && not (declarationHasPointer d) = convert (CD d)
-      -- | declarationIsFunctionPrototype d                          = convert (FPD d)
+      | declarationIsFunctionPrototype d                          = convert (FPD d)
       | otherwise                                                 = convert (VD d)
   
   -- CExternal -> Typedef
@@ -130,8 +130,54 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CompositeDeclaration where
     convert = error "convert is not defined for composite types yet"
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  variable a b c = tie $ Variable a b c
+  fpointerto funcspecs params = tie $ FunctionPointerT funcspecs params
+  
   instance Reifiable FunctionPrototypeDeclaration where
-    convert = error "convert is not defined for function prototypes yet"
+    convert (FPD d@(CDeclaration specs info)) = let 
+      -- TODO: WE ARE DROPPING THINGS OFF LIKE IT'S AFTER-SCHOOL ACTIVITIES, YO 
+      (functionSpecs, returnTypeSpecs) = partition specifierBelongsToFunction specs
+      (Just functionName) = name' <$> nameOfDeclaration d
+      (Just declarator) = contents $ head info
+      params = declaratorParameters declarator
+      in 
+      variable (fpointerto (convert returnTypeSpecs) (convert <$> params)) functionName nil
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   instance Reifiable CInitializer where
     convert (CInitExpression e) = convert e
@@ -147,7 +193,7 @@ module Semantics.C.Reifiable.Instances
   -- hits: declaration+specifiers -> type
   instance Reifiable CParameter where
     convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = 
-      tie $ Variable (convert (DTD (specs, contents))) n (tie Empty) where (Just n) = name' <$> declName contents
+      tie $ Variable (convert (DTD (specs, contents))) n (tie Empty) where n = maybe nil name' $ declName contents
     convert (CParameter (CDeclaration specs _)) = tie $ Variable (tie Empty) (convert specs) (tie Empty)
   
   -- CBlockItem -> Variable | Expression
