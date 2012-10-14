@@ -5,12 +5,13 @@ module Testing.HUnit.Assembly
   import Test.Framework.Providers.HUnit
   import Test.HUnit hiding (Test)
   import Language.C99
+  import Language.C99.Literals
   
   tests :: [Test]
   tests = [ testCase "simple statements" testSimpleStatements
           ]
           
-  str = CStringLiteral
+  str = CStringLiteral . Constant . CString
   
   testSimpleStatements :: Assertion
   testSimpleStatements = assertEqual "asm(stmt)" theory practice

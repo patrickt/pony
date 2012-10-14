@@ -25,6 +25,10 @@ module Semantics.C.Pretty
   foldArrays (ArrayT a@(In (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
   foldArrays (ArrayT _ size) = brackets $ prettyPrint size
   
+  foundationType :: Fix Sem -> Doc
+  foundationType (In (ArrayT t _)) = foundationType t
+  foundationType x = prettyPrint x
+  
   -- FIXME: sizes of integers are being ignored
   
   instance PrettyAlg Sem where
@@ -49,10 +53,12 @@ module Semantics.C.Pretty
     evalPretty (out -> CharT (out -> Signed)) _ = "char"
     evalPretty _ (CharT sign)                   = sign <+> "char"
     evalPretty _ (PointerToT a)                 = a <+> "*"
-    evalPretty _ (ArrayT t size)                = t -- we'll get to this later
+    evalPretty _ (ArrayT t size)                = t <> brackets size
+    
+
 
     evalPretty (out -> Variable (out -> FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ star <> name) <> t <> mayEquals val  
-    evalPretty (out -> Variable (out -> a@(ArrayT _ _)) _ _) (Variable baseType name val) = baseType <+> name <> foldArrays a <> mayEquals val
+    evalPretty (out -> Variable (out -> a@(ArrayT _ _)) _ _) (Variable _ name val) = (foundationType (In a)) <+> name <> foldArrays a <> mayEquals val
     evalPretty _  (Variable t n val) = t <+> n <> mayEquals val
     
     evalPretty _ (FunctionPointerT _ b) = parens $ sep $ punctuate comma b

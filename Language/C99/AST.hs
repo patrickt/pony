@@ -37,7 +37,6 @@ module Language.C99.AST
   import Language.C99.Literals
   
   -- TODO: Add position information to all of the types, etc.
-  -- TODO: Get some consistent naming structure up in here.
   -- TODO: CTranslationUnit and BlockItem need to become datatypes rather than type synonyms.
   -- TODO: Rename CAsmOperand and CAsmArgument to something more descriptive.
   -- TODO: Rename the CInitList constructor of CInitializer, as I find it really hard to read code 
