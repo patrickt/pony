@@ -18,15 +18,8 @@ module Semantics.C.Pretty
   mayEquals :: Doc e -> Doc e
   mayEquals a = if (a == empty) then a else space <> equals <+> a
   
-  
-  
-  
   class (Functor f) => PrettyAlg f where
     evalPretty :: Fix f -> f (Doc e) -> (Doc e)
-    evalGroup :: Fix f -> f (Doc e) -> (Doc e)
-    evalGroup = evalPretty
-    
-    
   
   foldArrays :: (Sem (Fix Sem)) -> Doc e
   foldArrays (ArrayT a@(In (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
@@ -111,7 +104,8 @@ module Semantics.C.Pretty
     evalPretty _ Static   = "static"
     evalPretty _ Volatile = "volatile"
     
-    evalPretty _ (Sized t s) = t <> ":" <> s
+    evalPretty (out -> Sized _ (out -> Empty)) (Sized t _) = t
+    evalPretty _                        (Sized t s) = t <> ":" <> s
     
     evalPretty _ (Program p) = vcat p
     evalPretty _ (Arguments t) = hsep $ punctuate comma t
@@ -121,6 +115,8 @@ module Semantics.C.Pretty
     evalPretty _ Empty = empty 
     
     evalPretty _ (Typedef name typ) = "typedef " <> name <+> typ 
+    
+    evalPretty _ (Composite t n fs) = t <+> n <+> braces (hsep fs)
     
     evalPretty _ x = error $ "not defined for " ++ show x
   

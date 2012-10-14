@@ -35,7 +35,7 @@ module Semantics.C.ASG where
     ArrayT           :: a -> a -> Sem a -- Array :: Type -> Length -> Type
     FunctionPointerT :: a -> [a] -> Sem a
     BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
-    CompositeT       :: a -> a -> [a] -> Sem a -- (Struct | Union) -> Name? -> Member
+    CompositeT       :: a -> Sem a
     
     -- statements
     Break      :: Sem a
@@ -80,6 +80,7 @@ module Semantics.C.ASG where
     Custom   :: [a] -> Sem a
   
     -- other stuff
+    Composite :: a -> a -> [a] -> Sem a -- (Struct | Union) -> Name? -> Member
     Program :: [a] -> Sem a
     Group :: [a] -> Sem a
     List  :: [a] -> Sem a

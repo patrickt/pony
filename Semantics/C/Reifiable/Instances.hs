@@ -23,7 +23,7 @@ module Semantics.C.Reifiable.Instances
     convert (FunctionDecl f) = convert f
     convert (ExternDecl d) 
       | declarationIsTypedef d                                    = convert (TdD d)
-      -- | declarationIsComposite d && not (declarationHasPointer d) = convert (CD d)
+      | declarationIsComposite d                                  = convert (CD d)
       | declarationIsFunctionPrototype d                          = convert (FPD d)
       | otherwise                                                 = convert (VD d)
       
@@ -127,6 +127,7 @@ module Semantics.C.Reifiable.Instances
     convert (Just a) = convert a
     convert _ = In Empty
   
+  newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
   instance Reifiable FunctionPrototypeDeclaration where
     convert (FPD d@(CDeclaration specs info)) = let 
       -- TODO: WE ARE DROPPING THINGS OFF LIKE IT'S AFTER-SCHOOL ACTIVITIES, YO 
@@ -160,7 +161,6 @@ module Semantics.C.Reifiable.Instances
   -- here we get very clever and define newtypes for the different parts of a function
   -- so that we don't have to define a bunch of helper functions
   newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
-  newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
   
   -- CExpr -> expression
   -- hits: CLiteral -> constant, CBuiltInExpr -> expression
@@ -179,10 +179,10 @@ module Semantics.C.Reifiable.Instances
     convert (CParen s)           = tie $ Paren (convert s)
     
   instance Reifiable CompositeDeclaration where
-    convert = error "convert is not defined for composite types yet"
+    convert (CD (CDeclaration specs infos)) = convert specs
     
   instance Reifiable CDeclaration where
-    convert = error "BUG: C declaration has gone unclassified"
+    convert = dieInBreakpoint "BUG: C declaration has gone unclassified"
   
   instance Reifiable CStatement where
     -- convert (AsmStmt tq (Simple s)) = Asm (isJust tq) (convert s) [] [] []
@@ -272,7 +272,7 @@ module Semantics.C.Reifiable.Instances
     convert [TDouble]                       = tie DoubleT
     convert [TLong, TDouble]                = tie LongDoubleT
     -- FIXME: ignoring attributes in these conversions
-    -- convert [t@(TStructOrUnion mName True fields attrs)] = tie $ CompositeT (fromMaybe (tie Empty) (name' <$> mName)) (tie Struct) (convert <$> fields)
+    convert [t@(TStructOrUnion mName sou fields attrs)] = tie $ Composite (tie comp) (fromMaybe nil (name' <$> mName)) (convert <$> fields) where comp = if sou then Struct else Union
     -- convert [TEnumeration n a attrs]        = SEnum (EnumerationInfo n (convert <$> a)) (convert <$> attrs)
     convert [TTypedef n d]                  = tie $ Typedef (name' n) (convert d)
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s

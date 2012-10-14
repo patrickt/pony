@@ -18,7 +18,7 @@ module Language.Pony
     -- import Language.Pony.Transformations.Utilities
   import Semantics.C.ASG
   import Semantics.C.Reifiable
-  import Semantics.C.Reifiable.Instances ()
+  import Semantics.C.Reifiable.Instances
   import Semantics.C.Pretty
   -- import System.Environment
   

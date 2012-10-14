@@ -8,7 +8,7 @@ where
   
   -- Lasciate ogne speranza, voi ch'intrate.
   
-  import Control.Monad (when)
+  import Control.Monad
   import Data.Either
   import Language.C99.AST hiding (asmName)
   import Language.C99.Expressions
@@ -118,6 +118,9 @@ where
   asmName :: Parser String
   asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
   
+  
+  -- CDeclarator 
+  
   -- Declarators (C99 6.7.5). May be named or unnamed.
   declarator :: Parser CDeclarator
   declarator = do
@@ -131,4 +134,6 @@ where
       (Just (Single s)) -> return $ CDeclarator (Just s) derived asm attrs
       -- discarding the result of __attributes__ here; could this be a bug?
       (Just (Parenthesized (CDeclarator n decls _ _))) -> return $ CDeclarator n (derived ++ decls) asm attrs
-      Nothing -> return $ CDeclarator Nothing derived Nothing attrs
+      Nothing -> do
+        guard ((length derived) /= 0)
+        return $ CDeclarator Nothing derived asm attrs
