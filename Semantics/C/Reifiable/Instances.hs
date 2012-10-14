@@ -262,22 +262,6 @@ module Semantics.C.Reifiable.Instances
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
     convert other                           = dieInBreakpoint $ show other
   
-  -- CExpr -> expression
-  -- hits: CLiteral -> constant, CBuiltInExpr -> expression
-  instance Reifiable CExpr where
-    convert (Comma _)            = error "BUG: COMMA NOT DEFINED YET"
-    convert (Constant l)         = convert l
-    convert (Identifier i)       = name' i
-    convert (Index l r)          = tie $ Brackets (convert l) (convert r)
-    convert (Call f args)        = tie $ FunCall (convert f) (convert <$> args)
-    convert (CCast tn arg)       = tie $ Cast (convert tn) (convert arg)
-    convert (UnaryOp n arg)      = tie $ Unary (name' n) (convert arg)
-    convert (BinaryOp n lhs rhs) = tie $ Binary (convert lhs) (name' n) (convert rhs)
-    convert (TernaryOp a b c)    = tie $ Ternary (convert a) (convert b) (convert c)
-    convert (SizeOfType decl)    = tie $ Unary (name' "sizeof") (convert decl)
-    convert (CBuiltin t)         = convert t
-    convert (CParen s)           = tie $ Paren (convert s)
-  
   instance Reifiable CStringLiteral where
     convert = convert . getExpr
     
@@ -301,6 +285,7 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CBuiltinExpr where
     convert (BuiltinVaArg ex ty) = tie $ VaArg (convert ex) (convert ty)
   
+  -- We just parse it as a regular declaration than 
   instance Reifiable CField where
     convert (CField d@(CDeclaration specs infos)) = tie $ Sized (convert (VD d)) (convert $ size $ head infos)
   
@@ -308,28 +293,10 @@ module Semantics.C.Reifiable.Instances
   
   instance Reifiable CAsmArgument AsmOp where
     convert (CAsmArgument x y) = AsmOp (convert x) (convert <$> y)
-  
-  instance Reifiable CField [Field] where
-    convert (CField (CDeclaration specs infos)) = map convert' infos where
-      convert' :: CDeclInfo -> Field
-      convert' (CDeclInfo {contents = (Just contents), size, ..}) = Field (declName contents) (extractTypeFromComponents specs contents) (convert <$> size)
-      convert' _ = error "unexpected pattern passed to CField -> Field conversion" 
     
   instance Reifiable CEnumerator Enumeration where
     convert (EnumIdent s) = Enumeration s Nothing
     convert (EnumAssign s expr) = Enumeration s (Just (convert expr))
-  
-  -- | A declaration can refer to multiple variables, for example:
-  -- @int foo, bar, baz;@
-  convertDeclarationToVariables :: CDeclaration -> [Variable]
-  convertDeclarationToVariables (CDeclaration specs infos) = map convert' infos where
-    convert' (CDeclInfo {contents = Just decl, initVal = Nothing, size }) 
-      = let (Just name) = declName decl 
-        in Variable name (extractTypeFromComponents specs decl) (convert <$> size)
-    convert' (CDeclInfo {contents = Just decl, initVal = Just (CInitExpression ie), size = Nothing}) 
-      = let (Just name) = declName decl 
-        in Variable name (extractTypeFromComponents specs decl) (Just (convert ie))
-    convert' _ = error "BUG: unexpected pattern passed to convertDeclarationToVariables."
   
   functionLevelSpecifiers :: [CSpecifier] -> [Attribute]
   functionLevelSpecifiers specs = (convert <$> sspecs) ++ (convert <$> tquals) where
@@ -349,11 +316,6 @@ module Semantics.C.Reifiable.Instances
     boolToCompositeType True = Struct
     boolToCompositeType False = Union
   convertComposite _ = error "BUG: non-composite type specifier passed to convertComposite"
-  
-  augmentType :: SType -> CDerivedDeclarator -> SType
-  augmentType t (Pointer qs) = SPointerTo t (convert <$> qs)
-  augmentType t (Array qs size) = SArray t (convert <$> size) (convert <$> qs)
-  augmentType t (DerivedFunction args variadic) = SFunctionPointer t (convert <$> args) []
 
   removeSpuriousPointers :: [CDerivedDeclarator] -> [CDerivedDeclarator]
   removeSpuriousPointers p = go p [] where
@@ -369,8 +331,5 @@ module Semantics.C.Reifiable.Instances
         rtype = returnTypeOfFunction (CFunction specs contents undefined)
         isVariadic = doesDeclaratorContainVariadicSpecifier contents
   functionPrototypeFromDeclaration _ = error "BUG: invalid declaration passed to functionPrototypeFromDeclaration"
-  
-  convertDeclarationToLocal :: CDeclaration -> Maybe Local
-  convertDeclarationToLocal d = LDeclaration <$> convertDeclarationToVariable d
   
   -}

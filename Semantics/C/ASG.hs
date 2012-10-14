@@ -2,7 +2,6 @@
 
 module Semantics.C.ASG where
   
-  import Data.Fixed
   import Data.Foldable (Foldable)
   import Data.Functor.Fix
   import Data.Traversable (Traversable)
@@ -96,6 +95,9 @@ module Semantics.C.ASG where
   deriving instance Functor Sem
   deriving instance Foldable Sem
   deriving instance Traversable Sem
+  
+  isFunction (Function _ _ _ _) = True
+  isFunction _ = False
   
   program = In . Program
   list = In . List

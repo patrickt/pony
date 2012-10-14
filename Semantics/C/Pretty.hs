@@ -7,25 +7,33 @@ module Semantics.C.Pretty
   where
   
   
-  import Data.Monoid hiding ((<>))
   import Semantics.C.ASG
-  import Text.Pretty
   import Data.Functor.Fix
+  import Control.Applicative hiding (Const)
+  import Text.Pretty
   
-  prettyPrint :: (PrettyAlg f) => Fix f -> Doc
+  prettyPrint :: (PrettyAlg f) => Fix f -> Doc e
   prettyPrint = para evalPretty
   
-  mayEquals :: Doc -> Doc
-  mayEquals a = if isEmpty a then a else space <> equals <+> a
-    
+  mayEquals :: Doc e -> Doc e
+  mayEquals a = if (a == empty) then a else space <> equals <+> a
+  
+  
+  
+  
   class (Functor f) => PrettyAlg f where
-    evalPretty :: Fix f -> f Doc -> Doc
+    evalPretty :: Fix f -> f (Doc e) -> (Doc e)
+    evalGroup :: Fix f -> f (Doc e) -> (Doc e)
+    evalGroup = evalPretty
     
-  foldArrays :: (Sem (Fix Sem)) -> Doc
+    
+  
+  foldArrays :: (Sem (Fix Sem)) -> Doc e
   foldArrays (ArrayT a@(In (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
   foldArrays (ArrayT _ size) = brackets $ prettyPrint size
+  foldArrays t = error "foldArrays called improper type"
   
-  foundationType :: Fix Sem -> Doc
+  foundationType :: Fix Sem -> Doc e
   foundationType (In (ArrayT t _)) = foundationType t
   foundationType x = prettyPrint x
   
@@ -35,10 +43,12 @@ module Semantics.C.Pretty
     evalPretty _ (Name n) = text n
     evalPretty _ Unsigned = "unsigned"
     evalPretty _ Signed   = "signed"
-    evalPretty _ (Size t) = "TOD"
+    evalPretty _ (Size _) = "TODO" 
+    evalPretty _ Struct   = "struct"
+    evalPretty _ Union    = "union"
   
-    evalPretty _ (Function typ name params body) = typ <+> name <> (parens params) <+> "{" $$ (nest 4 body) $$ "}"
-    
+    evalPretty _ (Function typ name params body) = typ <+> name <> (parens params) <+> "{" `above` (indent 2 body) `above` "}"
+
     evalPretty _ VoidT = "void"
 
     -- no need to print 'signed int' when 'int' will do
@@ -54,30 +64,35 @@ module Semantics.C.Pretty
     evalPretty _ (CharT sign)                   = sign <+> "char"
     evalPretty _ (PointerToT a)                 = a <+> "*"
     evalPretty _ (ArrayT t size)                = t <> brackets size
-    
+    evalPretty _ (FunctionPointerT _ b) = tupled b
 
 
-    evalPretty (out -> Variable (out -> FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ star <> name) <> t <> mayEquals val  
-    evalPretty (out -> Variable (out -> a@(ArrayT _ _)) _ _) (Variable _ name val) = (foundationType (In a)) <+> name <> foldArrays a <> mayEquals val
-    evalPretty _  (Variable t n val) = t <+> n <> mayEquals val
+    evalPretty (out -> Variable (out ->FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ "*" <> name) <> t <> mayEquals val  
+    evalPretty (out -> Variable (out -> a@(ArrayT _ _)         ) _ _) (Variable _ name val) = foundationType (In a) <+> name <> foldArrays a <> mayEquals val
+    evalPretty _                                                      (Variable t n val) = t <+> n <> mayEquals val
     
-    evalPretty _ (FunctionPointerT _ b) = parens $ sep $ punctuate comma b
-    
+    -- there's a BIG bug here where case statements don't "keep" the things they own
     -- statements
-    evalPretty _ Break                          = "break"
-    evalPretty _ (Compound sts)                 = braces $ hsep sts 
-    -- evalPretty (Default sts)                 = "default:" $$ hsep sts
-    evalPretty _ (Case a b)                     = "case" <+> a <> ":" $$ hsep b
-    evalPretty (out -> Return (out -> Empty)) _ = "return"
-    evalPretty _ (Return a)                     = "return" <+> a
+    evalPretty _ Break                = "break"
+    evalPretty _ (Case a b)           = "case" <+> a <> colon </> hsep b
+    evalPretty x (Compound sts)       = "{" `above` (indent 2 $ vcat sts) `above` "}" 
+    evalPretty _ (Default sts)        = "default:" 
+    evalPretty _ (DoWhile a b)        = "do" <+> a <+> "while" <+> parens b
+    evalPretty _ (Return a)           = "return" <+> a
+    evalPretty _ (Goto s)             = "goto" <+> s
+    evalPretty _ (IfThen c s)         = "if" <> parens c <> s
+    evalPretty _ (IfThenElse c s alt) = "if" <+> parens c <+> s <+> "else" <+> parens s <+> alt
+    evalPretty _ (Labeled l s)        = l <> ":" <> s
+    evalPretty _ (While c a)          = "while" <+> parens c <+> a
     
     evalPretty _ (FunCall a bs) = a <> parens (sep $ punctuate comma bs)
     
     -- literals
-    evalPretty _ (CInt t) = textS t
-    evalPretty _ (CStr s) = doubleQuotes $ text s
+    evalPretty _ (CInt t) = pretty t
+    evalPretty _ (CStr s) = dquotes $ text s
     evalPretty _ (CFloat s) = text s
-    evalPretty _ (CChar c) = quotes $ char c
+    evalPretty _ (CChar c) = squotes $ char c
+    
     
     evalPretty _ (Unary op a) = op <> a
     evalPretty _ (Binary a op b) = a <+> op <+> b
@@ -96,14 +111,14 @@ module Semantics.C.Pretty
     evalPretty _ Static   = "static"
     evalPretty _ Volatile = "volatile"
     
-    evalPretty _ (Sized t s) = t <:> s
+    evalPretty _ (Sized t s) = t <> ":" <> s
     
     evalPretty _ (Program p) = vcat p
     evalPretty _ (Arguments t) = hsep $ punctuate comma t
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t
-    evalPretty _ (Group ts) = vcat $ [t <> semi | t <- ts]
+    evalPretty (out -> Group rs) (Group ts) = vcat $ [t <> semi | t <- ts]
     
-    evalPretty _ Empty = mempty 
+    evalPretty _ Empty = empty 
     
     evalPretty _ (Typedef name typ) = "typedef " <> name <+> typ 
     
@@ -184,33 +199,6 @@ module Semantics.C.Pretty
     pretty (EnumerationInfo n vals) =
       "enum" <+> pretty n <+> braces values where
         values = commaSep vals
-  
-  instance Pretty Variable where
-    pretty (Variable n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
-      pretty t <+> pretty n' <+> star <> pretty n
-    -- stupid C and its stupid decision to put array sizes after the variable name
-    pretty (Variable n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> text n) <> parens (commaSep params) <> semicolon
-    pretty (Variable n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size)
-    pretty (Variable n t Nothing) = pretty t <+> pretty n
-    pretty (Variable n t (Just e)) = pretty t <+> pretty n <+> equals <+> pretty e
-
-  instance Pretty Parameter where
-    pretty (Parameter Nothing (SFunctionPointer rt params _)) = pretty rt <+> parens star <> parens (commaSep params)
-    pretty (Parameter Nothing t) = pretty t
-    pretty (Parameter (Just n) (SFunctionPointer rt params _)) = pretty rt <+> parens (star <> pretty n) <> parens (commaSep params)
-    pretty (Parameter (Just n) (SArray t Nothing _)) = pretty t <+> text n <> "[]"
-    pretty (Parameter (Just n) t) = pretty t <+> text n
-  
-  instance Pretty Field where
-    pretty (Field n (SPointerTo (SComposite (CompositeInfo t n' []) []) []) Nothing) = 
-      pretty t <+> pretty n' <+> star <> pretty n <> semicolon
-    -- function pointer syntax is the devil, and when I say the devil, I actually mean
-    -- Satan. You know, the guy who lives in Hell.
-    pretty (Field n (SFunctionPointer rt params _) _) = pretty rt <+> parens (star <> pretty n) <> parens (commaSep params) <> semicolon
-    -- stupid C and its stupid decision to put array sizes after the variable name
-    pretty (Field n (SArray t size _) _) = pretty t <+> pretty n <> brackets (pretty size) <> semicolon
-    pretty (Field n t Nothing) = pretty t <+> pretty n <> semicolon
-    pretty (Field n t (Just i)) = pretty t <+> pretty n <> colon <+> pretty i <> semicolon
 
   instance Pretty Statement where
     pretty (Asm True a b c d) = 
@@ -242,12 +230,6 @@ module Semantics.C.Pretty
     pretty (Switch e s) = "switch" <+> parens' e <+> pretty s
     pretty (While e s) = "while" <+> parens' e <+> pretty s
     
-  instance Pretty CLiteral where
-    pretty (CInteger i) = textS i
-    pretty (CChar c) = textS c
-    pretty (CFloat f) = textS f
-    pretty (CString s) = textS s
-
   instance Pretty Expression where
     pretty (Literal l) = pretty l
     pretty (Ident n) = text n
@@ -301,5 +283,4 @@ module Semantics.C.Pretty
     pretty a = vcat $ pretty <$> a
     
   -}
-
   

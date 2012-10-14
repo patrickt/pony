@@ -1,7 +1,6 @@
 module Language.C99 
   ( module Language.C99.Parser
   , module Language.C99.AST
-  , module Language.C99.ASTPretty
   , module Language.C99.Declarations
   , module Language.C99.Expressions
   , module Language.C99.Functions
@@ -17,7 +16,7 @@ module Language.C99
   
   import Language.C99.Parser
   import Language.C99.AST
-  import Language.C99.ASTPretty
+  import Language.C99.ASTPretty ()
   import Language.C99.Declarations
   import Language.C99.Expressions
   import Language.C99.Functions

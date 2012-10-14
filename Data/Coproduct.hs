@@ -1,14 +1,12 @@
 {-# LANGUAGE TypeOperators, MultiParamTypeClasses, FlexibleInstances #-}
 
 module Data.Coproduct 
-  ( Co (..)
-  , (:+:)
+  ( (:+:)
   , (:<:)
   )
   where
   
-  
-  data Co f = In (f (Co f))
+  inport Data.Functor.Fix
   
   -- Swierstra's key insight was to combine expressions using the coproduct 
   -- of their signatures. Coproducts are easy to define, and are conceptually 

@@ -1,12 +1,41 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, StandaloneDeriving, OverlappingInstances #-}
 
 module Language.C99.ASTPretty 
+  ( CLiteral (..)
+  , CAsmArgument (..)
+  , CAsmOperand  (..)
+  , CAttribute (..)
+  , CBuiltinExpr (..)
+  , CDeclaration (..)
+  , CDeclarator (..)
+  , CDeclInfo (..)
+  , CDerivedDeclarator (..)
+  , CDesignator (..)
+  , CEnumerator (..)
+  , CExpr (..)
+  , CExternal (..)
+  , CField (..)
+  , CFunction (..)
+  , CInitializer (..)
+  , CInitializerSubfield (..)
+  , CParameter (..)
+  , CSpecifier (..)
+  , CStatement (..)
+  , CStorageSpecifier (..)
+  , CTypeName (..)
+  , CTypeQualifier (..)
+  , CTypeSpecifier (..)
+  , CStringLiteral (..)
+  )
   where
   
-  import Data.Generics
   import Language.C99.AST
   import Language.C99.Literals
   import Text.PrettyPrint.GenericPretty
+  
+  -- | This uses GHC's new Generics system to pretty-print AST results. 
+  -- | For now, it is somewhat bewildering, as the graphs produced are gigantic,
+  -- | but it's a sight better than deciphering them from a single stream of text.
   
   instance Out CLiteral
   instance Out CTranslationUnit
