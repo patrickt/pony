@@ -5,9 +5,9 @@ module Semantics.C.Reifiable
  where
   
   import Semantics.C.ASG
-  import Data.Functor.Fix
+  import Data.Generics.Fixplate
   
   -- coalgebra?
   class Reifiable abstract where
-    convert :: abstract -> Fix Sem
+    convert :: abstract -> Mu Sem
   

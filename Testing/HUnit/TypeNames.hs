@@ -6,11 +6,12 @@ module Testing.HUnit.TypeNames
   import Test.HUnit hiding (Test)
   import Language.Pony
   import Text.Pretty
+  import Data.Generics.Fixplate
   
   roundTrip :: String -> Test
   roundTrip s = testCase s $ assertEqual s theory practice where
     theory = text s
-    practice = para evalPretty $ convert $ parseUnsafe typeName s
+    practice = para' evalPretty $ convert $ parseUnsafe typeName s
   
   tests :: [Test]
   tests = [ roundTrip "int"

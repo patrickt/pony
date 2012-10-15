@@ -32,6 +32,7 @@ Library {
                    , ghc-prim
                    , GenericPretty >= 1.2
                    , mtl >= 2.0.1.0
+                   , fixplate >= 0.1.5
                    , parsec >= 3.1.0
                    , pretty >= 1.0
                    , process > 1.0

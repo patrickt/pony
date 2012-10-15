@@ -9,7 +9,7 @@ module Semantics.C.Reifiable.Instances
   import qualified Language.C99.Literals as Lit
   import Language.Pony.MachineSizes
   import Data.List (find, foldl', partition)
-  import Data.Functor.Fix
+  import Data.Generics.Fixplate
   import Data.Maybe (fromMaybe)
   
   -- CTranslationUnit -> Program.
@@ -63,12 +63,12 @@ module Semantics.C.Reifiable.Instances
       -- Possible bug: cdecl(1) describes "static int* foo" as "static pointer to int", but 
       -- this parses it as "pointer to static int", which makes sense from a pretty-printing POV
       -- but possibly not from a semantic point of view
-      buildDerivedType :: Fix Sem -> CDerivedDeclarator -> Fix Sem
+      buildDerivedType :: Mu Sem -> CDerivedDeclarator -> Mu Sem
       buildDerivedType t (Pointer qs)                    = wrapQualifiers qs $ tie $ PointerToT t
       buildDerivedType t (Array qs Nothing)              = wrapQualifiers qs $ tie $ ArrayT t (tie Empty)
       buildDerivedType t (Array qs (Just size))          = wrapQualifiers qs $ tie $ ArrayT t (convert size)
       buildDerivedType t (DerivedFunction args variadic) = tie $ FunctionPointerT t (convert <$> args)
-      wrapQualifiers :: [CTypeQualifier] -> Fix Sem -> Fix Sem
+      wrapQualifiers :: [CTypeQualifier] -> Mu Sem -> Mu Sem
       wrapQualifiers [] t = t
       wrapQualifiers qs t = tie $ Attributed (convert <$> qs) t
   
@@ -118,7 +118,7 @@ module Semantics.C.Reifiable.Instances
             isFunction (DerivedFunction _ _) = True
             isFunction _ = False
             params = convert <$> args
-            fromArgs = if variad then params ++ [In Ellipsis] else params
+            fromArgs = if variad then params ++ [Fix Ellipsis] else params
   
   -- CTypeName -> Type
   -- hits: derived type declaration -> type
@@ -130,7 +130,7 @@ module Semantics.C.Reifiable.Instances
     -- this is pretty sus but cool also
   instance (Reifiable a) => Reifiable (Maybe a) where
     convert (Just a) = convert a
-    convert _ = In Empty
+    convert _ = nil
   
   newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
   instance Reifiable FunctionPrototypeDeclaration where
@@ -206,7 +206,7 @@ module Semantics.C.Reifiable.Instances
       (convert e2)
       (convert e3)
       (convert s)
-    convert (ForDeclStmt d e2 e3 s) = In $ For
+    convert (ForDeclStmt d e2 e3 s) = tie $ For
       (convert d)
       (convert e2)
       (convert e3)

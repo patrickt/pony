@@ -3,7 +3,7 @@
 module Semantics.C.ASG where
   
   import Data.Foldable (Foldable)
-  import Data.Functor.Fix
+  import Data.Generics.Fixplate
   import Data.Traversable (Traversable)
 
   
@@ -98,24 +98,25 @@ module Semantics.C.ASG where
   deriving instance Functor Sem
   deriving instance Foldable Sem
   deriving instance Traversable Sem
+  instance ShowF Sem where showsPrecF = showsPrec
   
   isFunction (Function _ _ _ _) = True
   isFunction _ = False
-  program = In . Program
-  list = In . List
-  nil = In Empty
-  tie = In
+  program = Fix . Program
+  list = Fix . List
+  nil = Fix Empty
+  tie = Fix
   
-  signed' t = In (t (In Signed))
-  unsigned' t = In (t (In Unsigned))
-  int' size sign = In (IntT (In (Size size)) (In sign))
+  signed' t = Fix (t (Fix Signed))
+  unsigned' t = Fix (t (Fix Unsigned))
+  int' size sign = Fix (IntT (Fix (Size size)) (Fix sign))
   variable a b c = tie $ Variable a b c
   fpointerto funcspecs params = tie $ FunctionPointerT funcspecs params
   
-  void' :: Fix Sem
-  void' = In VoidT
-  char' s = In (CharT s)
-  name' n = In (Name n)
-  str' = In . CStr
+  void' :: Mu Sem
+  void' = Fix VoidT
+  char' s = Fix (CharT s)
+  name' n = Fix (Name n)
+  str' = Fix . CStr
   
   

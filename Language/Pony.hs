@@ -29,5 +29,7 @@ module Language.Pony
   conv = conv' preprocessedC
   conv' p x = convert $ parseUnsafe (p <* eof) x
   
-  fuck = "static const int (*func)(int, float, char);"
+  fuck = "int main(int argc, int **argc) { return 0; }"
   astfuck = parseUnsafe preprocessedC fuck
+  convfuck = convert astfuck
+  

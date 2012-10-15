@@ -8,26 +8,28 @@ module Semantics.C.Pretty
   
   
   import Semantics.C.ASG
-  import Data.Functor.Fix
+  import Data.Generics.Fixplate
   import Control.Applicative hiding (Const)
   import Text.Pretty
   
-  prettyPrint :: (PrettyAlg f) => Fix f -> Doc e
-  prettyPrint = para evalPretty
+  out = unFix
+  
+  prettyPrint :: (PrettyAlg f) => Mu f -> Doc e
+  prettyPrint = para' evalPretty
   
   mayEquals :: Doc e -> Doc e
   mayEquals a = if (a == empty) then a else space <> equals <+> a
   
   class (Functor f) => PrettyAlg f where
-    evalPretty :: Fix f -> f (Doc e) -> (Doc e)
+    evalPretty :: Mu f -> f (Doc e) -> (Doc e)
   
-  foldArrays :: (Sem (Fix Sem)) -> Doc e
-  foldArrays (ArrayT a@(In (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
+  foldArrays :: (Sem (Mu Sem)) -> Doc e
+  foldArrays (ArrayT a@(Fix (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
   foldArrays (ArrayT _ size) = brackets $ prettyPrint size
   foldArrays t = error "foldArrays called improper type"
   
-  foundationType :: Fix Sem -> Doc e
-  foundationType (In (ArrayT t _)) = foundationType t
+  foundationType :: Mu Sem -> Doc e
+  foundationType (Fix (ArrayT t _)) = foundationType t
   foundationType x = prettyPrint x
   
   -- FIXME: sizes of integers are being ignored
@@ -62,7 +64,7 @@ module Semantics.C.Pretty
 
 
     evalPretty (out -> Variable (out ->FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ "*" <> name) <> t <> mayEquals val  
-    evalPretty (out -> Variable (out -> a@(ArrayT _ _)         ) _ _) (Variable _ name val) = foundationType (In a) <+> name <> foldArrays a <> mayEquals val
+    evalPretty (out -> Variable (out -> a@(ArrayT _ _)         ) _ _) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a <> mayEquals val
     evalPretty _                                                      (Variable t n val) = t <+> n <> mayEquals val
     
     -- there's a BIG bug here where case statements don't "keep" the things they own

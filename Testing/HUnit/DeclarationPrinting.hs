@@ -6,6 +6,7 @@ module Testing.HUnit.DeclarationPrinting
   import Test.HUnit hiding (Test)
   import Language.Pony
   import Text.Pretty
+  import Data.Generics.Fixplate
   
   tests :: [Test]
   tests = [ roundTrip "int a;"
@@ -21,5 +22,5 @@ module Testing.HUnit.DeclarationPrinting
   roundTrip :: String -> Test
   roundTrip s = testCase s $ assertEqual s theory practice where
     theory = text s
-    practice = (para evalPretty $ convert $ parseUnsafe preprocessedC s) <> semi
+    practice = (para' evalPretty $ convert $ parseUnsafe preprocessedC s) <> semi
   
