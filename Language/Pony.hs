@@ -2,7 +2,6 @@
 
 module Language.Pony 
   ( module Semantics.C.ASG
-  , module Data.Functor.Fix
   , module Semantics.C.Pretty
   , module Semantics.C.Reifiable
   , module Language.C99
@@ -10,9 +9,10 @@ module Language.Pony
   
   where
     -- 
-  import Data.Functor.Fix
+  -- import Data.Functor.Fix
     -- import Data.Generics hiding (empty)
   import Language.C99 hiding (CChar, CFloat, Empty)
+  import Data.Generics.Fixplate
     -- import Language.C99.Literals
     -- import Language.Pony.Transformations
     -- import Language.Pony.Transformations.Utilities
