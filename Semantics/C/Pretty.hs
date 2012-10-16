@@ -61,6 +61,7 @@ module Semantics.C.Pretty
     evalPretty _ (PointerToT a)                 = a <+> "*"
     evalPretty _ (ArrayT t size)                = t <> brackets size
     evalPretty _ (FunctionPointerT _ b) = tupled b
+    evalPretty _ (TypedefT n) = n
 
 
     evalPretty (out -> Variable (out ->FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ "*" <> name) <> t <> mayEquals val  

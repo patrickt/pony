@@ -13,6 +13,7 @@ module Language.Pony
     -- import Data.Generics hiding (empty)
   import Language.C99 hiding (CChar, CFloat, Empty)
   import Data.Generics.Fixplate
+  import Data.Generics.Fixplate.Draw
     -- import Language.C99.Literals
     -- import Language.Pony.Transformations
     -- import Language.Pony.Transformations.Utilities
@@ -29,7 +30,17 @@ module Language.Pony
   conv = conv' preprocessedC
   conv' p x = convert $ parseUnsafe (p <* eof) x
   
-  fuck = "int main(int argc, int **argc) { return 0; }"
-  astfuck = parseUnsafe preprocessedC fuck
-  convfuck = convert astfuck
+  source = "typedef volatile int foo; foo bar = 5;"
+  parsed = parseUnsafe preprocessedC source
+  syntax = convert parsed
+  result = prettyPrint syntax
+  
+  topleveltypedefs = [ t | prog@(Fix (Program _)) <- universe syntax, (Fix t@(Typedef _ _)) <- children prog ]
+  typedefs = [ s | Fix (Variable s@(Fix (Typedef _ _)) _ _) <- universe syntax ]
+  
+  sensible = transform untypedef syntax
+  
+  untypedef :: Mu Sem -> Mu Sem
+  untypedef (Fix (Variable (Fix (Typedef tname t)) vname val)) = Fix (Variable (Fix (TypedefT tname)) vname val)
+  untypedef x = x
   

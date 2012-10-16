@@ -22,13 +22,13 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CExternal where
     convert (FunctionDecl f) = convert f
     convert (ExternDecl d) 
-      | declarationIsTypedef d                                    = convert (TdD d)
-      | declarationIsComposite d                                  = convert (CD d)
-      | declarationIsFunctionPrototype d                          = convert (FPD d)
-      | otherwise                                                 = convert (VD d)
+      | declarationIsTypedef d           = convert (TdD d)
+      | declarationIsComposite d         = convert (CD d)
+      | declarationIsFunctionPrototype d = convert (FPD d)
+      | otherwise                        = convert (VD d)
       
   -- CBlockItem -> Variable | Expression
-  -- Because in open recursion style, we can mix statements and declarations freely, the BlockItem class is not useful.
+  -- Because in open recursion style we can mix statements and declarations freely, the BlockItem class is not useful.
   instance Reifiable CBlockItem where
     convert (BlockDeclaration decl) = convert (VD decl)
     convert (BlockStatement stmt)   = convert stmt

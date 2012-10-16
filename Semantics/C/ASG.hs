@@ -37,6 +37,7 @@ module Semantics.C.ASG where
     FunctionPointerT :: a -> [a] -> Sem a
     BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
     CompositeT       :: a -> Sem a
+    TypedefT         :: a -> Sem a
     
     -- statements
     Break      :: Sem a
