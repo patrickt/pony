@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, StandaloneDeriving, OverlappingInstances #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverlappingInstances #-}
 
 module Language.C99.ASTPretty 
   ( CLiteral (..)

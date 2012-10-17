@@ -9,19 +9,13 @@ module Language.Pony
   
   where
     -- 
-  -- import Data.Functor.Fix
-    -- import Data.Generics hiding (empty)
+  import Data.Functor.Fix
   import Language.C99 hiding (CChar, CFloat, Empty)
-  import Data.Generics.Fixplate
   import Data.Generics.Fixplate.Draw
-    -- import Language.C99.Literals
-    -- import Language.Pony.Transformations
-    -- import Language.Pony.Transformations.Utilities
   import Semantics.C.ASG
   import Semantics.C.Reifiable
   import Semantics.C.Reifiable.Instances
   import Semantics.C.Pretty
-  -- import System.Environment
   import Text.PrettyPrint.GenericPretty
   
   repl = repl' preprocessedC
@@ -37,8 +31,6 @@ module Language.Pony
   
   topleveltypedefs = [ t | prog@(Fix (Program _)) <- universe syntax, (Fix t@(Typedef _ _)) <- children prog ]
   typedefs = [ s | Fix (Variable s@(Fix (Typedef _ _)) _ _) <- universe syntax ]
-  
-  µ = unFix
   
   sanitize :: Mu Sem -> Mu Sem
   sanitize (µ -> (Variable (µ -> (Typedef tname t)) vname val)) = Fix (Variable (Fix (TypedefT tname)) vname val)
