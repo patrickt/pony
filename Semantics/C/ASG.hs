@@ -18,7 +18,7 @@ module Semantics.C.ASG where
     Variadic :: Sem a
   
     -- Function :: Name -> Type -> Arguments -> Group -> Function
-    Function :: a -> a -> a -> a -> Sem a
+    Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a 
     
     Arguments :: [a] -> Sem a
   
@@ -27,13 +27,13 @@ module Semantics.C.ASG where
   
     -- types
     VoidT            :: Sem a
-    IntT             :: a -> a -> Sem a -- Int :: Size -> Signedness -> Type
+    IntT             :: { isize :: a, isign :: a } -> Sem a
     FloatT           :: Sem a
     DoubleT          :: Sem a
     LongDoubleT      :: Sem a
     CharT            :: a -> Sem a -- Char  :: Signedness -> Type
     PointerToT       :: a -> Sem a -- Pointer :: Type -> Type
-    ArrayT           :: a -> a -> Sem a -- Array :: Type -> Length -> Type
+    ArrayT           :: { atype :: a, alength :: a } -> Sem a
     FunctionPointerT :: a -> [a] -> Sem a
     BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
     CompositeT       :: a -> Sem a
@@ -82,7 +82,7 @@ module Semantics.C.ASG where
     Custom   :: [a] -> Sem a
   
     -- other stuff
-    Composite :: a -> a -> [a] -> Sem a -- (Struct | Union) -> Name? -> Composite
+    Composite :: { ckind :: a, cname :: a, cfields :: [a] } -> Sem a
     Enumeration :: a -> [a] -> Sem a -- [Variables] -> Name? ->  Composite
     Program :: [a] -> Sem a
     Group :: [a] -> Sem a

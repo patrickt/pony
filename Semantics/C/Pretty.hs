@@ -72,6 +72,7 @@ module Semantics.C.Pretty
     -- statements
     evalPretty _ Break                = "break"
     evalPretty _ (Case a b)           = "case" <+> a <> colon </> hsep b
+    evalPretty _ (Cast t v)           = parens t <> v
     evalPretty x (Compound sts)       = "{" `above` (indent 2 $ vcat sts) `above` "}" 
     evalPretty _ (Default sts)        = "default:" 
     evalPretty _ (DoWhile a b)        = "do" <+> a <+> "while" <+> parens b
@@ -114,7 +115,7 @@ module Semantics.C.Pretty
     evalPretty (out -> Sized _ (out -> Empty)) (Sized t _) = t
     evalPretty _                        (Sized t s) = t <> ":" <> s
     
-    evalPretty _ (Program p) = vcat p
+    evalPretty _ (Program p) = vcat $ [ s <> semi | s <- p  ]
     evalPretty _ (Arguments t) = hsep $ punctuate comma t
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t
     evalPretty (out -> Group rs) (Group ts) = vcat $ [t <> semi | t <- ts]
