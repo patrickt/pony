@@ -23,9 +23,6 @@ module Semantics.C.Pretty
   prettyPrint :: (PrettyAlg f) => Mu f -> Doc e
   prettyPrint = para' evalPretty
   
-  maybeEquals :: Doc e -> Doc e
-  maybeEquals a = if (a == empty) then a else space <> equals <+> a
-  
   class (Functor f) => PrettyAlg f where
     evalPretty :: Mu f -> f (Doc e) -> (Doc e)
   
@@ -62,9 +59,14 @@ module Semantics.C.Pretty
     evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Unsigned)) _ = "uint128_t"
     evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Signed)) _   = "int128_t"
 
-    evalPretty (out -> Variable (out -> FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ "*" <> name) <> t <> maybeEquals val  
-    evalPretty (out -> Variable (out -> a@(ArrayT _ _)         )  _ _) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a <> maybeEquals val
-    evalPretty _                                                       (Variable t n val) = t <+> n <> maybeEquals val
+    evalPretty (µ -> Variable   (µ -> (FunctionPointerT ftype args)) _ (µ -> Empty)) (Variable t name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (tupled $ prettyPrint <$> args)
+    evalPretty (out -> Variable (µ -> (FunctionPointerT ftype args)) _ val)          (Variable t name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (tupled $ prettyPrint <$> args) <+> equals <+> prettyPrint val
+
+    evalPretty (µ -> Variable (µ -> a@(ArrayT _ _))  _ (µ -> Empty)) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a
+    evalPretty (µ -> Variable (µ -> a@(ArrayT _ _))  _ _)            (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a <+> equals <+> val
+
+    evalPretty (µ -> Variable _ _ (µ -> Empty)) (Variable t n _)   = t <+> n
+    evalPretty _                                (Variable t n val) = t <+> n <+> equals <+> val
     
     -- there's a BIG bug here where case statements don't "keep" the things they own
     -- statements
