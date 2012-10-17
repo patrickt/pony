@@ -15,7 +15,7 @@ module Semantics.C.ASG where
     Size     :: Int -> Sem a
     Struct   :: Sem a
     Union    :: Sem a
-    Ellipsis :: Sem a
+    Variadic :: Sem a
   
     -- Function :: Name -> Type -> Arguments -> Group -> Function
     Function :: a -> a -> a -> a -> Sem a

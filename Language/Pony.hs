@@ -28,19 +28,19 @@ module Language.Pony
   repl' p x = prettyPrint $ conv' p x
   
   conv = conv' preprocessedC
-  conv' p x = convert $ parseUnsafe (p <* eof) x
+  conv' p x = transform sanitize $ convert $ parseUnsafe (p <* eof) x
   
   source = "typedef volatile int foo; foo bar = 5;"
   parsed = parseUnsafe preprocessedC source
-  syntax = convert parsed
+  syntax = transform sanitize $ convert parsed
   result = prettyPrint syntax
   
   topleveltypedefs = [ t | prog@(Fix (Program _)) <- universe syntax, (Fix t@(Typedef _ _)) <- children prog ]
   typedefs = [ s | Fix (Variable s@(Fix (Typedef _ _)) _ _) <- universe syntax ]
   
-  sensible = transform untypedef syntax
+  µ = unFix
   
-  untypedef :: Mu Sem -> Mu Sem
-  untypedef (Fix (Variable (Fix (Typedef tname t)) vname val)) = Fix (Variable (Fix (TypedefT tname)) vname val)
-  untypedef x = x
+  sanitize :: Mu Sem -> Mu Sem
+  sanitize (µ -> (Variable (µ -> (Typedef tname t)) vname val)) = Fix (Variable (Fix (TypedefT tname)) vname val)
+  sanitize x = x
   

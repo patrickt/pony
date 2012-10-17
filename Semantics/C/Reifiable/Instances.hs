@@ -90,7 +90,7 @@ module Semantics.C.Reifiable.Instances
   -- CFunction -> Function
   -- hits: CFunction -> Type, FunctionArgs -> Declarations, BlockItem -> Group
   instance Reifiable CFunction where
-    convert f@(CFunction _ decl (CompoundStmt body)) = tie $ Function ftype fname fargs fbody
+    convert f@(CFunction v decl (CompoundStmt body)) = tie $ Function ftype fname fargs fbody
       where ftype        = convert  $  FT f
             (Just fname) = name'   <$> declName decl 
             fargs        = convert  $  FA decl
@@ -118,7 +118,7 @@ module Semantics.C.Reifiable.Instances
             isFunction (DerivedFunction _ _) = True
             isFunction _ = False
             params = convert <$> args
-            fromArgs = if variad then params ++ [Fix Ellipsis] else params
+            fromArgs = if variad then params ++ [Fix Variadic] else params
   
   -- CTypeName -> Type
   -- hits: derived type declaration -> type

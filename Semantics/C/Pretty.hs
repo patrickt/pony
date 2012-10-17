@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings, ViewPatterns #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings, ViewPatterns, RankNTypes #-}
 
 module Semantics.C.Pretty 
   ( PrettyAlg (..)
@@ -6,67 +6,65 @@ module Semantics.C.Pretty
   )
   where
   
-  
+  import Data.Monoid hiding ((<>))
   import Semantics.C.ASG
   import Data.Generics.Fixplate
   import Control.Applicative hiding (Const)
   import Text.Pretty
+  import Language.Pony.MachineSizes
   
   out = unFix
+  µ = out
+  
+  isEmpty x = show x == ""
+  infixr 5 <?+>
+  a <?+> r = if isEmpty a then r else a <+> r
   
   prettyPrint :: (PrettyAlg f) => Mu f -> Doc e
   prettyPrint = para' evalPretty
   
-  mayEquals :: Doc e -> Doc e
-  mayEquals a = if (a == empty) then a else space <> equals <+> a
+  maybeEquals :: Doc e -> Doc e
+  maybeEquals a = if (a == empty) then a else space <> equals <+> a
   
   class (Functor f) => PrettyAlg f where
     evalPretty :: Mu f -> f (Doc e) -> (Doc e)
   
-  foldArrays :: (Sem (Mu Sem)) -> Doc e
-  foldArrays (ArrayT a@(Fix (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
-  foldArrays (ArrayT _ size) = brackets $ prettyPrint size
-  foldArrays t = error "foldArrays called improper type"
-  
-  foundationType :: Mu Sem -> Doc e
-  foundationType (Fix (ArrayT t _)) = foundationType t
-  foundationType x = prettyPrint x
-  
-  -- FIXME: sizes of integers are being ignored
-  
   instance PrettyAlg Sem where
     evalPretty _ (Name n) = text n
     evalPretty _ Unsigned = "unsigned"
-    evalPretty _ Signed   = "signed"
-    evalPretty _ (Size _) = "TODO" 
+    evalPretty _ Signed   = empty
     evalPretty _ Struct   = "struct"
     evalPretty _ Union    = "union"
-    evalPretty _ Ellipsis = "..."
-  
+    evalPretty _ Variadic = "..."
+    evalPretty _ (Size n) 
+      | n == sizeOfShort    = "short"
+      | n == sizeOfInt      = empty
+      | n == sizeOfLong     = "long"
+      | n == sizeOfLongLong = "long long"
+      | n == sizeOfInt128   = empty
+      | otherwise = error $ "Bug: unexpected integer size " ++ show n
+    
     evalPretty _ (Function typ name params body) = typ <+> name <> (parens params) <+> "{" `above` (indent 2 body) `above` "}"
 
-    evalPretty _ VoidT = "void"
-
-    -- no need to print 'signed int' when 'int' will do
-    evalPretty (out -> IntT _ (out -> Signed)) (IntT _ _) = "int"
-    evalPretty _ (IntT _ sign) = sign <+> "int"
-    
-    evalPretty _ FloatT      = "float"
-    evalPretty _ DoubleT     = "double"
-    evalPretty _ LongDoubleT = "long double"
-    
-    -- same with 'char'
-    evalPretty (out -> CharT (out -> Signed)) _ = "char"
-    evalPretty _ (CharT sign)                   = sign <+> "char"
-    evalPretty _ (PointerToT a)                 = a <+> "*"
-    evalPretty _ (ArrayT t size)                = t <> brackets size
+    evalPretty _ VoidT = "void"    
+    evalPretty _ (IntT size sign)       = sign <?+> size <?+> "int"
+    evalPretty _ FloatT                 = "float"
+    evalPretty _ DoubleT                = "double"
+    evalPretty _ LongDoubleT            = "long double"
+    evalPretty _ (CharT sign)           = sign <?+> "char"
+    evalPretty _ (PointerToT a)         = a <+> "*"
+    evalPretty _ (ArrayT t size)        = t <> brackets size
     evalPretty _ (FunctionPointerT _ b) = tupled b
-    evalPretty _ (TypedefT n) = n
+    evalPretty _ (TypedefT n)           = n
+    
+    evalPretty (µ -> (CompositeT (µ -> Composite typ name _))) _ = prettyPrint typ <+> prettyPrint name
+    
+    evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Unsigned)) _ = "uint128_t"
+    evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Signed)) _   = "int128_t"
 
-
-    evalPretty (out -> Variable (out ->FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ "*" <> name) <> t <> mayEquals val  
-    evalPretty (out -> Variable (out -> a@(ArrayT _ _)         ) _ _) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a <> mayEquals val
-    evalPretty _                                                      (Variable t n val) = t <+> n <> mayEquals val
+    evalPretty (out -> Variable (out -> FunctionPointerT ftype _) _ _) (Variable t name val) = prettyPrint ftype <+> (parens $ "*" <> name) <> t <> maybeEquals val  
+    evalPretty (out -> Variable (out -> a@(ArrayT _ _)         )  _ _) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a <> maybeEquals val
+    evalPretty _                                                       (Variable t n val) = t <+> n <> maybeEquals val
     
     -- there's a BIG bug here where case statements don't "keep" the things they own
     -- statements
@@ -126,6 +124,16 @@ module Semantics.C.Pretty
     evalPretty _ (Composite t n fs) = t <+> n <+> braces (hsep fs)
     
     evalPretty _ x = error $ "not defined for " ++ show x
+  
+  foldArrays :: (Sem (Mu Sem)) -> Doc e
+  foldArrays (ArrayT a@(Fix (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
+  foldArrays (ArrayT _ size) = brackets $ prettyPrint size
+  foldArrays t = error "foldArrays called improper type"
+  
+  foundationType :: Mu Sem -> Doc e
+  foundationType (Fix (ArrayT t _)) = foundationType t
+  foundationType x = prettyPrint x
+  
   
   {-
   
