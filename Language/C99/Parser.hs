@@ -3,9 +3,9 @@
 module Language.C99.Parser 
   ( module Text.Parsec
   , module Control.Applicative
+  , module Data.Default
   , Parser
   , Internals(..)
-  , emptyInternals
   , addTypeDef
   , parseTest
   , parseTestCustom
@@ -19,6 +19,7 @@ module Language.C99.Parser
   import Control.Applicative hiding (Const)
   import Data.Generics
   import Language.C99.AST
+  import Data.Default
   import System.Cmd
   import Text.Parsec hiding (parseTest, many, optional, (<|>))
   import Text.Parsec.String hiding (Parser, parseFromFile)
@@ -35,14 +36,7 @@ module Language.C99.Parser
     , logicalOps :: [String]
     } deriving (Show, Eq, Typeable, Data)
   
-  -- | An empty 'Internals' data structure.
-  emptyInternals :: Internals
-  emptyInternals = Internals { typedefs       = []
-                             , arithmeticOps  = [] 
-                             , comparativeOps = []
-                             , bitwiseOps     = []
-                             , logicalOps     = []
-                             }
+  instance Default Internals where def = Internals [] [] [] [] []
   
   -- | Updates an 'Internals' record by adding a new (name, type) pair to the 
   -- lookup table. There are a number of problems with this: typedefs do not 
@@ -65,7 +59,7 @@ module Language.C99.Parser
   -- | Given a parser action and a string, parses the string and dumps the 
   -- result to stdout. Useful for debugging.
   parseTest :: (Show a) => Parser a -> String -> IO ()
-  parseTest p s = parseTestCustom p s emptyInternals
+  parseTest p s = parseTestCustom p s def
   
   -- | Like 'parseTest', except, you can specify a custom 'Internals' structure.
   parseTestCustom :: (Show a) => Parser a -> String -> Internals -> IO ()
@@ -75,12 +69,12 @@ module Language.C99.Parser
   -- If an error occurs, it will be printed to stdout and the function will 
   -- terminate early. Extremely useful for debugging purposes.
   parseUnsafe :: Parser a -> String -> a
-  parseUnsafe p s = either (error . show) id (runParser p emptyInternals "" s)
+  parseUnsafe p s = either (error . show) id (runParser p def "" s)
   
   -- | Like 'preprocessAndParse', except without the whole preprocessing thing.
   -- Useful for debugging in conjunction with 'unsafePerformIO'.
   parseFromFile :: Parser a -> FilePath -> IO (Either ParseError a)
-  parseFromFile p loc = parseFromFileCustom p loc emptyInternals
+  parseFromFile p loc = parseFromFileCustom p loc def
   
   -- | Like 'parseFromFile', except you can specify your own 'Internals' structure.
   parseFromFileCustom :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)

@@ -22,5 +22,5 @@ module Testing.HUnit.DeclarationPrinting
   roundTrip :: String -> Test
   roundTrip s = testCase s $ assertEqual s theory practice where
     theory = text s
-    practice = (para' evalPretty $ convert $ parseUnsafe preprocessedC s) <> semi
+    practice = (para' evalPretty $ convert $ parseUnsafe preprocessedC s)
   

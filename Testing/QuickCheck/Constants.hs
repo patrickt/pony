@@ -5,9 +5,10 @@ module Testing.QuickCheck.Constants
   import Test.Framework(Test)
   import Test.Framework.Providers.QuickCheck2(testProperty)
   import Language.C99
+  import Data.Default
   
   parseConstant :: String -> Either ParseError CExpr
-  parseConstant = runParser constantExpression emptyInternals "test data"
+  parseConstant = runParser constantExpression def "test data"
 
   tests :: [Test]
   tests = [ testProperty "decimal integers" prop_decimalIntegers
