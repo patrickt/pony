@@ -1,9 +1,9 @@
-{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, RankNTypes #-}
 
 module Semantics.C.ASG where
   
+  import Data.Functor.Fix
   import Data.Foldable (Foldable)
-  import Data.Generics.Fixplate
   import Data.Traversable (Traversable)
 
   
@@ -18,7 +18,8 @@ module Semantics.C.ASG where
     Variadic :: Sem a
   
     -- Function :: Name -> Type -> Arguments -> Group -> Function
-    Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a 
+    -- Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a 
+    Function :: a -> a -> a -> a -> Sem a
     
     Arguments :: [a] -> Sem a
   
@@ -100,13 +101,20 @@ module Semantics.C.ASG where
   deriving instance Foldable Sem
   deriving instance Traversable Sem
   instance ShowF Sem where showsPrecF = showsPrec
+  instance EqF Sem where equalF = (==)
   
+  type CSem = forall a. Sem a
+  type FSem = Fix Sem
+  
+  isFunction :: Sem a -> Bool
   isFunction (Function _ _ _ _) = True
   isFunction _ = False
+  
+  
+  
   program = Fix . Program
   list = Fix . List
   nil = Fix Empty
-  tie = Fix
   
   signed' t = Fix (t (Fix Signed))
   unsigned' t = Fix (t (Fix Unsigned))

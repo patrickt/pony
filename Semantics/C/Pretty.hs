@@ -52,7 +52,7 @@ module Semantics.C.Pretty
     evalPretty _ (PointerToT a)         = a <+> "*"
     evalPretty _ (ArrayT t size)        = t <> brackets size
     evalPretty _ (FunctionPointerT _ b) = tupled b
-    evalPretty _ (TypedefT n)           = n
+    evalPretty _ (TypedefT n) = n
     
     evalPretty (µ -> (CompositeT (µ -> Composite typ name _))) _ = prettyPrint typ <+> prettyPrint name
     
