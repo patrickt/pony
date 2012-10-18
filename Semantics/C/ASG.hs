@@ -83,7 +83,7 @@ module Semantics.C.ASG where
     Custom   :: [a] -> Sem a
   
     -- other stuff
-    Composite :: { ckind :: a, cname :: a, cfields :: [a] } -> Sem a
+    CompositeInfo :: { ckind :: a, cname :: a, cfields :: a } -> Sem a
     Enumeration :: a -> [a] -> Sem a -- [Variables] -> Name? ->  Composite
     Program :: [a] -> Sem a
     Group :: [a] -> Sem a
@@ -115,6 +115,7 @@ module Semantics.C.ASG where
   program = Fix . Program
   list = Fix . List
   nil = Fix Empty
+  group = Fix . Group
   
   signed' t = Fix (t (Fix Signed))
   unsigned' t = Fix (t (Fix Unsigned))

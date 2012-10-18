@@ -11,6 +11,7 @@ module Semantics.C.Reifiable.Instances
   import qualified Language.C99.Literals as Lit
   import Semantics.C.ASG as ASG
   import Semantics.C.Reifiable
+  import Data.Maybe
   
   -- CTranslationUnit -> Program.
   -- hits: CExternal -> global
@@ -22,10 +23,15 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CExternal where
     convert (FunctionDecl f) = convert f
     convert (ExternDecl d) 
-      | declarationIsTypedef d           = convert (TdD d)
-      | declarationIsComposite d         = convert (CD d)
-      | declarationIsFunctionPrototype d = convert (FPD d)
-      | otherwise                        = convert (VD d)
+      | declarationIsTypedef d             = convert (TdD d)
+      | declarationIsComposite d
+          && declarationHasFields d
+          && declarationIsUnnamed d        = convert (CID d)
+      | declarationIsComposite d 
+          && not (declarationHasFields d)
+          && declarationIsUnnamed d        = convert (FCD d)
+      | declarationIsFunctionPrototype d   = convert (FPD d)
+      | otherwise                          = convert (VD d)
       
   -- CBlockItem -> Variable | Expression
   -- Because in open recursion style we can mix statements and declarations freely, the BlockItem class is not useful.
@@ -143,6 +149,9 @@ module Semantics.C.Reifiable.Instances
       in 
       variable (fpointerto (convert returnTypeSpecs) (convert <$> params)) functionName nil
   
+  -- SUPER SUS
+  instance Reifiable String where convert = name'
+  
   instance Reifiable CInitializer where
     convert (CInitExpression e) = convert e
     convert (CInitList l) = list $ convert <$> l
@@ -160,12 +169,37 @@ module Semantics.C.Reifiable.Instances
       variable (convert (DTD (specs, contents))) n nil where n = maybe nil name' $ declName contents
     -- sometimes parameter names are just given type specifiers. spooky!
     convert (CParameter (CDeclaration specs _)) = variable nil (convert specs) nil
+    
+
+  -- Composite info declarations are of the form:
+  -- (struct|union) { fields+ };
+  -- i.e. they are not predeclarations of future composite types,
+  -- nor do they declare any variables.
+  newtype CompositeInfoDeclaration = CID  { unCID  :: CDeclaration }
+  instance Reifiable CompositeInfoDeclaration where
+    convert (CID (CDeclaration [TSpec (TStructOrUnion name isStruct fields _)] [])) = 
+      tie $ CompositeInfo { 
+          cname = (convert name)
+        , ckind = (kind isStruct)
+        , cfields = (group (convert <$> fields)) } 
+      where 
+        kind True = tie Struct
+        kind False = tie Union
+        
+  newtype ForwardCompositeDeclaration = FCD { unFCD :: CDeclaration }
+  instance Reifiable ForwardCompositeDeclaration where
+    convert (FCD (CDeclaration [TSpec (TStructOrUnion name isStruct [] _)] [])) = 
+      tie $ CompositeInfo { cname = convert name 
+                          , ckind = kind isStruct
+                          , cfields = nil }
+      where
+        kind True = tie Struct
+        kind False = tie Union
+  
+  
+  
   
   -- THE LINE OF BULLSHIT. FROM HERE ON EVERYTHING SUCKS.
-  
-  -- here we get very clever and define newtypes for the different parts of a function
-  -- so that we don't have to define a bunch of helper functions
-  newtype CompositeDeclaration         = CD  { unCD  :: CDeclaration }
   
   -- CExpr -> expression
   -- hits: CLiteral -> constant, CBuiltInExpr -> expression
@@ -183,8 +217,7 @@ module Semantics.C.Reifiable.Instances
     convert (CBuiltin t)         = convert t
     convert (CParen s)           = tie $ Paren (convert s)
     
-  instance Reifiable CompositeDeclaration where
-    convert (CD (CDeclaration specs infos)) = convert specs
+
     
   instance Reifiable CDeclaration where
     convert = dieInBreakpoint "BUG: C declaration has gone unclassified"

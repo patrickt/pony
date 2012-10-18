@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings, ViewPatterns, RankNTypes #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings, ViewPatterns, RankNTypes, NamedFieldPuns, RecordWildCards #-}
 
 module Semantics.C.Pretty 
   ( PrettyAlg (..)
@@ -54,7 +54,7 @@ module Semantics.C.Pretty
     evalPretty _ (FunctionPointerT _ b) = tupled b
     evalPretty _ (TypedefT n) = n
     
-    evalPretty (µ -> (CompositeT (µ -> Composite typ name _))) _ = prettyPrint typ <+> prettyPrint name
+    evalPretty (µ -> (CompositeT (µ -> CompositeInfo typ name _))) _ = prettyPrint typ <+> prettyPrint name
     
     evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Unsigned)) _ = "uint128_t"
     evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Signed)) _   = "int128_t"
@@ -124,7 +124,8 @@ module Semantics.C.Pretty
     
     evalPretty _ (Typedef name typ) = "typedef " <> name <+> typ 
     
-    evalPretty _ (Composite t n fs) = t <+> n <+> braces (hsep fs)
+    evalPretty (µ -> CompositeInfo _ _ (µ -> Empty)) (CompositeInfo { ckind, cname, .. }) = ckind <+> cname 
+    evalPretty _ (CompositeInfo { ckind, cname, cfields }) = ckind <+> cname <+> "{" `above` (indent 2 cfields) `above` "}"
     
     evalPretty _ x = error $ "not defined for " ++ show x
   

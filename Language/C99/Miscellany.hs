@@ -5,6 +5,8 @@ module Language.C99.Miscellany where
   import Language.C99.AST
   import Control.Applicative
   import Data.Monoid
+  import Data.Generics
+  import Data.Maybe
   
   -- | A declaration is a typedef iff its first specifier is an 'STypedef'.
   declarationIsTypedef :: CDeclaration -> Bool
@@ -26,6 +28,10 @@ module Language.C99.Miscellany where
       isFunction _ = False
   declarationIsFunctionPrototype _ = False
   
+  declarationHasFields :: CDeclaration -> Bool
+  declarationHasFields d = 0 /= gtypecount (undefined :: CField) d 
+    
+  
   declarationHasPointer :: CDeclaration -> Bool
   declarationHasPointer (CDeclaration _ infos) = any hasPointer infos where
     hasPointer :: CDeclInfo -> Bool
@@ -41,6 +47,12 @@ module Language.C99.Miscellany where
   nameOfDeclaration :: CDeclaration -> Maybe String
   nameOfDeclaration (CDeclaration _ [CDeclInfo {contents, ..}]) = contents >>= declName
   nameOfDeclaration _ = Nothing
+  
+  declarationIsNamed :: CDeclaration -> Bool
+  declarationIsNamed = isJust . nameOfDeclaration
+  
+  declarationIsUnnamed :: CDeclaration -> Bool
+  declarationIsUnnamed = isNothing . nameOfDeclaration
   
   dropTypedef :: CDeclaration -> CDeclaration
   dropTypedef (CDeclaration (SSpec CTypedef : rest) it) = CDeclaration rest it

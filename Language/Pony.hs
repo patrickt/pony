@@ -10,7 +10,7 @@ module Language.Pony
   where
     -- 
   import Data.Functor.Fix
-  import Language.C99 hiding (CChar, CFloat, Empty)
+  import Language.C99 hiding (CChar, CFloat, Empty, parse)
   import Data.Generics.Fixplate.Attributes
   import Data.Generics.Fixplate.Draw
   import Data.Generics.Fixplate.Traversals
@@ -27,7 +27,10 @@ module Language.Pony
   repl' p x = prettyPrint $ conv' p x
   
   conv = conv' preprocessedC
-  conv' p x = convert $ parseUnsafe (p <* eof) x
+  conv' p x = convert $ parse' p x
+  
+  parse = parse' preprocessedC
+  parse' p s = parseUnsafe (p <* eof) s
   
   source = "typedef volatile int foo; foo bar = 5;"
   parsed = parseUnsafe preprocessedC source
