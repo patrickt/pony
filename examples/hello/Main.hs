@@ -19,5 +19,5 @@ module Main where
     let asg = convert ast
     print asg
     let transformed = ana changeHello asg
-    let done = para evalPretty transformed
+    let done = prettyPrint transformed
     print done

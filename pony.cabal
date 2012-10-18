@@ -24,7 +24,7 @@ Flag tests {
 
 Flag examples {
   Description:       Build example programs
-  Default:           False
+  Default:           True
 }
 
 Library {
@@ -55,16 +55,16 @@ Library {
                   ViewPatterns
 }
 
--- Executable check-malloc {
---   Main-is: Main.hs
---   Hs-source-dirs: examples/check-malloc .
---   LD-Options: -w
---   if flag(examples) {
---     Buildable: True
---   } else {
---     Buildable: False
---   }
--- }
+Executable check-malloc {
+  Main-is: Main.hs
+  Hs-source-dirs: examples/check-malloc .
+  LD-Options: -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
                    
 -- Executable concat {
 --   Main-is:  Main.hs

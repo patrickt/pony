@@ -1,10 +1,11 @@
-{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, RankNTypes #-}
+{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, RankNTypes, OverloadedStrings #-}
 
 module Semantics.C.ASG where
   
   import Data.Functor.Fix
   import Data.Foldable (Foldable)
   import Data.Traversable (Traversable)
+  import GHC.Exts (IsString (..))
 
   
   data Sem a where
@@ -81,6 +82,8 @@ module Semantics.C.ASG where
     Static   :: Sem a
     Volatile :: Sem a
     Custom   :: [a] -> Sem a
+    
+    Ghost :: a -> Sem a
   
     -- other stuff
     CompositeInfo :: { ckind :: a, cname :: a, cfields :: a } -> Sem a
@@ -91,7 +94,7 @@ module Semantics.C.ASG where
     
     -- gotta be a nicer way to do this
     -- type -> name -> initial value?
-    Variable :: a -> a -> a -> Sem a
+    Variable :: { vtype :: a, vname :: a, vvalue :: a } -> Sem a
     Typedef :: a -> a -> Sem a
     Sized :: a -> a -> Sem a
   
@@ -102,6 +105,7 @@ module Semantics.C.ASG where
   deriving instance Traversable Sem
   instance ShowF Sem where showsPrecF = showsPrec
   instance EqF Sem where equalF = (==)
+  instance IsString (Sem a) where fromString = Name
   
   type CSem = forall a. Sem a
   type FSem = Fix Sem

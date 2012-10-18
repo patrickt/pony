@@ -1,16 +1,17 @@
-{-# LANGUAGE NamedFieldPuns, OverlappingInstances #-}
+{-# LANGUAGE NamedFieldPuns, OverlappingInstances, ViewPatterns #-}
 
 module Language.Pony 
   ( module Semantics.C.ASG
   , module Semantics.C.Pretty
   , module Semantics.C.Reifiable
   , module Language.C99
+  , module Data.Functor.Fix
   ) 
   
   where
     -- 
   import Data.Functor.Fix
-  import Language.C99 hiding (CChar, CFloat, Empty, parse)
+  import Language.C99 hiding (CChar, CFloat, Empty, parse, attribute)
   import Data.Generics.Fixplate.Attributes
   import Data.Generics.Fixplate.Draw
   import Data.Generics.Fixplate.Traversals
@@ -21,6 +22,8 @@ module Language.Pony
   import Text.PrettyPrint.GenericPretty
   import qualified Data.Foldable as F
   import Semantics.C.Queries
+  -- import qualified Language.Haskell.TH as TH
+
 
   
   repl = repl' preprocessedC
@@ -55,4 +58,5 @@ module Language.Pony
   sanitize _ = Nothing
   
   hello = preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
+  
   
