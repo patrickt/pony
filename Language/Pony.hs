@@ -21,23 +21,31 @@ module Language.Pony
   import Semantics.C.Pretty
   import Text.PrettyPrint.GenericPretty
   import qualified Data.Foldable as F
+  import qualified Data.List as L
   import Semantics.C.Queries
   -- import qualified Language.Haskell.TH as TH
 
+  unfoldGroups :: FSem -> [FSem]
+  unfoldGroups (µ -> Group a) = a >>= unfoldGroups
+  unfoldGroups x = [x]
 
-  
+  flattenGroup :: FSem -> Sem FSem
+  flattenGroup (µ -> Group a) = Group $ a >>= unfoldGroups
+  flattenGroup (µ -> Program a) = Program $ a >>= unfoldGroups
+  flattenGroup x = out x
+
   repl = repl' preprocessedC
   repl' p x = prettyPrint $ conv' p x
   
   conv = conv' preprocessedC
-  conv' p x = convert $ parse' p x
+  conv' p x = ana flattenGroup $ rewrite sanitize $ convert $ parse' p x
   
   parse = parse' preprocessedC
   parse' p s = parseUnsafe (p <* eof) s
   
   source = "typedef volatile int foo; foo bar = 5;"
   parsed = parseUnsafe preprocessedC source
-  syntax = rewrite sanitize $ convert parsed
+  syntax = ana flattenGroup $ rewrite sanitize $ convert parsed
   result = prettyPrint syntax
   
   changeSize :: FSem -> Maybe FSem

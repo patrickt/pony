@@ -107,6 +107,10 @@ module Semantics.C.ASG where
   
   type CSem = forall a. Sem a
   type FSem = Fix Sem
+
+  isGroup :: FSem -> Bool
+  isGroup (Fix (Group _)) = True
+  isGroup _ = False
   
   program = Fix . Program
   list = Fix . List
