@@ -9,8 +9,8 @@ module Main where
     fromString = Fix . fromString
   
   checkMalloc :: Fix Sem -> Fix Sem
-  checkMalloc (µ -> v@(Variable { vname, vtype, vvalue = (Fix (FunCall "malloc" args))})) = group [ tie (Ghost $ tie v) , tie $ (IfThen (Fix (Unary "!" vname)) (Fix (FunCall "abort" [nil]))) ]
-  checkMalloc a = a
+  checkMalloc (µ -> v@(Variable { vname, vtype, vvalue = (Fix (FunCall "malloc" args))})) = group [ tie v , tie $ (IfThen (Fix (Unary "!" vname)) (Fix (FunCall "abort" [nil]))) ]
+  checkMalloc a = fmap checkMalloc a
   
   main :: IO ()
   main = do 

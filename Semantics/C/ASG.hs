@@ -82,8 +82,6 @@ module Semantics.C.ASG where
     Static   :: Sem a
     Volatile :: Sem a
     Custom   :: [a] -> Sem a
-    
-    Ghost :: a -> Sem a
   
     -- other stuff
     CompositeInfo :: { ckind :: a, cname :: a, cfields :: a } -> Sem a
