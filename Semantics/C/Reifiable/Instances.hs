@@ -54,6 +54,7 @@ module Semantics.C.Reifiable.Instances
           aliasedType = convert $ DTD (specs, declar)
           -- lastly we find the name of the new typedef.
           (Just alias) = name' <$> nameOfDeclaration decl
+      convert _ = error "invariant violated, please report this as a bug"
 
   
   -- (Specifiers x Declarator) -> Type
@@ -73,7 +74,7 @@ module Semantics.C.Reifiable.Instances
       buildDerivedType t (Pointer qs)                    = wrapQualifiers qs $ tie $ PointerToT t
       buildDerivedType t (Array qs Nothing)              = wrapQualifiers qs $ tie $ ArrayT t (tie Empty)
       buildDerivedType t (Array qs (Just size))          = wrapQualifiers qs $ tie $ ArrayT t (convert size)
-      buildDerivedType t (DerivedFunction args variadic) = tie $ FunctionPointerT t (convert <$> args)
+      buildDerivedType t (DerivedFunction args variadic) = tie $ FunctionPointerT t (tie $ Arguments $ convert <$> args)
       wrapQualifiers :: [CTypeQualifier] -> Mu Sem -> Mu Sem
       wrapQualifiers [] t = t
       wrapQualifiers qs t = tie $ Attributed (convert <$> qs) t
@@ -90,7 +91,7 @@ module Semantics.C.Reifiable.Instances
           initial        = convert initVal
     -- if there are more infos, e.g. statements of the form `int foo, bar, *baz;`
     -- then we loop around and convert each of them to Variables and stick them in a Group
-    convert (VD (CDeclaration specs infos)) = tie $ Group $ [ convert (VD (CDeclaration specs [i])) | i <- infos ]
+    convert (VD (CDeclaration specs infos)) = tie $ Group $ [ convert (VD (CDeclaration specs [i])) | i <- infos ]  
   
   -- FIXME: ignoring variadicity here too
   -- CFunction -> Function
@@ -147,7 +148,7 @@ module Semantics.C.Reifiable.Instances
       (Just declarator) = contents $ head info
       params = declaratorParameters declarator
       in 
-      variable (fpointerto (convert returnTypeSpecs) (convert <$> params)) functionName nil
+      variable (fpointerto (convert returnTypeSpecs) (tie $ Arguments $ convert <$> params)) functionName nil
   
   -- SUPER SUS
   instance Reifiable String where convert = name'
@@ -185,6 +186,14 @@ module Semantics.C.Reifiable.Instances
       where 
         kind True = tie Struct
         kind False = tie Union
+    convert _ = error "error in conversion, invariants not respected"
+    
+  
+  -- We just parse it as a regular declaration than 
+  instance Reifiable CField where
+    convert (CField d@(CDeclaration _ infos)) 
+      | isNothing $ size $ head infos = convert (VD d)
+      | otherwise = tie $ Sized (convert (VD d)) (convert $ size $ head infos)
         
   newtype ForwardCompositeDeclaration = FCD { unFCD :: CDeclaration }
   instance Reifiable ForwardCompositeDeclaration where
@@ -343,6 +352,3 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CBuiltinExpr where
     convert (BuiltinVaArg ex ty) = tie $ VaArg (convert ex) (convert ty)
   
-  -- We just parse it as a regular declaration than 
-  instance Reifiable CField where
-    convert (CField d@(CDeclaration specs infos)) = tie $ Sized (convert (VD d)) (convert $ size $ head infos)

@@ -138,7 +138,7 @@ where
     case direct' of
       (Just (Single s)) -> return $ CDeclarator (Just s) derived asm attrs
       -- discarding the result of __attributes__ here; could this be a bug?
-      (Just (Parenthesized (CDeclarator n decls _ _))) -> return $ CDeclarator n (derived ++ decls) asm attrs
+      (Just (Parenthesized (CDeclarator n _ _ _))) -> return $ CDeclarator n derived asm attrs
       Nothing -> do
         guard ((length derived) /= 0)
         return $ CDeclarator Nothing derived asm attrs

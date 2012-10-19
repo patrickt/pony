@@ -36,7 +36,7 @@ module Semantics.C.ASG where
     CharT            :: a -> Sem a -- Char  :: Signedness -> Type
     PointerToT       :: a -> Sem a -- Pointer :: Type -> Type
     ArrayT           :: { atype :: a, alength :: a } -> Sem a
-    FunctionPointerT :: a -> [a] -> Sem a
+    FunctionPointerT :: a -> a -> Sem a
     BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
     CompositeT       :: a -> Sem a
     TypedefT         :: a -> Sem a
@@ -107,12 +107,6 @@ module Semantics.C.ASG where
   
   type CSem = forall a. Sem a
   type FSem = Fix Sem
-  
-  isFunction :: Sem a -> Bool
-  isFunction (Function _ _ _ _) = True
-  isFunction _ = False
-  
-  
   
   program = Fix . Program
   list = Fix . List

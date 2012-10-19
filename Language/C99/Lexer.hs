@@ -89,7 +89,7 @@ module Language.C99.Lexer
   lexeme = T.lexeme lexer
   parens = T.parens lexer
   braces = T.braces lexer
-  angles = T.angles lexer
+  -- angles = T.angles lexer -- (unused)
   brackets = T.brackets lexer
   semi = T.semi lexer
   comma = T.comma lexer

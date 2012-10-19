@@ -42,6 +42,7 @@ Library {
                    , syb >= 0.1
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Exposed-modules: Language.Pony, Semantics.C
+  Main-is:         Language/Pony.hs
   Extensions:     DeriveDataTypeable,
                   FlexibleContexts,
                   FlexibleInstances,            

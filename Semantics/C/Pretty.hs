@@ -6,8 +6,7 @@ module Semantics.C.Pretty
   )
   where
   
-  import Data.Monoid hiding ((<>))
-  import Semantics.C.ASG
+  import Semantics.C.ASG hiding (group)
   import Data.Generics.Fixplate
   import Control.Applicative hiding (Const)
   import Text.Pretty
@@ -36,12 +35,12 @@ module Semantics.C.Pretty
     evalPretty _ (Size n) 
       | n == sizeOfShort    = "short"
       | n == sizeOfInt      = empty
-      | n == sizeOfLong     = "long"
+      | n == sizeOfLong     = "long"      -- BUG: long and long long are the same size on my platform so long longs are turned into longs
       | n == sizeOfLongLong = "long long"
       | n == sizeOfInt128   = empty
       | otherwise = error $ "Bug: unexpected integer size " ++ show n
     
-    evalPretty _ (Function typ name params body) = typ <+> name <> (parens params) <+> "{" `above` (indent 2 body) `above` "}"
+    evalPretty _ (Function typ name params body) = typ <+> name <> params <+> "{" `above` (indent 2 body) `above` "}"
 
     evalPretty _ VoidT = "void"    
     evalPretty _ (IntT size sign)       = sign <?+> size <?+> "int"
@@ -51,19 +50,19 @@ module Semantics.C.Pretty
     evalPretty _ (CharT sign)           = sign <?+> "char"
     evalPretty _ (PointerToT a)         = a <+> "*"
     evalPretty _ (ArrayT t size)        = t <> brackets size
-    evalPretty _ (FunctionPointerT _ b) = tupled b
+    evalPretty _ (FunctionPointerT _ b) = b
     evalPretty _ (TypedefT n) = n
     
     evalPretty (µ -> (CompositeT (µ -> CompositeInfo typ name _))) _ = prettyPrint typ <+> prettyPrint name
     
     evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Unsigned)) _ = "uint128_t"
     evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Signed)) _   = "int128_t"
-
-    evalPretty (µ -> Variable   (µ -> (FunctionPointerT ftype args)) _ (µ -> Empty)) (Variable t name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (tupled $ prettyPrint <$> args)
-    evalPretty (out -> Variable (µ -> (FunctionPointerT ftype args)) _ val)          (Variable t name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (tupled $ prettyPrint <$> args) <+> equals <+> prettyPrint val
+    
+    evalPretty (µ -> Variable   (µ -> (FunctionPointerT ftype args)) _ (µ -> Empty)) (Variable _ name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (prettyPrint args)
+    evalPretty (out -> Variable (µ -> (FunctionPointerT ftype args)) _ val)          (Variable _ name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (prettyPrint args) <+> equals <+> prettyPrint val
 
     evalPretty (µ -> Variable (µ -> a@(ArrayT _ _))  _ (µ -> Empty)) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a
-    evalPretty (µ -> Variable (µ -> a@(ArrayT _ _))  _ _)            (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a <+> equals <+> val
+    evalPretty (µ -> Variable (µ -> a@(ArrayT _ _))  _ _) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a <+> equals <+> val
 
     evalPretty (µ -> Variable _ _ (µ -> Empty)) (Variable t n _)   = t <+> n
     evalPretty _                                (Variable t n val) = t <+> n <+> equals <+> val
@@ -74,7 +73,7 @@ module Semantics.C.Pretty
     evalPretty _ (Case a b)           = "case" <+> a <> colon </> hsep b
     evalPretty _ (Cast t v)           = parens t <> v
     evalPretty x (Compound sts)       = "{" `above` (indent 2 $ vcat sts) `above` "}" 
-    evalPretty _ (Default sts)        = "default:" 
+    evalPretty _ (Default sts)        = "default:"  -- TODO: figure out what to do about default statements and shit
     evalPretty _ (DoWhile a b)        = "do" <+> a <+> "while" <+> parens b
     evalPretty _ (Return a)           = "return" <+> a
     evalPretty _ (Goto s)             = "goto" <+> s
@@ -116,15 +115,25 @@ module Semantics.C.Pretty
     evalPretty _                        (Sized t s) = t <> ":" <> s
     
     evalPretty _ (Program p) = vcat $ [ s <> semi | s <- p  ]
-    evalPretty _ (Arguments t) = hsep $ punctuate comma t
+    evalPretty _ (Arguments t) = parens $ hsep $ punctuate comma t
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t
-    evalPretty (out -> Group rs) (Group ts) = vcat $ [t <> semi | t <- ts]
+    evalPretty _ (Group ts) = vcat $ [t <> semi | t <- ts]
     
     evalPretty _ Empty = empty 
     
-    evalPretty _ (Typedef name typ) = "typedef " <> name <+> typ 
+    -- Anonymous structures and unions appear before the type they are being declared to.
+    evalPretty (µ -> (Typedef _ (µ -> CompositeInfo { cname = (Fix Empty) }))) (Typedef name typ) = "typedef" <+> typ <+> name
+      
+    evalPretty _ (Typedef name typ) = "typedef" <+> name <+> typ 
     
+    -- Don't print any fields if they aren't included.
+    -- Should we rewrite (Group []) to be Empty?
+    evalPretty (µ -> CompositeInfo _ _ (µ -> Group [])) (CompositeInfo { ckind, cname, .. }) = ckind <+> cname 
     evalPretty (µ -> CompositeInfo _ _ (µ -> Empty)) (CompositeInfo { ckind, cname, .. }) = ckind <+> cname 
+    -- Don't make space for a name if it's an anonymous composite
+    evalPretty (µ -> CompositeInfo { cname = (Fix Empty) }) (CompositeInfo { ckind, cfields })
+      = ckind <+> "{" `above` (indent 2 cfields) `above` "}"
+    
     evalPretty _ (CompositeInfo { ckind, cname, cfields }) = ckind <+> cname <+> "{" `above` (indent 2 cfields) `above` "}"
     
     evalPretty _ x = error $ "not defined for " ++ show x

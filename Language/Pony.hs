@@ -53,10 +53,16 @@ module Language.Pony
   typedefs = [ s | Fix (Variable s@(Fix (Typedef _ _)) _ _) <- universe syntax ]
   
   sanitize :: Mu Sem -> Maybe (Mu Sem)
+  sanitize (µ -> (PointerToT (µ -> Typedef tname _))) = Just $ Fix (PointerToT (Fix (TypedefT tname)))
   sanitize (µ -> (Typedef tname (µ -> (Typedef tname' _)))) = Just $ Fix (Typedef tname tname')
   sanitize (µ -> (Variable (µ -> (Typedef tname t)) vname val)) = Just $ Fix (Variable (Fix (TypedefT tname)) vname val)
   sanitize _ = Nothing
   
   hello = preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
   
+  
+  testHello = do
+    (Right decl) <- preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
+    let syntax = rewrite sanitize $ convert decl
+    print $ prettyPrint syntax
   

@@ -1,12 +1,13 @@
 module Semantics.C.Queries 
   where
-    
+  
+  import Prelude hiding (pred)
   import Data.Functor.Fix
   import Semantics.C.ASG
   import qualified Data.Foldable as F
-  import Data.Maybe
   import Control.Applicative
   import Debug.Trace
+  
   traceIt x = traceShow x x
   
   deepElem, deepElem' :: FSem -> FSem -> Bool
