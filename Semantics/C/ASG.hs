@@ -6,7 +6,7 @@ module Semantics.C.ASG where
   import Data.Foldable (Foldable)
   import Data.Traversable (Traversable)
   import GHC.Exts (IsString (..))
-
+  import Test.QuickCheck
   
   data Sem a where
     -- logical constructs
@@ -108,8 +108,13 @@ module Semantics.C.ASG where
   type CSem = forall a. Sem a
   type FSem = Fix Sem
 
-  isGroup :: FSem -> Bool
-  isGroup (Fix (Group _)) = True
+  instance Arbitrary FSem where
+    arbitrary = undefined
+
+
+
+  isGroup :: CSem -> Bool
+  isGroup (Group _) = True
   isGroup _ = False
   
   program = Fix . Program

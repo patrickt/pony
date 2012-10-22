@@ -23,6 +23,9 @@ module Language.Pony
   import qualified Data.Foldable as F
   import qualified Data.List as L
   import Semantics.C.Queries
+  import Semantics.C.ASG.Newtypes
+  import Semantics.C.ASG.Arbitrary
+  import Test.QuickCheck
   -- import qualified Language.Haskell.TH as TH
 
   unfoldGroups :: FSem -> [FSem]
