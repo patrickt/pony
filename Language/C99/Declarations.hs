@@ -135,5 +135,5 @@ where
       -- discarding the result of __attributes__ here; could this be a bug?
       (Just (Parenthesized (CDeclarator n _ _ _))) -> return $ CDeclarator n derived asm attrs
       Nothing -> do
-        guard ((length derived) /= 0)
+        guard $ not $ null derived
         return $ CDeclarator Nothing derived asm attrs

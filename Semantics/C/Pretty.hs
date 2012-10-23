@@ -38,7 +38,7 @@ module Semantics.C.Pretty
       | n == sizeOfInt128   = empty
       | otherwise = error $ "Bug: unexpected integer size " ++ show n
     
-    evalPretty _ (Function typ name params body) = typ <+> name <> params <+> "{" `above` (indent 2 body) `above` "}"
+    evalPretty _ (Function typ name params body) = typ <+> name <> params <+> "{" `above` indent 2 body `above` "}"
 
     evalPretty _ VoidT = "void"    
     evalPretty _ (IntT size sign)       = sign <?+> size <?+> "int"
@@ -70,7 +70,7 @@ module Semantics.C.Pretty
     evalPretty _ Break                = "break"
     evalPretty _ (Case a b)           = "case" <+> a <> colon </> hsep b
     evalPretty _ (Cast t v)           = parens t <> v
-    evalPretty x (Compound sts)       = "{" `above` (indent 2 $ vcat sts) `above` "}" 
+    evalPretty _ (Compound sts)       = "{" `above` (indent 2 $ vcat sts) `above` "}" 
     evalPretty _ (Default sts)        = "default:"  -- TODO: figure out what to do about default statements and shit
     evalPretty _ (DoWhile a b)        = "do" <+> a <+> "while" <+> parens b
     evalPretty _ (Return a)           = "return" <+> a
@@ -95,7 +95,7 @@ module Semantics.C.Pretty
     evalPretty _ (Paren a) = parens a
     
     evalPretty (out -> (Attributed _ (out -> PointerToT _))) (Attributed as t) = t <+> hsep as
-    evalPretty _ (Attributed as t) = (hsep as) <+> t
+    evalPretty _ (Attributed as t) = hsep as <+> t
     
     evalPretty _ Auto     = "auto"
     evalPretty _ Const    = "const"
@@ -114,10 +114,10 @@ module Semantics.C.Pretty
     
     evalPretty _ (Prototype { pname, ptype, pargs }) = ptype <+> pname <> pargs
     
-    evalPretty _ (Program p) = vcat $ [ s <> semi | s <- p  ]
+    evalPretty _ (Program p) = vcat [ s <> semi | s <- p  ]
     evalPretty _ (Arguments t) = parens $ hsep $ punctuate comma t
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t
-    evalPretty _ (Group ts) = vcat $ [t <> semi | t <- ts]
+    evalPretty _ (Group ts) = vcat [t <> semi | t <- ts]
     
     evalPretty _ Empty = empty 
     

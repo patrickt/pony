@@ -5,13 +5,12 @@ module Semantics.C.Reifiable.Instances
   
   import Data.Functor.Fix
   import Data.List (find, foldl', partition)
-  import Data.Maybe (fromMaybe)
+  import Data.Maybe (fromMaybe, isNothing)
   import Language.C99 hiding (char, Empty)
   import Language.Pony.MachineSizes
   import qualified Language.C99.Literals as Lit
   import Semantics.C.ASG as ASG
   import Semantics.C.Reifiable
-  import Data.Maybe
   
   -- CTranslationUnit -> Program.
   -- hits: CExternal -> global

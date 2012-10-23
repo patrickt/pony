@@ -16,7 +16,7 @@ module Language.C99.Miscellany where
   -- A declaration is of a composite type if it contains a 'TStructOrUnion' specifier.
   declarationIsComposite :: CDeclaration -> Bool
   declarationIsComposite (CDeclaration specs _) = any isComposite specs where
-    isComposite (TSpec (TStructOrUnion _ _ _ _)) = True
+    isComposite (TSpec (TStructOrUnion {})) = True
     isComposite _ = False
   
   -- A declaration is a function or function prototype if its derived declarations 
