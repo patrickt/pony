@@ -112,6 +112,8 @@ module Semantics.C.Pretty
     evalPretty (out -> Sized _ (out -> Empty)) (Sized t _) = t
     evalPretty _                        (Sized t s) = t <> ":" <> s
     
+    evalPretty _ (Prototype { pname, ptype, pargs }) = ptype <+> pname <> pargs
+    
     evalPretty _ (Program p) = vcat $ [ s <> semi | s <- p  ]
     evalPretty _ (Arguments t) = parens $ hsep $ punctuate comma t
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t

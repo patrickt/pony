@@ -85,6 +85,6 @@ module Language.Pony
   
   testHello = do
     (Right decl) <- preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
-    let syntax = ana flatGroupsAxiom $ convert decl
+    let syntax = reifyTypedefs $ ana flatGroupsAxiom $ convert decl
     print $ prettyPrint syntax
   

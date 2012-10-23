@@ -83,6 +83,7 @@ module Semantics.C.ASG where
     Custom   :: [a] -> Sem a
   
     -- other stuff
+    Prototype :: { pname :: a, ptype :: a, pargs :: a } -> Sem a
     CompositeInfo :: { ckind :: a, cname :: a, cfields :: a } -> Sem a
     Enumeration :: a -> [a] -> Sem a -- [Variables] -> Name? ->  Composite
     Program :: [a] -> Sem a

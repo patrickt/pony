@@ -148,7 +148,7 @@ module Semantics.C.Reifiable.Instances
       (Just declarator) = contents $ head info
       params = declaratorParameters declarator
       in 
-      variable (fpointerto (convert returnTypeSpecs) (tie $ Arguments $ convert <$> params)) functionName nil
+      tie $ Prototype functionName (convert returnTypeSpecs) (tie $ Arguments $ convert <$> params)
   
   -- SUPER SUS
   instance Reifiable String where convert = name'
