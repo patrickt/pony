@@ -6,14 +6,12 @@ module Semantics.C.Pretty
   )
   where
   
-  import Semantics.C.ASG hiding (group)
-  import Data.Generics.Fixplate
   import Control.Applicative hiding (Const)
-  import Text.Pretty
+  import Data.Fixed
+  import Data.Functor.Fix
   import Language.Pony.MachineSizes
-  
-  out = unFix
-  µ = out
+  import Semantics.C.ASG hiding (group)
+  import Text.Pretty
   
   isEmpty x = show x == ""
   infixr 5 <?+>
@@ -87,7 +85,7 @@ module Semantics.C.Pretty
     -- literals
     evalPretty _ (CInt t) = pretty t
     evalPretty _ (CStr s) = dquotes $ text s
-    evalPretty _ (CFloat s) = text s
+    evalPretty _ (CFloat s) = text $ show $ ((fromRational $ toRational s) :: Double) -- shenanigans to prevent trailing zeroes.
     evalPretty _ (CChar c) = squotes $ char c
     
     

@@ -335,7 +335,7 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CLiteral where
     convert (Lit.CInteger i) = tie $ ASG.CInt i
     convert (Lit.CChar c)    = tie $ ASG.CChar c
-    convert (Lit.CFloat f)   = tie $ ASG.CFloat f
+    convert (Lit.CFloat f)   = tie $ ASG.CFloat $ read f
     convert (Lit.CString s)  = tie $ ASG.CStr s
   
   instance Reifiable [CSpecifier] where

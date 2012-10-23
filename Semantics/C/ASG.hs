@@ -1,7 +1,8 @@
-{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, RankNTypes, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, RankNTypes, OverloadedStrings, TypeSynonymInstances, FlexibleInstances #-}
 
 module Semantics.C.ASG where
   
+  import Data.Fixed
   import Data.Functor.Fix
   import Data.Foldable (Foldable)
   import Data.Traversable (Traversable)
@@ -17,10 +18,8 @@ module Semantics.C.ASG where
     Struct   :: Sem a
     Union    :: Sem a
     Variadic :: Sem a
-  
-    -- Function :: Name -> Type -> Arguments -> Group -> Function
-    -- Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a 
-    Function :: a -> a -> a -> a -> Sem a
+    
+    Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a 
     
     Arguments :: [a] -> Sem a
   
@@ -61,7 +60,7 @@ module Semantics.C.ASG where
     -- expressions
     CStr     :: String -> Sem a
     CInt     :: Integer -> Sem a
-    CFloat   :: String -> Sem a -- Maybe a fixed-point type?
+    CFloat   :: Nano -> Sem a
     CChar    :: Char -> Sem a
     Unary    :: a -> a -> Sem a
     Binary   :: a -> a -> a -> Sem a

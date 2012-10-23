@@ -27,8 +27,21 @@ module Language.Pony
   import Semantics.C.ASG.Arbitrary
   import Test.QuickCheck
   import Debug.Trace
-
-
+  
+  type NSem = Mu (Ann Sem Int)
+  
+  churn :: [String] -> NSem -> NSem
+  churn [] x = x
+  churn (name:rest) x = churn rest $ transform (killTypedefs name (attribute $ firstTypedef name x)) x
+  
+  reifyTypedefs :: FSem -> FSem
+  reifyTypedefs x = forget (churn (typedefNames (enumerateNodes_ x)) $ enumerateNodes_ x)
+  
+  killTypedefs :: String -> Int -> NSem -> NSem
+  killTypedefs looking x base@(Fix (Ann num (Typedef given@(Fix (Ann _ (Name n))) _))) =
+    if (num > x && looking == n) then (Fix (Ann num (TypedefT given))) else base
+  killTypedefs _ _ it = it
+  
   unfoldGroups :: FSem -> [FSem]
   unfoldGroups (µ -> Group a) = a >>= unfoldGroups
   unfoldGroups x = [x]
@@ -47,10 +60,11 @@ module Language.Pony
   parse = parse' preprocessedC
   parse' p s = parseUnsafe (p <* eof) s
   
-  source = "typedef volatile int foo; foo bar = 5; extern foo whatever;"
+  source = "typedef volatile int foo; foo bar = 5; extern foo whatever; typedef volatile float bar; extern bar flisdjflkds;"
   parsed = parseUnsafe preprocessedC source
   unsanitized = convert parsed
   syntax = ana flatGroupsAxiom unsanitized
+  numbered = enumerateNodes_ syntax
   result = prettyPrint syntax
   
   changeSize :: FSem -> Maybe FSem
@@ -62,7 +76,9 @@ module Language.Pony
     (Size 32) -> True
     _ -> False
   
-  topleveltypedefs p = [ t | prog@(Fix (Program _)) <- universe p, (Fix t@(Typedef _ _)) <- children prog]
+  firstTypedef nam p = head $ [ t | t@(Fix (Ann _ (Typedef (Fix (Ann _ (Name given))) _))) <- universe p, given == nam ]
+  findTypedefs p = [ t | t@(Fix (Ann _ (Typedef _ _))) <- universe p ]
+  typedefNames p = L.nub [ n | (Fix (Ann _ (Typedef (Fix (Ann _ (Name n))) _))) <- universe p]
   
   hello = preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
   
