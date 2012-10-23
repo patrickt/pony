@@ -9,6 +9,7 @@ where
   -- Lasciate ogne speranza, voi ch'intrate.
   
   import Control.Monad
+  import Data.Maybe
   import Data.Either
   import Language.C99.AST hiding (asmName)
   import Language.C99.Expressions
@@ -19,10 +20,7 @@ where
   -- | C99 6.7 - abstract and concrete declarations.
   declaration :: Parser CDeclaration
   declaration = declaration' >>= checkTypedefs
-    where declaration' = pure CDeclaration <*> some specifier <*> initDeclaratorList <* L.semi
-  
-  initDeclaratorList = L.commaSep initDeclarator
-  
+    where declaration' = CDeclaration <$> some specifier <*> (L.commaSep initDeclarator) <* L.semi
   
   checkTypedefs :: CDeclaration -> Parser CDeclaration
   checkTypedefs d@(CDeclaration (SSpec CTypedef : rest) infos) = do
@@ -34,8 +32,9 @@ where
   
   -- | Sized declarations can only appear in the bodies of composite types.
   sizedDeclaration :: Parser CField
-  sizedDeclaration = CField <$> (pure CDeclaration <*> some specifier
-                                       <*> L.commaSep sizedDeclarator <* L.semi)
+  sizedDeclaration = CField <$> (CDeclaration <$> some specifier
+                                              <*> L.commaSep sizedDeclarator 
+                                              <*  L.semi)
   
   -- | Parameter declarations. Must have types, but may be anonymous if they appear
   -- as a forward declaration.
@@ -43,14 +42,13 @@ where
   parameter = do
     specs <- some specifier
     decl <- optional declarator
-    let needsAContents x = [CDeclInfo {contents = (Just x), initVal = Nothing, size = Nothing}]
-    let info = maybe [] needsAContents decl
+    let info = if (isNothing decl) then [] else [def {contents = decl}]
     return $ CParameter $ CDeclaration specs info
   
   -- | Type names, used in cast operations and typedefs.
   typeName :: Parser CTypeName
-  typeName = pure decl <*> some specifier <*> optional declarator where
-    decl s d = CTypeName $ CDeclaration s [CDeclInfo {contents = d, initVal = Nothing, size = Nothing}]
+  typeName = CTypeName <$> (decl <$> some specifier <*> optional declarator) where
+    decl s d = CDeclaration s [def {contents = d}]
   
   func :: Parser CDerivedDeclarator
   func = L.parens $ do
@@ -72,19 +70,16 @@ where
   -- [type-qualifier-list static assignment-expression]
   -- [type-qualifier-list? *]
   array :: Parser CDerivedDeclarator
-  array = do
-    (quals, expr) <- L.brackets lunacy
-    return $ Array quals expr
-    where lunacy = pure (,) <*> many typeQualifier <*> optional expression
+  array = L.brackets $ (Array <$> many typeQualifier <*> optional expression)
 
   -- ISO C99 standard, section 6.7.5.
   pointer :: Parser CDerivedDeclarator
   pointer = Pointer <$> (char '*' >> L.whiteSpace >> many typeQualifier)
 
   initDeclarator :: Parser CDeclInfo
-  initDeclarator = pure CDeclInfo <*> Just <$> declarator 
-                                  <*> optional assignment 
-                                  <*> pure Nothing
+  initDeclarator = CDeclInfo <$> Just <$> declarator 
+                             <*> optional assignment 
+                             <*> pure Nothing
     where assignment = L.reservedOp "=" >> initializer
     
   sizedDeclarator :: Parser CDeclInfo

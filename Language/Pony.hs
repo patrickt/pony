@@ -11,7 +11,7 @@ module Language.Pony
   where
     -- 
   import Data.Functor.Fix
-  import Language.C99 hiding (CChar, CFloat, Empty, parse, attribute)
+  import Language.C99 hiding (CChar, CFloat, Empty, parse, attribute, typedefs)
   import Data.Generics.Fixplate.Attributes
   import Data.Generics.Fixplate.Draw
   import Data.Generics.Fixplate.Traversals
@@ -26,29 +26,31 @@ module Language.Pony
   import Semantics.C.ASG.Newtypes
   import Semantics.C.ASG.Arbitrary
   import Test.QuickCheck
-  -- import qualified Language.Haskell.TH as TH
+  import Debug.Trace
+
 
   unfoldGroups :: FSem -> [FSem]
   unfoldGroups (µ -> Group a) = a >>= unfoldGroups
   unfoldGroups x = [x]
 
-  flattenGroup :: FSem -> Sem FSem
-  flattenGroup (µ -> Group a) = Group $ a >>= unfoldGroups
-  flattenGroup (µ -> Program a) = Program $ a >>= unfoldGroups
-  flattenGroup x = out x
+  flatGroupsAxiom :: FSem -> Sem FSem
+  flatGroupsAxiom (µ -> Group a) = Group $ a >>= unfoldGroups
+  flatGroupsAxiom (µ -> Program a) = Program $ a >>= unfoldGroups
+  flatGroupsAxiom x = out x
 
   repl = repl' preprocessedC
   repl' p x = prettyPrint $ conv' p x
   
   conv = conv' preprocessedC
-  conv' p x = ana flattenGroup $ rewrite sanitize $ convert $ parse' p x
+  conv' p x = ana flatGroupsAxiom $ convert $ parse' p x
   
   parse = parse' preprocessedC
   parse' p s = parseUnsafe (p <* eof) s
   
-  source = "typedef volatile int foo; foo bar = 5;"
+  source = "typedef volatile int foo; foo bar = 5; extern foo whatever;"
   parsed = parseUnsafe preprocessedC source
-  syntax = ana flattenGroup $ rewrite sanitize $ convert parsed
+  unsanitized = convert parsed
+  syntax = ana flatGroupsAxiom unsanitized
   result = prettyPrint syntax
   
   changeSize :: FSem -> Maybe FSem
@@ -60,20 +62,13 @@ module Language.Pony
     (Size 32) -> True
     _ -> False
   
-  topleveltypedefs = [ t | prog@(Fix (Program _)) <- universe syntax, (Fix t@(Typedef _ _)) <- children prog ]
-  typedefs = [ s | Fix (Variable s@(Fix (Typedef _ _)) _ _) <- universe syntax ]
-  
-  sanitize :: Mu Sem -> Maybe (Mu Sem)
-  sanitize (µ -> (PointerToT (µ -> Typedef tname _))) = Just $ Fix (PointerToT (Fix (TypedefT tname)))
-  sanitize (µ -> (Typedef tname (µ -> (Typedef tname' _)))) = Just $ Fix (Typedef tname tname')
-  sanitize (µ -> (Variable (µ -> (Typedef tname t)) vname val)) = Just $ Fix (Variable (Fix (TypedefT tname)) vname val)
-  sanitize _ = Nothing
+  topleveltypedefs p = [ t | prog@(Fix (Program _)) <- universe p, (Fix t@(Typedef _ _)) <- children prog]
   
   hello = preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
   
   
   testHello = do
     (Right decl) <- preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
-    let syntax = rewrite sanitize $ convert decl
+    let syntax = ana flatGroupsAxiom $ convert decl
     print $ prettyPrint syntax
   

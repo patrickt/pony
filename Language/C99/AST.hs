@@ -33,6 +33,7 @@ module Language.C99.AST
   where
   
   import GHC.Generics
+  import Data.Default
   import Data.Generics hiding (Generic)
   import Language.C99.Literals
   
@@ -224,6 +225,8 @@ module Language.C99.AST
     initVal :: Maybe CInitializer,
     size :: Maybe CExpr
   } deriving (Show, Eq, Typeable, Data, Generic)
+
+  instance Default CDeclInfo where def = CDeclInfo Nothing Nothing Nothing
   
   -- | C declarations (C99 6.7).
   -- This method of structuring declarations was innovated by Benedikt Huber.
