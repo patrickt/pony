@@ -235,10 +235,8 @@ module Language.C99.AST
       declrInfos :: [CDeclInfo]
   } deriving (Eq, Show, Typeable, Data, Generic)
   
-  -- | Represents C type names. These have a number of invariants: there will 
-  -- be at least one 'CSpecifier', at most one 'CDeclInfo', which may contain a 
-  -- declarator (if it is not 'Nothing', it will be unnamed) and will not have an 'Initializer' or be sized..
-  newtype CTypeName = CTypeName CDeclaration deriving (Show, Eq, Typeable, Data, Generic)
+  -- | Represents C type names. The list of specifiers will not be empty.
+  data CTypeName = CTypeName [CSpecifier] (Maybe CDeclarator) deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | Represents C parameters. There will be at least one 'Specifier', and only 
   -- one 'CDeclInfo', which will contain a possibly-named declarator

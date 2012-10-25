@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns, RecordWildCards #-}
+
 module Language.C99.Declarations
   ( declaration
   , sizedDeclaration
@@ -23,10 +25,9 @@ where
     where declaration' = CDeclaration <$> some specifier <*> (L.commaSep initDeclarator) <* L.semi
   
   checkTypedefs :: CDeclaration -> Parser CDeclaration
-  checkTypedefs d@(CDeclaration (SSpec CTypedef : rest) infos) = do
-    let (Just declr) = contents $ head infos
-    let (Just name) = declName declr
-    updateState $ addTypeDef name (CTypeName (CDeclaration rest infos))
+  checkTypedefs d@(CDeclaration (SSpec CTypedef : rest) ((CDeclInfo { contents, .. }) : _)) = do
+    let (Just name) = contents >>= declName
+    updateState $ addTypeDef name (CTypeName rest contents)
     return d
   checkTypedefs x = return x
   
@@ -47,8 +48,7 @@ where
   
   -- | Type names, used in cast operations and typedefs.
   typeName :: Parser CTypeName
-  typeName = CTypeName <$> (decl <$> some specifier <*> optional declarator) where
-    decl s d = CDeclaration s [def {contents = d}]
+  typeName = CTypeName <$> some specifier <*> optional declarator
   
   func :: Parser CDerivedDeclarator
   func = L.parens $ do

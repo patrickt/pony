@@ -130,8 +130,8 @@ module Semantics.C.Reifiable.Instances
   -- hits: derived type declaration -> type
   -- CTypeNames are only hit in casts and sizeof(type) and the like. 
   instance Reifiable CTypeName where
-    convert (CTypeName (CDeclaration specs [CDeclInfo { contents = Just decl, ..}])) = convert $ DTD (specs, decl)
-    convert (CTypeName (CDeclaration specs _)) = convert specs
+    convert (CTypeName specs (Just decl)) = convert $ DTD (specs, decl)
+    convert (CTypeName specs _) = convert specs
   
     -- this is pretty sus but cool also
   instance (Reifiable a) => Reifiable (Maybe a) where
