@@ -22,14 +22,14 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CExternal where
     convert (FunctionDecl f) = convert f
     convert (ExternDecl d) 
-      | declarationIsTypedef d             = convert (TdD d)
+      | declarationIsTypedef d             = convert (TdD d) -- typedef
       | declarationIsComposite d
           && declarationHasFields d
-          && declarationIsUnnamed d        = convert (CID d)
+          && declarationIsUnnamed d        = convert (CID d) -- struct/union
       | declarationIsComposite d 
           && not (declarationHasFields d)
-          && declarationIsUnnamed d        = convert (FCD d)
-      | declarationIsFunctionPrototype d   = convert (FPD d)
+          && declarationIsUnnamed d        = convert (FCD d) -- forward declaration of a structor or union
+      | declarationIsFunctionPrototype d   = convert (FPD d) -- function prototype
       | otherwise                          = convert (VD d)
       
   -- CBlockItem -> Variable | Expression
@@ -84,23 +84,25 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable VariableDeclaration where
     -- if there's just one DeclInfo -- i.e. a declaration like `int foo;` we return a Variable
     convert (VD (CDeclaration specs [CDeclInfo { contents = Just decl, initVal, .. }])) 
-      = tie $ Variable vartype varname initial where 
-          (Just varname) = name' <$> declName decl
-          vartype        = convert (DTD (specs, decl))
-          initial        = convert initVal
+      = tie $ Variable 
+        { vname  = name
+        , vtype  = convert (DTD (specs, decl))
+        , vvalue = convert initVal
+        } where (Just name) = name' <$> declName decl
     -- if there are more infos, e.g. statements of the form `int foo, bar, *baz;`
     -- then we loop around and convert each of them to Variables and stick them in a Group
     convert (VD (CDeclaration specs infos)) = tie $ Group $ [ convert (VD (CDeclaration specs [i])) | i <- infos ]  
   
-  -- FIXME: ignoring variadicity here too
   -- CFunction -> Function
-  -- hits: CFunction -> Type, FunctionArgs -> Declarations, BlockItem -> Group
+  -- hits: FunctionType -> Type, FunctionArgs -> Arguments, String -> Name, BlockItem -> Group
+  -- converting a function is pretty straightforward.
   instance Reifiable CFunction where
-    convert f@(CFunction v decl (CompoundStmt body)) = tie $ Function ftype fname fargs fbody
-      where ftype        = convert  $  FT f
-            (Just fname) = name'   <$> declName decl 
-            fargs        = convert  $  FA decl
-            fbody        = tie      $ Group $ convert <$> body
+    convert f@(CFunction v decl (CompoundStmt body)) = tie $ Function 
+      { ftype = convert $ FT f
+      , fname = name
+      , fargs = convert $ FA decl
+      , fbody = tie $ Group $ convert <$> body
+      } where (Just name) = name' <$> declName decl
     convert other = error $ "converting function " ++ show other ++ " failed: invariants not respected"
     
   -- CFunction -> Type
@@ -141,9 +143,12 @@ module Semantics.C.Reifiable.Instances
   newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
   instance Reifiable FunctionPrototypeDeclaration where
     convert (FPD d@(CDeclaration specs info)) = let 
-      -- TODO: WE ARE DROPPING THINGS OFF LIKE IT'S AFTER-SCHOOL ACTIVITIES, YO 
+      -- first thing we do is separate the specifiers into those that belong to the function 
+      -- ('extern', 'static', and 'inline') and those that don't.
       (functionSpecs, returnTypeSpecs) = partition specifierBelongsToFunction specs
-      (a, b, c) = partitionSpecifiers functionSpecs
+      -- then we convert the specifiers that belong to the function (this is ugly)
+      (_, qualifiers, storages) = partitionSpecifiers functionSpecs
+      -- then we get the name of the function
       (Just functionName) = name' <$> nameOfDeclaration d
       (Just declarator) = contents $ head info
       params' = convert <$> declaratorParameters declarator
@@ -167,11 +172,10 @@ module Semantics.C.Reifiable.Instances
   -- CParameter -> Variable
   -- hits: declaration+specifiers -> type
   instance Reifiable CParameter where
-    -- we know thanks to the Parameter axioms that theres only going to be one info, with 
-    -- contents, but that it might not have a name. 
+    -- convert it to a variable if it has contents, bearing in mind that it might not be a name
     convert (CParameter specs (Just contents)) = 
       variable (convert (DTD (specs, contents))) n nil where n = maybe nil name' $ declName contents
-    -- sometimes parameter names are just given type specifiers. spooky!
+    -- sometimes parameter names are just given type specifiers, in that case it's just a type
     convert (CParameter specs _) = convert specs
     
 
@@ -208,11 +212,6 @@ module Semantics.C.Reifiable.Instances
         kind True = tie Struct
         kind False = tie Union
   
-  
-  
-  
-  -- THE LINE OF BULLSHIT. FROM HERE ON EVERYTHING SUCKS.
-  
   -- CExpr -> expression
   -- hits: CLiteral -> constant, CBuiltInExpr -> expression
   instance Reifiable CExpr where
@@ -228,12 +227,11 @@ module Semantics.C.Reifiable.Instances
     convert (SizeOfType decl)    = tie $ Unary (name' "sizeof") (convert decl)
     convert (CBuiltin t)         = convert t
     convert (CParen s)           = tie $ Paren (convert s)
-    
-
-    
+  
   instance Reifiable CDeclaration where
     convert = dieInBreakpoint "BUG: C declaration has gone unclassified"
   
+  -- FIXME: figure out how to represent asm nodes in the ASG
   instance Reifiable CStatement where
     -- convert (AsmStmt tq (Simple s)) = Asm (isJust tq) (convert s) [] [] []
     -- convert (AsmStmt tq (GCCAsm s inR outR clobber)) 
