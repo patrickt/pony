@@ -165,10 +165,10 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CParameter where
     -- we know thanks to the Parameter axioms that theres only going to be one info, with 
     -- contents, but that it might not have a name. 
-    convert (CParameter (CDeclaration specs [CDeclInfo { contents = (Just contents), .. }])) = 
+    convert (CParameter specs (Just contents)) = 
       variable (convert (DTD (specs, contents))) n nil where n = maybe nil name' $ declName contents
     -- sometimes parameter names are just given type specifiers. spooky!
-    convert (CParameter (CDeclaration specs _)) = variable nil (convert specs) nil
+    convert (CParameter specs _) = variable nil (convert specs) nil
     
 
   -- Composite info declarations are of the form:

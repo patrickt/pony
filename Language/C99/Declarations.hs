@@ -40,11 +40,7 @@ where
   -- | Parameter declarations. Must have types, but may be anonymous if they appear
   -- as a forward declaration.
   parameter :: Parser CParameter
-  parameter = do
-    specs <- some specifier
-    decl <- optional declarator
-    let info = if (isNothing decl) then [] else [def {contents = decl}]
-    return $ CParameter $ CDeclaration specs info
+  parameter = CParameter <$> some specifier <*> optional declarator
   
   -- | Type names, used in cast operations and typedefs.
   typeName :: Parser CTypeName

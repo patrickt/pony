@@ -241,7 +241,7 @@ module Language.C99.AST
   -- | Represents C parameters. There will be at least one 'Specifier', and only 
   -- one 'CDeclInfo', which will contain a possibly-named declarator
   -- and no initializer or size.
-  newtype CParameter = CParameter CDeclaration deriving (Show, Eq, Typeable, Data, Generic)
+  data CParameter = CParameter [CSpecifier] (Maybe CDeclarator) deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | Represents fields of structs or unions. There will be at least one specifier,
   -- at least one 'CDeclInfo', all of which will not have an initVal (but may be 
