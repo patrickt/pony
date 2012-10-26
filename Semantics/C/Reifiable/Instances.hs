@@ -143,12 +143,15 @@ module Semantics.C.Reifiable.Instances
     convert (FPD d@(CDeclaration specs info)) = let 
       -- TODO: WE ARE DROPPING THINGS OFF LIKE IT'S AFTER-SCHOOL ACTIVITIES, YO 
       (functionSpecs, returnTypeSpecs) = partition specifierBelongsToFunction specs
+      (a, b, c) = partitionSpecifiers functionSpecs
       (Just functionName) = name' <$> nameOfDeclaration d
       (Just declarator) = contents $ head info
       params' = convert <$> declaratorParameters declarator
       params = if (declaratorContainsVariadicSpecifier declarator) then (params' ++ [Fix Variadic]) else params'
+      attr [] x = x
+      attr as d = tie $ Attributed ((convert <$> c) ++ (convert <$> b)) d
       in 
-      tie $ Prototype functionName (convert returnTypeSpecs) (tie $ Arguments params)
+      attr functionSpecs $ tie $ Prototype functionName (convert (DTD (returnTypeSpecs, declarator { derived = init $ derived declarator}))) (tie $ Arguments params)
   
   -- SUPER SUS
   instance Reifiable String where convert = name'
@@ -169,7 +172,7 @@ module Semantics.C.Reifiable.Instances
     convert (CParameter specs (Just contents)) = 
       variable (convert (DTD (specs, contents))) n nil where n = maybe nil name' $ declName contents
     -- sometimes parameter names are just given type specifiers. spooky!
-    convert (CParameter specs _) = variable nil (convert specs) nil
+    convert (CParameter specs _) = convert specs
     
 
   -- Composite info declarations are of the form:
