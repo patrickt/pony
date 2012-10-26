@@ -145,9 +145,10 @@ module Semantics.C.Reifiable.Instances
       (functionSpecs, returnTypeSpecs) = partition specifierBelongsToFunction specs
       (Just functionName) = name' <$> nameOfDeclaration d
       (Just declarator) = contents $ head info
-      params = declaratorParameters declarator
+      params' = convert <$> declaratorParameters declarator
+      params = if (declaratorContainsVariadicSpecifier declarator) then (params' ++ [Fix Variadic]) else params'
       in 
-      tie $ Prototype functionName (convert returnTypeSpecs) (tie $ Arguments $ convert <$> params)
+      tie $ Prototype functionName (convert returnTypeSpecs) (tie $ Arguments params)
   
   -- SUPER SUS
   instance Reifiable String where convert = name'

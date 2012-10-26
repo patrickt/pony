@@ -58,14 +58,14 @@ module Language.C99.Miscellany where
   dropTypedef (CDeclaration (SSpec CTypedef : rest) it) = CDeclaration rest it
   dropTypedef _ = error "invalid declaration passed to dropTypedef"
   
-  doesDeclaratorContainVariadicSpecifier :: CDeclarator -> Bool
-  doesDeclaratorContainVariadicSpecifier d = any variadicFunction (derived d) where
+  declaratorContainsVariadicSpecifier :: CDeclarator -> Bool
+  declaratorContainsVariadicSpecifier d = any variadicFunction (derived d) where
     variadicFunction (DerivedFunction _ True) = True
     variadicFunction _ = False
   
   -- this is buggy
   isFunctionVariadic :: CFunction -> Bool
-  isFunctionVariadic (CFunction _ d _) = doesDeclaratorContainVariadicSpecifier d
+  isFunctionVariadic (CFunction _ d _) = declaratorContainsVariadicSpecifier d
   
   partitionSpecifiers :: [CSpecifier] -> ([CTypeSpecifier], [CTypeQualifier], [CStorageSpecifier])
   partitionSpecifiers them = (typeSpecs, typeQuals, storageSpecs) where 
