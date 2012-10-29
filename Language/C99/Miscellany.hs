@@ -9,6 +9,9 @@ module Language.C99.Miscellany where
   import Data.Generics.Uniplate.Data
   import Data.Maybe
   
+  any' :: [a] -> Bool
+  any' = not . null
+  
   -- | A declaration is a typedef iff its first specifier is an 'STypedef'.
   declarationIsTypedef :: CDeclaration -> Bool
   declarationIsTypedef (CDeclaration (SSpec CTypedef : _) _) = True
@@ -16,7 +19,7 @@ module Language.C99.Miscellany where
   
   -- A declaration is of a composite type if it contains a 'TStructOrUnion' specifier.
   declarationIsComposite :: CDeclaration -> Bool
-  declarationIsComposite decl = not $ null [i | i@(TStructOrUnion {}) <- universeBi decl]
+  declarationIsComposite decl = any' [i | i@(TStructOrUnion {}) <- universeBi decl]
   
   -- A declaration is a function or function prototype if its derived declarations 
   -- contain the DerivedFunction attribute.
@@ -28,13 +31,13 @@ module Language.C99.Miscellany where
   declarationIsFunctionPrototype _ = False
   
   declarationIsEnum :: CDeclaration -> Bool
-  declarationIsEnum decl = not $ null [i | i@(TEnumeration {}) <- universeBi decl]
+  declarationIsEnum decl = any' [i | i@(TEnumeration {}) <- universeBi decl]
   
   declarationHasEnumerations :: CDeclaration -> Bool
-  declarationHasEnumerations decl = not $ null [e | e@(EnumIdent {}) <- universeBi decl]
+  declarationHasEnumerations decl = any' [e | e@(EnumIdent {}) <- universeBi decl]
   
   declarationHasFields :: CDeclaration -> Bool
-  declarationHasFields d = not $ null [f | f@(CField _) <- universeBi d]
+  declarationHasFields d = any' [f | f@(CField _) <- universeBi d]
   
   nameOfDeclaration :: CDeclaration -> Maybe String
   nameOfDeclaration (CDeclaration _ [CDeclInfo {contents, ..}]) = contents >>= declName
