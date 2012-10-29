@@ -38,7 +38,11 @@ module Semantics.C.Pretty
       | n == sizeOfInt128   = empty
       | otherwise = error $ "Bug: unexpected integer size " ++ show n
     
-    evalPretty _ (Function typ name params body) = typ <+> name <> params <+> "{" `above` indent 2 body `above` "}"
+    evalPretty _ (Function {ftype, fname, fargs, fbody}) = 
+      ftype <+> fname <> fargs <+> 
+        "{" `above` 
+          indent 2 fbody 
+            `above` "}"
 
     evalPretty _ VoidT = "void"    
     evalPretty _ (IntT size sign)       = sign <?+> size <?+> "int"

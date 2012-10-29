@@ -5,7 +5,7 @@ module Semantics.C.Reifiable.Instances
   
   import Data.Functor.Fix
   import Data.List (find, foldl', partition)
-  import Data.Maybe (fromMaybe, isNothing)
+  import Data.Maybe
   import Language.C99 hiding (char, Empty)
   import Language.Pony.MachineSizes
   import qualified Language.C99.Literals as Lit
@@ -172,10 +172,21 @@ module Semantics.C.Reifiable.Instances
   -- CParameter -> Variable
   -- hits: declaration+specifiers -> type
   instance Reifiable CParameter where
-    -- convert it to a variable if it has contents, bearing in mind that it might not be a name
     convert (CParameter specs (Just contents)) = 
-      variable (convert (DTD (specs, contents))) n nil where n = maybe nil name' $ declName contents
-    -- sometimes parameter names are just given type specifiers, in that case it's just a type
+      -- if we have a name for the variable, make it a Variable,
+      -- otherwise leave it as a plain type
+      if hasName
+        then tie $ Variable 
+          { vname  = name' $ fromJust dname
+          , vtype  = typ
+          , vvalue = nil
+          }
+        else typ
+      where 
+        hasName = isJust dname
+        dname = declName contents
+        typ = convert $ DTD (specs, contents)
+    -- if there's no contents its an unmodified type name, so just convert that
     convert (CParameter specs _) = convert specs
     
 
