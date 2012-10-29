@@ -25,14 +25,18 @@ module Semantics.C.Pretty
   
   instance PrettyAlg Sem where
     evalPretty _ (Name n)  = text n
-    evalPretty _ Unsigned  = "unsigned"
+    
+    evalPretty _ Enum      = "enum"
     evalPretty _ Signed    = empty
+    evalPretty _ (Size s)  = pretty s
     evalPretty _ Struct    = "struct"
     evalPretty _ Union     = "union"
+    evalPretty _ Unsigned  = "unsigned"
     evalPretty _ Variadic  = "..."
+    
     evalPretty _ ShortM    = "short"
     evalPretty _ LongM     = "long"
-    evalPretty _ VeryLongM = "int128_tt"
+    evalPretty _ VeryLongM = "int128_t"
     
     evalPretty _ (Function {ftype, fname, fargs, fbody}) = 
       ftype <+> fname <> fargs <+> 
@@ -44,8 +48,8 @@ module Semantics.C.Pretty
     evalPretty _ FloatT                  = "float"
     evalPretty _ DoubleT                 = "double"
     
-    evalPretty (µ -> IntT (µ -> Unsigned) (µ -> MultipartT [Fix VeryLongM])) _   = "uint128_t"
-    evalPretty (µ -> IntT (µ -> Signed)   (µ -> MultipartT [Fix VeryLongM])) _   = "int128_t"
+    evalPretty (µ -> IntT (µ -> Unsigned) (µ -> MultipartT [Fix VeryLongM])) _   = "__uint128_t"
+    evalPretty (µ -> IntT (µ -> Signed)   (µ -> MultipartT [Fix VeryLongM])) _   = "__int128_t"
     evalPretty _ (IntT { isign, ibase }) = isign <?+> ibase <?+> "int"
     
     evalPretty _ (MultipartT a)          = hsep a

@@ -26,6 +26,8 @@ module Semantics.C.Reifiable.Instances
       | declarationIsComposite d
           && declarationHasFields d
           && declarationIsUnnamed d        = convert (AsComposite d)
+      | declarationIsEnum d
+          && declarationHasEnumerations d  = convert (AsComposite d)
       | declarationIsComposite d 
           && not (declarationHasFields d)
           && declarationIsUnnamed d        = convert (AsForwardComposite d)
@@ -191,9 +193,10 @@ module Semantics.C.Reifiable.Instances
     
 
   -- Composite info declarations are of the form:
-  -- (struct|union) { fields+ };
+  -- (struct|union|enum) { fields+ };
   -- i.e. they are not predeclarations of future composite types,
   -- nor do they declare any variables.
+  -- BUG: NOT CONVERTING __ATTRIBUTES__
   newtype CompositeInfoDeclaration = AsComposite  { unAsComposite  :: CDeclaration }
   instance Reifiable CompositeInfoDeclaration where
     convert (AsComposite (CDeclaration [TSpec (TStructOrUnion name isStruct fields _)] [])) = 
@@ -201,7 +204,13 @@ module Semantics.C.Reifiable.Instances
         { cname = (convert name)
         , ckind = tie $ if isStruct then Struct else Union
         , cfields = (group (convert <$> fields)) 
-        } 
+        }
+    convert (AsComposite (CDeclaration [TSpec (TEnumeration name enums _)] [])) = 
+      tie $ CompositeInfo 
+        { cname = convert name
+        , ckind = tie Enum
+        , cfields = (group (convert <$> enums))
+        }
     convert _ = error "error in conversion, invariants not respected"
     
   
@@ -330,7 +339,7 @@ module Semantics.C.Reifiable.Instances
     convert [TLong, TDouble]                = tie $ MultipartT $ tie <$> [LongM, DoubleT] -- this is weird and doesn't match the way we do ints
     -- FIXME: this is so wrong
     convert [TStructOrUnion mName sou fields attrs] = tie $ CompositeInfo (tie comp) (fromMaybe nil (name' <$> mName)) (group $ convert <$> fields) where comp = if sou then Struct else Union
-    convert [TEnumeration n a attrs]        = tie $ Enumeration (fromMaybe nil $ name' <$> n) (convert <$> a)
+    convert [TEnumeration n a attrs]        = convert n
     convert [TTypedef n d]                  = tie $ Typedef (name' n) (convert d)
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
     convert other                           = dieInBreakpoint $ show other

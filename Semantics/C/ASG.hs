@@ -13,12 +13,18 @@ module Semantics.C.ASG where
   data Sem a where
     -- logical constructs
     Name     :: String -> Sem a -- used for binary operators as well as identifiers
-    Unsigned :: Sem a
+    Enum     :: Sem a
     Signed   :: Sem a
     Size     :: Int -> Sem a
     Struct   :: Sem a
     Union    :: Sem a
+    Unsigned :: Sem a
     Variadic :: Sem a
+    
+    -- modifiers for types
+    ShortM     :: Sem a
+    LongM      :: Sem a
+    VeryLongM  :: Sem a
     
     Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a 
     
@@ -40,10 +46,6 @@ module Semantics.C.ASG where
     BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
     CompositeT       :: a -> Sem a
     TypedefT         :: a -> Sem a
-    
-    ShortM     :: Sem a
-    LongM      :: Sem a
-    VeryLongM  :: Sem a
     
     -- statements
     Break      :: Sem a

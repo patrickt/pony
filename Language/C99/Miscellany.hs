@@ -27,6 +27,12 @@ module Language.C99.Miscellany where
       isFunction _ = False
   declarationIsFunctionPrototype _ = False
   
+  declarationIsEnum :: CDeclaration -> Bool
+  declarationIsEnum decl = not $ null [i | i@(TEnumeration {}) <- universeBi decl]
+  
+  declarationHasEnumerations :: CDeclaration -> Bool
+  declarationHasEnumerations decl = not $ null [e | e@(EnumIdent {}) <- universeBi decl]
+  
   declarationHasFields :: CDeclaration -> Bool
   declarationHasFields d = not $ null [f | f@(CField _) <- universeBi d]
   

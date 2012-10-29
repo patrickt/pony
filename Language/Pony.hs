@@ -67,10 +67,6 @@ module Language.Pony
   numbered = enumerateNodes_ syntax
   result = prettyPrint syntax
   
-  changeSize :: FSem -> Maybe FSem
-  changeSize (Fix (Size 32)) = Just (Fix (Size 16))
-  changeSize _ = Nothing
-  
   has32Bit :: FSem -> Bool
   has32Bit x = case (unFix x) of
     (Size 32) -> True
