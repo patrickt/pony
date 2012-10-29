@@ -40,9 +40,9 @@ Library {
                    , semigroupoids >= 3.0
                    , wl-pprint-extras >= 3.0
                    , syb >= 0.1
+                   , uniplate >= 1.6.7
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Exposed-modules: Language.Pony, Semantics.C
-  Main-is:         Language/Pony.hs
   Extensions:     DeriveDataTypeable,
                   FlexibleContexts,
                   FlexibleInstances,            

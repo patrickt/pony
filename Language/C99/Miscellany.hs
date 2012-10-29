@@ -2,10 +2,11 @@
 
 module Language.C99.Miscellany where
   
+  
   import Language.C99.AST
   import Control.Applicative
   import Data.Monoid
-  import Data.Generics
+  import Data.Generics.Uniplate.Data
   import Data.Maybe
   
   -- | A declaration is a typedef iff its first specifier is an 'STypedef'.
@@ -15,9 +16,7 @@ module Language.C99.Miscellany where
   
   -- A declaration is of a composite type if it contains a 'TStructOrUnion' specifier.
   declarationIsComposite :: CDeclaration -> Bool
-  declarationIsComposite (CDeclaration specs _) = any isComposite specs where
-    isComposite (TSpec (TStructOrUnion {})) = True
-    isComposite _ = False
+  declarationIsComposite decl = not $ null [i | i@(TStructOrUnion {}) <- universeBi decl]
   
   -- A declaration is a function or function prototype if its derived declarations 
   -- contain the DerivedFunction attribute.
@@ -29,20 +28,7 @@ module Language.C99.Miscellany where
   declarationIsFunctionPrototype _ = False
   
   declarationHasFields :: CDeclaration -> Bool
-  declarationHasFields d = 0 /= gtypecount (undefined :: CField) d 
-    
-  
-  declarationHasPointer :: CDeclaration -> Bool
-  declarationHasPointer (CDeclaration _ infos) = any hasPointer infos where
-    hasPointer :: CDeclInfo -> Bool
-    hasPointer (CDeclInfo {contents = Just decl, ..}) = declaratorIsPointer decl
-    hasPointer _ = False
-    
-  declaratorIsPointer :: CDeclarator -> Bool
-  declaratorIsPointer (CDeclarator _ derived _ _) = any isPointer derived where
-    isPointer :: CDerivedDeclarator -> Bool
-    isPointer (Pointer _) = True
-    isPointer _ = False
+  declarationHasFields d = not $ null [f | f@(CField _) <- universeBi d]
   
   nameOfDeclaration :: CDeclaration -> Maybe String
   nameOfDeclaration (CDeclaration _ [CDeclInfo {contents, ..}]) = contents >>= declName
