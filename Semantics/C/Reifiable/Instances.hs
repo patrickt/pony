@@ -154,7 +154,7 @@ module Semantics.C.Reifiable.Instances
       params' = convert <$> declaratorParameters declarator
       params = if (declaratorContainsVariadicSpecifier declarator) then (params' ++ [Fix Variadic]) else params'
       attr [] x = x
-      attr as d = tie $ Attributed ((convert <$> c) ++ (convert <$> b)) d
+      attr as d = tie $ Attributed ((convert <$> qualifiers) ++ (convert <$> storages)) d
       in 
       attr functionSpecs $ tie $ Prototype functionName (convert (DTD (returnTypeSpecs, declarator { derived = init $ derived declarator}))) (tie $ Arguments params)
   
