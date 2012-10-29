@@ -2,6 +2,7 @@
 
 module Semantics.C.ASG where
   
+  import Control.Applicative
   import Data.Fixed
   import Data.Functor.Fix
   import Data.Foldable (Foldable)
@@ -28,10 +29,10 @@ module Semantics.C.ASG where
   
     -- types
     VoidT            :: Sem a
-    IntT             :: { isize :: a, isign :: a } -> Sem a
+    IntT             :: { isign :: a, ibase :: a } -> Sem a
     FloatT           :: Sem a
     DoubleT          :: Sem a
-    LongDoubleT      :: Sem a
+    MultipartT       :: { mparts :: [a] } -> Sem a
     CharT            :: a -> Sem a -- Char  :: Signedness -> Type
     PointerToT       :: a -> Sem a -- Pointer :: Type -> Type
     ArrayT           :: { atype :: a, alength :: a } -> Sem a
@@ -39,6 +40,10 @@ module Semantics.C.ASG where
     BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
     CompositeT       :: a -> Sem a
     TypedefT         :: a -> Sem a
+    
+    ShortM     :: Sem a
+    LongM      :: Sem a
+    VeryLongM  :: Sem a
     
     -- statements
     Break      :: Sem a
@@ -124,7 +129,8 @@ module Semantics.C.ASG where
   
   signed' t = Fix (t (Fix Signed))
   unsigned' t = Fix (t (Fix Unsigned))
-  int' size sign = Fix (IntT (Fix (Size size)) (Fix sign))
+  int' sign [] = Fix (IntT (Fix sign) nil)
+  int' sign base = Fix (IntT (Fix sign) (Fix (MultipartT (tie <$> base))))
   variable a b c = tie $ Variable a b c
   fpointerto funcspecs params = tie $ FunctionPointerT funcspecs params
   

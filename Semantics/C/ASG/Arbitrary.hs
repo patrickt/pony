@@ -10,15 +10,15 @@ module Semantics.C.ASG.Arbitrary where
     arbitrary = elements $ (FSign . tie) <$> [Signed, Unsigned]
 
   instance Arbitrary FixSize where 
-    arbitrary = elements $ (FSize . tie . Size) <$> [16, 32, 64]
+    arbitrary = elements $ (FSize . tie . MultipartT) <$> [[Fix ShortM], [Fix LongM]]
 
   instance Arbitrary FixType where
     arbitrary = do 
-      (FSign sign) <- arbitrary
-      (FSize size) <- arbitrary
-      let intGen = return $ FType $ tie $ IntT { isize = size, isign = sign }
+      (FSign base) <- arbitrary
+      (FSize sign) <- arbitrary
+      let intGen = return $ FType $ tie $ IntT { isign = sign, ibase = base }
       let charGen = return $ FType $ tie $ CharT sign
-      let otherGen = elements $ (FType . tie) <$> [VoidT, FloatT, DoubleT, LongDoubleT]
+      let otherGen = elements $ (FType . tie) <$> [VoidT, FloatT, DoubleT]
       let pointerGen = arbitrary >>= \(FType t) -> return $ FType $ tie $ PointerToT t
       oneof [intGen, charGen, otherGen, pointerGen]
 

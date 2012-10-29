@@ -24,19 +24,15 @@ module Semantics.C.Pretty
     evalPretty :: Mu f -> f (Doc e) -> (Doc e)
   
   instance PrettyAlg Sem where
-    evalPretty _ (Name n) = text n
-    evalPretty _ Unsigned = "unsigned"
-    evalPretty _ Signed   = empty
-    evalPretty _ Struct   = "struct"
-    evalPretty _ Union    = "union"
-    evalPretty _ Variadic = "..."
-    evalPretty _ (Size n) 
-      | n == sizeOfShort    = "short"
-      | n == sizeOfInt      = empty
-      | n == sizeOfLong     = "long"      -- BUG: long and long long are the same size on my platform so long longs are turned into longs
-      | n == sizeOfLongLong = "long long"
-      | n == sizeOfInt128   = empty
-      | otherwise = error $ "Bug: unexpected integer size " ++ show n
+    evalPretty _ (Name n)  = text n
+    evalPretty _ Unsigned  = "unsigned"
+    evalPretty _ Signed    = empty
+    evalPretty _ Struct    = "struct"
+    evalPretty _ Union     = "union"
+    evalPretty _ Variadic  = "..."
+    evalPretty _ ShortM    = "short"
+    evalPretty _ LongM     = "long"
+    evalPretty _ VeryLongM = "int128_tt"
     
     evalPretty _ (Function {ftype, fname, fargs, fbody}) = 
       ftype <+> fname <> fargs <+> 
@@ -44,21 +40,22 @@ module Semantics.C.Pretty
           indent 2 fbody 
             `above` "}"
 
-    evalPretty _ VoidT = "void"    
-    evalPretty _ (IntT size sign)       = sign <?+> size <?+> "int"
-    evalPretty _ FloatT                 = "float"
-    evalPretty _ DoubleT                = "double"
-    evalPretty _ LongDoubleT            = "long double"
-    evalPretty _ (CharT sign)           = sign <?+> "char"
-    evalPretty _ (PointerToT a)         = a <+> "*"
-    evalPretty _ (ArrayT t size)        = t <> brackets size
-    evalPretty _ (FunctionPointerT _ b) = b
-    evalPretty _ (TypedefT n) = n
+    evalPretty _ VoidT                   = "void"    
+    evalPretty _ FloatT                  = "float"
+    evalPretty _ DoubleT                 = "double"
+    
+    evalPretty (µ -> IntT (µ -> Unsigned) (µ -> MultipartT [Fix VeryLongM])) _   = "uint128_t"
+    evalPretty (µ -> IntT (µ -> Signed)   (µ -> MultipartT [Fix VeryLongM])) _   = "int128_t"
+    evalPretty _ (IntT { isign, ibase }) = isign <?+> ibase <?+> "int"
+    
+    evalPretty _ (MultipartT a)          = hsep a
+    evalPretty _ (CharT sign)            = sign <?+> "char"
+    evalPretty _ (PointerToT a)          = a <+> "*"
+    evalPretty _ (ArrayT t size)         = t <> brackets size
+    evalPretty _ (FunctionPointerT _ b)  = b
+    evalPretty _ (TypedefT n)            = n
     
     evalPretty (µ -> (CompositeT (µ -> CompositeInfo typ name _))) _ = prettyPrint typ <+> prettyPrint name
-    
-    evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Unsigned)) _ = "uint128_t"
-    evalPretty (µ -> IntT (µ -> (Size 128)) (µ -> Signed)) _   = "int128_t"
     
     evalPretty (µ -> Variable   (µ -> (FunctionPointerT ftype args)) _ (µ -> Empty)) (Variable _ name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (prettyPrint args)
     evalPretty (out -> Variable (µ -> (FunctionPointerT ftype args)) _ val)          (Variable _ name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (prettyPrint args) <+> equals <+> prettyPrint val

@@ -22,28 +22,28 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable CExternal where
     convert (FunctionDecl f) = convert f
     convert (ExternDecl d) 
-      | declarationIsTypedef d             = convert (TdD d) -- typedef
+      | declarationIsTypedef d             = convert (AsTypedef d)
       | declarationIsComposite d
           && declarationHasFields d
-          && declarationIsUnnamed d        = convert (CID d) -- struct/union
+          && declarationIsUnnamed d        = convert (AsComposite d)
       | declarationIsComposite d 
           && not (declarationHasFields d)
-          && declarationIsUnnamed d        = convert (FCD d) -- forward declaration of a structor or union
-      | declarationIsFunctionPrototype d   = convert (FPD d) -- function prototype
-      | otherwise                          = convert (VD d)
+          && declarationIsUnnamed d        = convert (AsForwardComposite d)
+      | declarationIsFunctionPrototype d   = convert (AsPrototype d) -- function prototype
+      | otherwise                          = convert (AsVariable d)  -- variable declaration
       
   -- CBlockItem -> Variable | Expression
   -- Because in open recursion style we can mix statements and declarations freely, the BlockItem class is not useful.
   instance Reifiable CBlockItem where
-    convert (BlockDeclaration decl) = convert (VD decl)
+    convert (BlockDeclaration decl) = convert (AsVariable decl)
     convert (BlockStatement stmt)   = convert stmt
   
   -- CExternal -> Typedef
   -- hits: TypeDeclaration -> Type
   -- SOMEDAY: `typedef foo;` on its own is legal, declaring foo as a type for int (curse you, implicit int)
-  newtype TypedefDeclaration = TdD { unTdD  :: CDeclaration }
+  newtype TypedefDeclaration = AsTypedef { unAsTypedef  :: CDeclaration }
   instance Reifiable TypedefDeclaration where
-      convert (TdD decl@(CDeclaration _ [info])) = tie $ Typedef alias aliasedType
+      convert (AsTypedef decl@(CDeclaration _ [info])) = tie $ Typedef alias aliasedType
         where 
           -- first we drop the leading Typedef specifier from the declaration specifiers
           specs = declrSpecifiers $ dropTypedef decl
@@ -57,7 +57,7 @@ module Semantics.C.Reifiable.Instances
 
   
   -- (Specifiers x Declarator) -> Type
-  newtype DerivedTypeDeclaration       = DTD { unDT  :: ([CSpecifier], CDeclarator)}
+  newtype DerivedTypeDeclaration = DTD { unDT  :: ([CSpecifier], CDeclarator)}
   instance Reifiable DerivedTypeDeclaration where
     convert (DTD (specs, decl)) = foldl' buildDerivedType (convert specs) (derived decl) where
       -- there are two steps in building a real type out of a declarator. 
@@ -80,10 +80,10 @@ module Semantics.C.Reifiable.Instances
   
   -- Declaration -> Variable | Group of Variables
   -- hits: TypeDeclaration -> Type, CInitializer -> List
-  newtype VariableDeclaration = VD  { unVD  :: CDeclaration }
+  newtype VariableDeclaration = AsVariable { unAsVariable  :: CDeclaration }
   instance Reifiable VariableDeclaration where
     -- if there's just one DeclInfo -- i.e. a declaration like `int foo;` we return a Variable
-    convert (VD (CDeclaration specs [CDeclInfo { contents = Just decl, initVal, .. }])) 
+    convert (AsVariable (CDeclaration specs [CDeclInfo { contents = Just decl, initVal, .. }])) 
       = tie $ Variable 
         { vname  = name
         , vtype  = convert (DTD (specs, decl))
@@ -91,7 +91,7 @@ module Semantics.C.Reifiable.Instances
         } where (Just name) = name' <$> declName decl
     -- if there are more infos, e.g. statements of the form `int foo, bar, *baz;`
     -- then we loop around and convert each of them to Variables and stick them in a Group
-    convert (VD (CDeclaration specs infos)) = tie $ Group $ [ convert (VD (CDeclaration specs [i])) | i <- infos ]  
+    convert (AsVariable (CDeclaration specs infos)) = tie $ Group $ [ convert (AsVariable (CDeclaration specs [i])) | i <- infos ]  
   
   -- CFunction -> Function
   -- hits: FunctionType -> Type, FunctionArgs -> Arguments, String -> Name, BlockItem -> Group
@@ -140,9 +140,9 @@ module Semantics.C.Reifiable.Instances
     convert (Just a) = convert a
     convert _ = nil
   
-  newtype FunctionPrototypeDeclaration = FPD { unFPD :: CDeclaration }
+  newtype FunctionPrototypeDeclaration = AsPrototype { unAsPrototype :: CDeclaration }
   instance Reifiable FunctionPrototypeDeclaration where
-    convert (FPD d@(CDeclaration specs info)) = let 
+    convert (AsPrototype d@(CDeclaration specs info)) = let 
       -- first thing we do is separate the specifiers into those that belong to the function 
       -- ('extern', 'static', and 'inline') and those that don't.
       (functionSpecs, returnTypeSpecs) = partition specifierBelongsToFunction specs
@@ -194,9 +194,9 @@ module Semantics.C.Reifiable.Instances
   -- (struct|union) { fields+ };
   -- i.e. they are not predeclarations of future composite types,
   -- nor do they declare any variables.
-  newtype CompositeInfoDeclaration = CID  { unCID  :: CDeclaration }
+  newtype CompositeInfoDeclaration = AsComposite  { unAsComposite  :: CDeclaration }
   instance Reifiable CompositeInfoDeclaration where
-    convert (CID (CDeclaration [TSpec (TStructOrUnion name isStruct fields _)] [])) = 
+    convert (AsComposite (CDeclaration [TSpec (TStructOrUnion name isStruct fields _)] [])) = 
       tie $ CompositeInfo { 
           cname = (convert name)
         , ckind = (kind isStruct)
@@ -210,12 +210,12 @@ module Semantics.C.Reifiable.Instances
   -- We just parse it as a regular declaration than 
   instance Reifiable CField where
     convert (CField d@(CDeclaration _ infos)) 
-      | isNothing $ size $ head infos = convert (VD d)
-      | otherwise = tie $ Sized (convert (VD d)) (convert $ size $ head infos)
+      | isNothing $ size $ head infos = convert (AsVariable d)
+      | otherwise = tie $ Sized (convert (AsVariable d)) (convert $ size $ head infos)
         
-  newtype ForwardCompositeDeclaration = FCD { unFCD :: CDeclaration }
+  newtype ForwardCompositeDeclaration = AsForwardComposite { unFCD :: CDeclaration }
   instance Reifiable ForwardCompositeDeclaration where
-    convert (FCD (CDeclaration [TSpec (TStructOrUnion name isStruct [] _)] [])) = 
+    convert (AsForwardComposite (CDeclaration [TSpec (TStructOrUnion name isStruct [] _)] [])) = 
       tie $ CompositeInfo { cname = convert name 
                           , ckind = kind isStruct
                           , cfields = nil }
@@ -300,36 +300,36 @@ module Semantics.C.Reifiable.Instances
     convert [TChar]                         = signed' CharT
     convert [TSigned, TChar]                = signed' CharT
     convert [TUnsigned, TChar]              = unsigned' CharT
-    convert [TShort]                        = int' sizeOfShort Signed
-    convert [TSigned, TShort]               = int' sizeOfShort Signed
-    convert [TShort, TInt]                  = int' sizeOfShort Signed
-    convert [TSigned, TShort, TInt]         = int' sizeOfShort Signed
-    convert [TBool]                         = int' sizeOfShort Signed -- this is probably wrong
-    convert [TUnsigned, TShort]             = int' sizeOfShort Unsigned
-    convert [TUnsigned, TShort, TInt]       = int' sizeOfShort Unsigned
-    convert [TInt]                          = int' sizeOfInt Signed
-    convert [TSigned]                       = int' sizeOfInt Signed
-    convert [TSigned, TInt]                 = int' sizeOfInt Signed
-    convert [TUnsigned]                     = int' sizeOfInt Unsigned
-    convert [TUnsigned, TInt]               = int' sizeOfInt Unsigned
-    convert [TLong]                         = int' sizeOfLong Signed
-    convert [TSigned, TLong]                = int' sizeOfLong Signed
-    convert [TLong, TInt]                   = int' sizeOfLong Signed
-    convert [TSigned, TLong, TInt]          = int' sizeOfLong Signed
-    convert [TUnsigned, TLong]              = int' sizeOfLong Unsigned
-    convert [TLong, TUnsigned, TInt]        = int' sizeOfLong Unsigned
-    convert [TUnsigned, TLong, TInt]        = int' sizeOfLong Unsigned
-    convert [TLong, TLong]                  = int' sizeOfLongLong Signed
-    convert [TSigned, TLong, TLong]         = int' sizeOfLongLong Signed
-    convert [TLong, TLong, TInt]            = int' sizeOfLongLong Signed
-    convert [TSigned, TLong, TLong, TInt]   = int' sizeOfLongLong Unsigned
-    convert [TUnsigned, TLong, TLong]       = int' sizeOfLongLong Unsigned
-    convert [TUnsigned, TLong, TLong, TInt] = int' sizeOfLongLong Unsigned
-    convert [TInt128]                       = int' sizeOfInt128 Signed
-    convert [TUInt128]                      = int' sizeOfInt128 Unsigned
+    convert [TShort]                        = int' Signed [ShortM]
+    convert [TSigned, TShort]               = int' Signed [ShortM]
+    convert [TShort, TInt]                  = int' Signed [ShortM]
+    convert [TSigned, TShort, TInt]         = int' Signed [ShortM]
+    convert [TBool]                         = int' Signed [ShortM] 
+    convert [TUnsigned, TShort]             = int' Unsigned [ShortM]
+    convert [TUnsigned, TShort, TInt]       = int' Unsigned [ShortM]
+    convert [TInt]                          = int' Signed []
+    convert [TSigned]                       = int' Signed []
+    convert [TSigned, TInt]                 = int' Signed []
+    convert [TUnsigned]                     = int' Unsigned []
+    convert [TUnsigned, TInt]               = int' Unsigned []
+    convert [TLong]                         = int' Signed [LongM]
+    convert [TSigned, TLong]                = int' Signed [LongM]
+    convert [TLong, TInt]                   = int' Signed [LongM]
+    convert [TSigned, TLong, TInt]          = int' Signed [LongM]
+    convert [TUnsigned, TLong]              = int' Unsigned [LongM]
+    convert [TLong, TUnsigned, TInt]        = int' Unsigned [LongM]
+    convert [TUnsigned, TLong, TInt]        = int' Unsigned [LongM]
+    convert [TLong, TLong]                  = int' Signed [LongM, LongM]
+    convert [TSigned, TLong, TLong]         = int' Signed [LongM, LongM]
+    convert [TLong, TLong, TInt]            = int' Signed [LongM, LongM]
+    convert [TSigned, TLong, TLong, TInt]   = int' Unsigned [LongM, LongM]
+    convert [TUnsigned, TLong, TLong]       = int' Unsigned [LongM, LongM]
+    convert [TUnsigned, TLong, TLong, TInt] = int' Unsigned [LongM, LongM]
+    convert [TInt128]                       = int' Unsigned [VeryLongM]
+    convert [TUInt128]                      = int' Unsigned [VeryLongM]
     convert [TFloat]                        = tie FloatT
     convert [TDouble]                       = tie DoubleT
-    convert [TLong, TDouble]                = tie LongDoubleT
+    convert [TLong, TDouble]                = tie $ MultipartT $ tie <$> [LongM, DoubleT] -- this is weird and doesn't match the way we do ints
     -- FIXME: this is so wrong
     convert [TStructOrUnion mName sou fields attrs] = tie $ CompositeInfo (tie comp) (fromMaybe nil (name' <$> mName)) (group $ convert <$> fields) where comp = if sou then Struct else Union
     convert [TEnumeration n a attrs]        = tie $ Enumeration (fromMaybe nil $ name' <$> n) (convert <$> a)
