@@ -20,7 +20,7 @@ module Semantics.C.Reifiable.Instances
   -- CExternal -> Function | Typedef | FunctionProto? | Variable | Declarations
   -- hits: CFunction -> Function
   instance Reifiable CExternal where
-    convert (FunctionDecl f) = convert f
+    convert (FunctionDecl f)               = convert f
     convert (ExternDecl d) 
       | declarationIsTypedef d             = convert (AsTypedef d)
       | declarationIsComposite d
@@ -197,13 +197,11 @@ module Semantics.C.Reifiable.Instances
   newtype CompositeInfoDeclaration = AsComposite  { unAsComposite  :: CDeclaration }
   instance Reifiable CompositeInfoDeclaration where
     convert (AsComposite (CDeclaration [TSpec (TStructOrUnion name isStruct fields _)] [])) = 
-      tie $ CompositeInfo { 
-          cname = (convert name)
-        , ckind = (kind isStruct)
-        , cfields = (group (convert <$> fields)) } 
-      where 
-        kind True = tie Struct
-        kind False = tie Union
+      tie $ CompositeInfo 
+        { cname = (convert name)
+        , ckind = tie $ if isStruct then Struct else Union
+        , cfields = (group (convert <$> fields)) 
+        } 
     convert _ = error "error in conversion, invariants not respected"
     
   

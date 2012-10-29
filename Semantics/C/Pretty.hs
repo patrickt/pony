@@ -70,7 +70,6 @@ module Semantics.C.Pretty
     -- statements
     evalPretty _ Break                = "break"
     evalPretty _ (Case a b)           = "case" <+> a <> colon </> hsep b
-    evalPretty _ (Cast t v)           = parens t <> v
     evalPretty _ (Compound sts)       = "{" `above` (indent 2 $ vcat sts) `above` "}" 
     evalPretty _ (Default sts)        = "default:"  -- TODO: figure out what to do about default statements and shit
     evalPretty _ (DoWhile a b)        = "do" <+> a <+> "while" <+> parens b
@@ -81,19 +80,20 @@ module Semantics.C.Pretty
     evalPretty _ (Labeled l s)        = l <> ":" <> s
     evalPretty _ (While c a)          = "while" <+> parens c <+> a
     
-    evalPretty _ (FunCall a bs) = a <> parens (sep $ punctuate comma bs)
-    
     -- literals
     evalPretty _ (CInt t) = pretty t
     evalPretty _ (CStr s) = dquotes $ text s
     evalPretty _ (CFloat s) = text $ show $ ((fromRational $ toRational s) :: Double) -- shenanigans to prevent trailing zeroes.
     evalPretty _ (CChar c) = text $ show c
     
-    
+    -- expressions
+    evalPretty _ (Cast t v)           = parens t <> v
     evalPretty _ (Unary op a) = op <> a
     evalPretty _ (Binary a op b) = a <+> op <+> b
     evalPretty _ (Ternary a b c) = a <> "?" <> b <> colon <> c
     evalPretty _ (Paren a) = parens a
+    evalPretty _ (FunCall a bs) = a <> parens (sep $ punctuate comma bs)
+    evalPretty _ (Brackets a b) = a <> brackets b
     
     evalPretty (out -> (Attributed _ (out -> PointerToT _))) (Attributed as t) = t <+> hsep as
     evalPretty _ (Attributed as t) = hsep as <+> t

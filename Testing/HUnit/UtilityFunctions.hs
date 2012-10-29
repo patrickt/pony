@@ -19,19 +19,25 @@ module Testing.HUnit.UtilityFunctions
     (CTranslationUnit [ExternDecl d]) = parseUnsafe preprocessedC code
   
   tests :: [Test]
-  tests = [ isTypedef True "typedef int foo;"
-          , isTypedef True "typedef struct foo_s { int blah; int baz; } foo_t;"
-          , isTypedef True "typedef int (*clever)(float monkeys);"
+  tests = [ isTypedef True simpleTypedef
+          , isTypedef True compositeTypedef
+          , isTypedef True functionPointerTypedef
           , isTypedef False staticInt
           , isComposite True fooStruct
           , isComposite True clipseUnion
+          , isComposite True forwardStruct
           , isComposite False staticInt
           , hasFields True fooStruct
           , hasFields True clipseUnion
+          , hasFields True compositeTypedef
           , hasFields False staticInt
-          , hasFields False "struct forward *lol;"
+          , hasFields False forwardStruct
           ]
         where
+          simpleTypedef = "typedef int foo;"
+          compositeTypedef = "typedef struct foo_s { int blah; int baz; } foo_t;"
+          functionPointerTypedef = "typedef int (*clever)(float monkeys);"
+          forwardStruct = "struct forward *lol;"
           fooStruct = "struct foo { int bar; int baz; };"
           clipseUnion = "union clipse { char pusha; char malice; };"
           staticInt = "static int notatypedef;"
