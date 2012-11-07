@@ -105,12 +105,14 @@ module Semantics.C.ASG where
   
   deriving instance (Show a) => Show (Sem a)
   deriving instance (Eq a) => Eq (Sem a)
+  deriving instance (Ord a) => Ord (Sem a)
   deriving instance Functor Sem
   deriving instance Foldable Sem
   deriving instance Traversable Sem
   instance ShowF Sem where showsPrecF = showsPrec
   instance EqF Sem where equalF = (==)
   instance IsString (Sem a) where fromString = Name
+  instance OrdF Sem where compareF = compare
   
   type CSem = forall a. Sem a
   type FSem = Fix Sem

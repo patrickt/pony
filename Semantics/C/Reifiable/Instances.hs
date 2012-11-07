@@ -272,7 +272,7 @@ module Semantics.C.Reifiable.Instances
       (convert e2)
       (convert e3)
       (convert s)
-    convert (GotoStmt s)            = tie $ Goto (convert s)
+    convert (GotoStmt (convert -> s)) = tie $ Goto s
     convert (IfStmt e s Nothing)    = tie $ IfThen (convert e) (convert s)
     convert (IfStmt e s (Just s2))  = tie $ IfThenElse (convert e) (convert s) (convert s2)
     convert (LabeledStmt l [] s)    = tie $ Labeled (name' l) (convert s)

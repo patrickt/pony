@@ -29,6 +29,7 @@ Flag examples {
 
 Library {
   Build-depends:     base >= 4.2 && < 5
+                   , containers >= 0.4.2
                    , ghc-prim
                    , GenericPretty >= 1.2
                    , data-default >= 0.5

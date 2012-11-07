@@ -10,8 +10,9 @@ module Language.Pony
   
   where
     -- 
+  import Control.Monad.State
   import Data.Functor.Fix
-  import Language.C99 hiding (CChar, CFloat, Empty, parse, attribute, typedefs)
+  import Language.C99 hiding (CChar, CFloat, Empty, State, parse, attribute, typedefs)
   import Data.Generics.Fixplate.Attributes
   import Data.Generics.Fixplate.Draw
   import Data.Generics.Fixplate.Traversals
@@ -28,6 +29,23 @@ module Language.Pony
   import Test.QuickCheck
   import Debug.Trace
   
+  type Recorder = State ([FSem])
+  
+  bool :: a -> a -> Bool -> a
+  bool a b p = if p then a else b
+  
+  
+  replaceTypedefs :: FSem -> Recorder FSem
+  replaceTypedefs x@(Fix (Typedef name@(Fix (Name _)) _)) = do
+    contained <- gets (elem x)
+    unless contained (modify (x :))
+    return $ bool (tie $ TypedefT name) x contained
+  replaceTypedefs x = pure x
+
+  
+  
+  
+  
   type NSem = Mu (Ann Sem Int)
   
   churn :: [String] -> NSem -> NSem
@@ -35,7 +53,7 @@ module Language.Pony
   churn (name:rest) x = churn rest $ transform (killTypedefs name (attribute $ firstTypedef name x)) x
   
   reifyTypedefs :: FSem -> FSem
-  reifyTypedefs x = forget (churn (typedefNames (enumerateNodes_ x)) $ enumerateNodes_ x)
+  reifyTypedefs x = evalState (replaceTypedefs `transformM` x) []
   
   killTypedefs :: String -> Int -> NSem -> NSem
   killTypedefs looking x base@(Fix (Ann num (Typedef given@(Fix (Ann _ (Name n))) _))) =
@@ -63,7 +81,7 @@ module Language.Pony
   source = "typedef volatile int foo; foo bar = 5; extern foo whatever; typedef volatile float bar; extern bar flisdjflkds;"
   parsed = parseUnsafe preprocessedC source
   unsanitized = convert parsed
-  syntax = ana flatGroupsAxiom unsanitized
+  syntax = reifyTypedefs unsanitized
   numbered = enumerateNodes_ syntax
   result = prettyPrint syntax
   
