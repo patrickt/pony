@@ -71,6 +71,7 @@ module Language.C99.Lexer
          return . fst . head . readHex
   
   lexer = T.makeTokenParser ponyCDef
+  {-# INLINE lexer #-}
 
   whiteSpace = T.whiteSpace lexer
   identifier = T.identifier lexer
