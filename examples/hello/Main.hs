@@ -14,10 +14,14 @@ module Main where
   
   main :: IO ()
   main = do 
-    f <- readFile "examples/hello/hello.pony.c"
-    let ast = parseUnsafe preprocessedC f
-    let asg = convert ast
-    print asg
-    let transformed = ana changeHello asg
-    let done = prettyPrint transformed
-    print done
+    parsed <- preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
+    case parsed of 
+      (Left a) -> putStrLn "ERROR" >> print a
+      (Right ast) -> do
+        
+
+        let asg = convert ast
+        print asg
+        let transformed = ana changeHello asg
+        let done = prettyPrint transformed
+        print done

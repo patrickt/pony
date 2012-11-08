@@ -97,13 +97,21 @@ module Language.Pony
   hello = preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
   
   testTort = do
-    (Right decl) <- preprocessAndParse preprocessedC "examples/torture.pony.c" def
-    let syntax = reifyTypedefs $ ana flatGroupsAxiom $ convert decl
-    print $ prettyPrint syntax
+    decl <- preprocessAndParse preprocessedC "examples/torture.pony.c" def
+    case decl of
+      (Left e) -> print e
+      (Right r) -> do
+        let syntax = reifyTypedefs $ ana flatGroupsAxiom $ convert r
+        print $ prettyPrint syntax
+  
+
   
   
   testHello = do
-    (Right decl) <- preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
-    let syntax = reifyTypedefs $ ana flatGroupsAxiom $ convert decl
-    print $ prettyPrint syntax
+    decl <- preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
+    case decl of
+      (Left e) -> print e
+      (Right r) -> do
+        let syntax = reifyTypedefs $ ana flatGroupsAxiom $ convert r
+        print $ prettyPrint syntax
   
