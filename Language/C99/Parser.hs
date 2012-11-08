@@ -19,7 +19,7 @@ module Language.C99.Parser
   import Language.C99.AST
   import Language.Pony.Overture hiding (Const)
   import qualified Data.ByteString as B
-  import Data.Default
+  import qualified Data.Map as M
   import System.Cmd
   import Text.Parsec hiding (parseTest, many, optional, (<|>))
   import Text.Parsec.ByteString hiding (Parser, parseFromFile)
@@ -29,14 +29,14 @@ module Language.C99.Parser
   -- that maps names to types, and four arrays of strings that provide the ability
   -- to define new operators at different precedence levels.
   data Internals = Internals 
-    { typedefs :: [(String, CTypeName)]
+    { typedefs :: Map String CTypeName
     , arithmeticOps :: [String]
     , comparativeOps :: [String]
     , bitwiseOps :: [String]
     , logicalOps :: [String]
     } deriving (Show, Eq, Typeable, Data)
   
-  instance Default Internals where def = Internals [] [] [] [] []
+  instance Default Internals where def = Internals def def def def def
   
   -- | Updates an 'Internals' record by adding a new (name, type) pair to the 
   -- lookup table. There are a number of problems with this: typedefs do not 
@@ -44,7 +44,7 @@ module Language.C99.Parser
   -- once, lookup tables are slow, et cetera. 
   -- tl;dr: this needs some work.
   addTypeDef :: String -> CTypeName -> Internals -> Internals
-  addTypeDef name decl record = record { typedefs = typedefs record ++ [(name, decl)]}
+  addTypeDef name decl record = record { typedefs = M.insert name decl (typedefs record) }
   
   -- | The instance of the GenParser monad transformer over characters and carrying 'Internals'.
   type Parser = GenParser Char Internals

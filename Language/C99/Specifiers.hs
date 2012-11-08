@@ -8,6 +8,7 @@ module Language.C99.Specifiers
 
 where
   
+  import qualified Data.Map as M
   import Language.C99.Parser
   import Language.C99.Lexer as L
   import Language.C99.AST
@@ -74,7 +75,7 @@ where
       lookupTypedef = do
         defs <- getState
         ident <- identifier
-        case lookup ident (typedefs defs) of
+        case M.lookup ident (typedefs defs) of
           (Just specs) -> return (TTypedef ident specs)
           Nothing -> fail "could not find typedef"
 
