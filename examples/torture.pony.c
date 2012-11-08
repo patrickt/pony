@@ -20,11 +20,11 @@
 #include <pthread.h>
 #include <regex.h>
 #include <sqlite3.h>
-// #include <stdint.h>
+#include <stdint.h>
 #include <stdio.h>
 // #include <stdlib.h> // ?
 // #include <sys/sysctl.h>
-// #include <unistd.h>
+#include <unistd.h>
 // #include <zlib.h>
 
 

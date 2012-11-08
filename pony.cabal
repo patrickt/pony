@@ -53,6 +53,7 @@ Library {
                   GeneralizedNewtypeDeriving,
                   MultiParamTypeClasses,
                   NamedFieldPuns,
+                  OverloadedStrings,
                   Rank2Types,
                   TypeOperators,
                   TypeSynonymInstances,

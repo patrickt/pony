@@ -12,13 +12,18 @@ where
   import Language.C99.Parser
   import Language.C99.Lexer as L
   import Language.C99.AST
+  import Language.C99.Literals
   import {-# SOURCE #-} Language.C99.Declarations
   import Language.C99.Expressions (expression, constantExpression)
   
-  as name qual = L.reserved name >> return qual
+  as name qual = qual <$ L.reserved name
+  
+  -- You can put reserved words like "const" inside __attribute__ declarations, so we try parsing an expression then give up and just read letters
+  customAttribute :: Parser CExpr
+  customAttribute = try expression <|> (Constant <$> CString <$> some letter)
   
   attribute :: Parser CAttribute
-  attribute = pure CAttribute <*> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 expression))
+  attribute = CAttribute <$> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 (customAttribute)))
   
   typeQualifier :: Parser CTypeQualifier
   typeQualifier = choice 
