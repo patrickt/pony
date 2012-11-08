@@ -8,7 +8,7 @@
 #include <copyfile.h>
 #include <ctype.h> // some sort of bug w/r/t ternary operators
 #include <curses.h>
-// #include <db.h> // ??
+#include <db.h>
 #include <dirent.h>
 #include <fcntl.h>
 // #include <getopt.h> // ??
@@ -22,7 +22,7 @@
 #include <sqlite3.h>
 #include <stdint.h>
 #include <stdio.h>
-// #include <stdlib.h> // ?
+// #include <stdlib.h>
 // #include <sys/sysctl.h>
 #include <unistd.h>
 // #include <zlib.h>

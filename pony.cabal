@@ -44,7 +44,7 @@ Library {
                    , wl-pprint-extras >= 3.0
                    , syb >= 0.1
                    , uniplate >= 1.6.7
-  ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs -threaded
+  ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Exposed-modules: Language.Pony, Semantics.C
   Extensions:     DeriveDataTypeable,
                   FlexibleContexts,
@@ -86,7 +86,6 @@ Executable hello {
   Main-is:  Main.hs
   Hs-source-dirs: examples/hello .
   LD-Options:          -w
-  ghc-options:     -O -prof -auto-all -caf-all -threaded
   if flag(examples) {
     Buildable: True
   } else {

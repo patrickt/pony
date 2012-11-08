@@ -25,4 +25,3 @@ module Main where
         let prettied = prettyPrint transformed
         handle <- openFile "./results.c" WriteMode
         hPutDoc handle prettied
-        
