@@ -1,4 +1,4 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE NoMonomorphismRestriction, OverloadedStrings #-}
 
 module Language.C99.Lexer 
   ( identifier
@@ -30,14 +30,18 @@ module Language.C99.Lexer
   where
   
   import Control.Applicative
+  import Data.ByteString (ByteString)
+  import Data.Functor.Identity (Identity)
   import Numeric (readOct, readHex)
   import Text.Parsec hiding ((<|>), many)
-  import Text.Parsec.Language
+  import Text.Parsec.Language hiding (LanguageDef)
   import qualified Text.Parsec.Token as T
+  
+  type LanguageDef st = GenLanguageDef ByteString st Identity
   
   -- Currently trigraphs, digraphs, _Bool, _Complex, and _Imaginary are unsupported.
   ponyCDef :: LanguageDef st
-  ponyCDef = javaStyle 
+  ponyCDef = T.LanguageDef 
     { T.reservedOpNames = ["->", "++", "--", "&", "*", "+", "-", "~", "!", "/", "%", "<<", ">>", 
                           "/", "%", "<<", ">>", "<", ">", "<=", ">=", "==", "!=", "^", "|", "&&", 
                           "?", ":", ";", "...", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", 
@@ -49,9 +53,14 @@ module Language.C99.Lexer
                         "volatile", "while", "...", "__asm", "__attribute__", "__inline", "__inline__",
                         "__typeof__", "__builtin_va_arg", "__int128_t", "__uint128_t"]
     , T.identStart = letter <|> char '_'
-    -- Since the C preprocessor removes comments, there is no need to 
-    -- have facilities for //, /* and */. Tee-hee.
+    , T.identLetter = alphaNum <|> oneOf "_'"
+    , T.commentStart = "/*"
+    , T.commentEnd = "*/"
+    , T.opStart = oneOf ":!#$%&*+./<=>?@\\^|-~"
+    , T.opLetter = oneOf ":!#$%&*+./<=>?@\\^|-~"
     , T.commentLine = "#"
+    , T.caseSensitive = True
+    , T.nestedComments = True
     }
 
   cOctal = char '0' >>
@@ -95,6 +104,7 @@ module Language.C99.Lexer
   comma = T.comma lexer
   colon = T.colon lexer
   dot = T.dot lexer
+  arrow :: ParsecT ByteString u Identity ByteString
   arrow = reservedOp "->" >> return "->"
   semiSep = T.semiSep lexer
   semiSep1 = T.semiSep1 lexer

@@ -2,8 +2,7 @@
 
 module Language.C99.Parser 
   ( module Text.Parsec
-  , module Control.Applicative
-  , module Data.Default
+  , module Language.Pony.Overture
   , Parser
   , Internals(..)
   , addTypeDef
@@ -16,13 +15,14 @@ module Language.C99.Parser
   )
   where
   
-  import Control.Applicative hiding (Const)
   import Data.Generics
   import Language.C99.AST
+  import Language.Pony.Overture hiding (Const)
+  import qualified Data.ByteString as B
   import Data.Default
   import System.Cmd
   import Text.Parsec hiding (parseTest, many, optional, (<|>))
-  import Text.Parsec.String hiding (Parser, parseFromFile)
+  import Text.Parsec.ByteString hiding (Parser, parseFromFile)
   import Text.Printf
 
   -- | The internal data type carried along by the parser monad: a lookup table 
@@ -58,17 +58,17 @@ module Language.C99.Parser
   
   -- | Given a parser action and a string, parses the string and dumps the 
   -- result to stdout. Useful for debugging.
-  parseTest :: (Show a) => Parser a -> String -> IO ()
+  parseTest :: (Show a) => Parser a -> ByteString -> IO ()
   parseTest p s = parseTestCustom p s def
   
   -- | Like 'parseTest', except, you can specify a custom 'Internals' structure.
-  parseTestCustom :: (Show a) => Parser a -> String -> Internals -> IO ()
+  parseTestCustom :: (Show a) => Parser a -> ByteString -> Internals -> IO ()
   parseTestCustom p s i = either print print (runParser p i "" s)
   
   -- | An unsafe variant of parseTest that actually returns the parsed object.
   -- If an error occurs, it will be printed to stdout and the function will 
   -- terminate early. Extremely useful for debugging purposes.
-  parseUnsafe :: Parser a -> String -> a
+  parseUnsafe :: Parser a -> ByteString -> a
   parseUnsafe p s = either (error . show) id (runParser p def "" s)
   
   -- | Like 'preprocessAndParse', except without the whole preprocessing thing.
@@ -78,4 +78,4 @@ module Language.C99.Parser
   
   -- | Like 'parseFromFile', except you can specify your own 'Internals' structure.
   parseFromFileCustom :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
-  parseFromFileCustom p loc internals = runParser p internals loc <$> readFile loc
+  parseFromFileCustom p loc internals = runParser p internals loc <$> B.readFile loc

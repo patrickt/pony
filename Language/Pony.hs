@@ -1,4 +1,4 @@
-{-# LANGUAGE NamedFieldPuns, OverlappingInstances, ViewPatterns #-}
+{-# LANGUAGE NamedFieldPuns, OverlappingInstances, ViewPatterns, OverloadedStrings #-}
 
 module Language.Pony 
   ( module Semantics.C.ASG
