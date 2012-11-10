@@ -1,12 +1,9 @@
 module Semantics.C 
-  ( module Semantics.C.Reifiable.Instances
-  , module Semantics.C.Pretty
-  , module Semantics.C.ASG
-  )
+  ( module X )
   
   where
   
-  import Semantics.C.Reifiable.Instances
-  import Semantics.C.Pretty
-  import Semantics.C.ASG
+  import Semantics.C.Reifiable.Instances as X
+  import Semantics.C.Pretty as X
+  import Semantics.C.ASG as X
   

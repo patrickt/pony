@@ -23,7 +23,7 @@ where
   customAttribute = try expression <|> (Constant <$> CString <$> some letter)
   
   attribute :: Parser CAttribute
-  attribute = CAttribute <$> (L.reserved "__attribute__" *> L.parens (L.parens $ L.commaSep1 (customAttribute)))
+  attribute = CAttribute <$> (L.reserved "__attribute__" *> L.parens (L.parens (L.commaSep1 customAttribute)))
   
   typeQualifier :: Parser CTypeQualifier
   typeQualifier = choice 

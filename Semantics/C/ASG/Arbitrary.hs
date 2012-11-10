@@ -16,7 +16,7 @@ module Semantics.C.ASG.Arbitrary where
     arbitrary = do 
       (FSign base) <- arbitrary
       (FSize sign) <- arbitrary
-      let intGen = return $ FType $ tie $ IntT { isign = sign, ibase = base }
+      let intGen = return $ FType $ tie IntT { isign = sign, ibase = base }
       let charGen = return $ FType $ tie $ CharT sign
       let otherGen = elements $ (FType . tie) <$> [VoidT, FloatT, DoubleT]
       let pointerGen = arbitrary >>= \(FType t) -> return $ FType $ tie $ PointerToT t

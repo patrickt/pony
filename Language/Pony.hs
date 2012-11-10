@@ -23,17 +23,15 @@ module Language.Pony
   import Text.PrettyPrint.GenericPretty
   import qualified Data.Foldable as F
   import qualified Data.List as L
-  import Semantics.C.Queries
   import Semantics.C.ASG.Newtypes
   import Semantics.C.ASG.Arbitrary
   import Test.QuickCheck
   import Debug.Trace
   
-  type Recorder = State ([FSem])
+  type Recorder = State [FSem]
   
   bool :: a -> a -> Bool -> a
   bool a b p = if p then a else b
-  
   
   replaceTypedefs :: FSem -> Recorder FSem
   replaceTypedefs x@(Fix (Typedef name@(Fix (Name _)) _)) = do
@@ -42,23 +40,8 @@ module Language.Pony
     return $ bool (tie $ TypedefT name) x contained
   replaceTypedefs x = pure x
 
-  
-  
-  
-  
-  type NSem = Mu (Ann Sem Int)
-  
-  churn :: [String] -> NSem -> NSem
-  churn [] x = x
-  churn (name:rest) x = churn rest $ transform (killTypedefs name (attribute $ firstTypedef name x)) x
-  
-  reifyTypedefs :: FSem -> FSem
-  reifyTypedefs x = evalState (replaceTypedefs `transformM` x) []
-  
-  killTypedefs :: String -> Int -> NSem -> NSem
-  killTypedefs looking x base@(Fix (Ann num (Typedef given@(Fix (Ann _ (Name n))) _))) =
-    if (num > x && looking == n) then (Fix (Ann num (TypedefT given))) else base
-  killTypedefs _ _ it = it
+  runReplacer :: FSem -> FSem
+  runReplacer x = evalState (replaceTypedefs `transformM` x) []
   
   unfoldGroups :: FSem -> [FSem]
   unfoldGroups (µ -> Group a) = a >>= unfoldGroups
@@ -76,34 +59,25 @@ module Language.Pony
   conv' p x = ana flatGroupsAxiom $ convert $ parse' p x
   
   parse = parse' preprocessedC
-  parse' p s = parseUnsafe (p <* eof) s
+  parse' p = parseUnsafe (p <* eof)
   
   source = "typedef volatile int foo; foo bar = 5; extern foo whatever; typedef volatile float bar; extern bar flisdjflkds;"
   parsed = parseUnsafe preprocessedC source
   unsanitized = convert parsed
-  syntax = reifyTypedefs unsanitized
+  syntax = runReplacer unsanitized
   numbered = enumerateNodes_ syntax
   result = prettyPrint syntax
-  
-  has32Bit :: FSem -> Bool
-  has32Bit x = case (unFix x) of
-    (Size 32) -> True
-    _ -> False
-  
-  firstTypedef nam p = head $ [ t | t@(Fix (Ann _ (Typedef (Fix (Ann _ (Name given))) _))) <- universe p, given == nam ]
-  findTypedefs p = [ t | t@(Fix (Ann _ (Typedef _ _))) <- universe p ]
-  typedefNames p = L.nub [ n | (Fix (Ann _ (Typedef (Fix (Ann _ (Name n))) _))) <- universe p]
   
   hello = preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
   
   testTort = do
     (Right decl) <- preprocessAndParse preprocessedC "examples/torture.pony.c" def
-    let syntax = reifyTypedefs $ ana flatGroupsAxiom $ convert decl
+    let syntax = runReplacer $ ana flatGroupsAxiom $ convert decl
     print $ prettyPrint syntax
   
   
   testHello = do
     (Right decl) <- preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
-    let syntax = reifyTypedefs $ ana flatGroupsAxiom $ convert decl
+    let syntax = runReplacer $ ana flatGroupsAxiom $ convert decl
     print $ prettyPrint syntax
   

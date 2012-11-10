@@ -176,8 +176,8 @@ module Language.C99.Expressions
                                  
   stringLiteral :: Parser CStringLiteral
   stringLiteral = do
-    str <- (L.stringLiteral `sepBy1` L.whiteSpace)
-    return $ CStringLiteral { getExpr = Constant (CString $ concat str) }
+    str <- L.stringLiteral `sepBy1` L.whiteSpace
+    return CStringLiteral { getExpr = Constant (CString $ concat str) }
   
   -- remember, kids, <$> is an infix synonym for fmap.
   -- TODO: The definition for integer suffixes is pretty gauche

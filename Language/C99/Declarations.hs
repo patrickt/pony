@@ -22,7 +22,7 @@ where
   -- | C99 6.7 - abstract and concrete declarations.
   declaration :: Parser CDeclaration
   declaration = declaration' >>= checkTypedefs
-    where declaration' = CDeclaration <$> some specifier <*> (L.commaSep initDeclarator) <* L.semi
+    where declaration' = CDeclaration <$> some specifier <*> L.commaSep initDeclarator <* L.semi
   
   checkTypedefs :: CDeclaration -> Parser CDeclaration
   checkTypedefs d@(CDeclaration (SSpec CTypedef : rest) ((CDeclInfo { contents, .. }) : _)) = do
@@ -66,7 +66,7 @@ where
   -- [type-qualifier-list static assignment-expression]
   -- [type-qualifier-list? *]
   array :: Parser CDerivedDeclarator
-  array = L.brackets $ (Array <$> many typeQualifier <*> optional expression)
+  array = L.brackets (Array <$> many typeQualifier <*> optional expression)
 
   -- ISO C99 standard, section 6.7.5.
   pointer :: Parser CDerivedDeclarator
@@ -84,8 +84,8 @@ where
                                    <*> optional (L.colon *> expression)
                                   
   designator :: Parser CDesignator
-  designator =  pure ArrayDesignator <*> ((L.brackets constant) <?> "array declaration")
-            <|> pure MemberDesignator <*> ((L.dot *> L.identifier) <?> "dotted declaration")  
+  designator =  (ArrayDesignator  <$> L.brackets constant     <?> "array declaration")
+            <|> (MemberDesignator <$> (L.dot *> L.identifier) <?> "dotted declaration")
   
   initList :: Parser [CInitializerSubfield]
   initList = L.braces (L.commaSep1 initSubfield)
@@ -95,7 +95,7 @@ where
     -- first we look for the designators: .x for membership. don't think an array designator could get in here.
     desigs <- many designator
     -- if there are designators, e.g. .x, we require an explicit = statement to make an assignment.
-    when (desigs /= []) $ (L.reservedOp "=")
+    when (desigs /= []) (L.reservedOp "=")
     CInitializerSubfield <$> pure desigs <*> initializer
   
   initializer :: Parser CInitializer

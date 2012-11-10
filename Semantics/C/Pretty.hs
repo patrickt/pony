@@ -21,7 +21,7 @@ module Semantics.C.Pretty
   prettyPrint = para' evalPretty
   
   class (Functor f) => PrettyAlg f where
-    evalPretty :: Mu f -> f (Doc e) -> (Doc e)
+    evalPretty :: Mu f -> f (Doc e) -> Doc e
   
   instance PrettyAlg Sem where
     evalPretty _ (Name n)  = text n
@@ -61,8 +61,11 @@ module Semantics.C.Pretty
     
     evalPretty (µ -> (CompositeT (µ -> CompositeInfo typ name _))) _ = prettyPrint typ <+> prettyPrint name
     
-    evalPretty (µ -> Variable   (µ -> (FunctionPointerT ftype args)) _ (µ -> Empty)) (Variable _ name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (prettyPrint args)
-    evalPretty (out -> Variable (µ -> (FunctionPointerT ftype args)) _ val)          (Variable _ name _) = prettyPrint ftype <+> (parens $ "*" <> name) <> (prettyPrint args) <+> equals <+> prettyPrint val
+    evalPretty (µ -> Variable   (µ -> (FunctionPointerT ftype args)) _ (µ -> Empty)) (Variable _ name _) = 
+      prettyPrint ftype <+> parens ("*" <> name) <> prettyPrint args
+    
+    evalPretty (out -> Variable (µ -> (FunctionPointerT ftype args)) _ val) (Variable _ name _) = 
+      prettyPrint ftype <+> parens ("*" <> name) <> prettyPrint args <+> equals <+> prettyPrint val
 
     evalPretty (µ -> Variable (µ -> a@(ArrayT _ _))  _ (µ -> Empty)) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a
     evalPretty (µ -> Variable (µ -> a@(ArrayT _ _))  _ _) (Variable _ name val) = foundationType (Fix a) <+> name <> foldArrays a <+> equals <+> val
@@ -74,7 +77,7 @@ module Semantics.C.Pretty
     -- statements
     evalPretty _ Break                = "break"
     evalPretty _ (Case a b)           = "case" <+> a <> colon </> hsep b
-    evalPretty _ (Compound sts)       = "{" `above` (indent 2 $ vcat sts) `above` "}" 
+    evalPretty _ (Compound sts)       = "{" `above` indent 2 (vcat sts) `above` "}" 
     evalPretty _ (Default sts)        = "default:"  -- TODO: figure out what to do about default statements and shit
     evalPretty _ (DoWhile a b)        = "do" <+> a <+> "while" <+> parens b
     evalPretty _ (Return a)           = "return" <+> a
@@ -87,7 +90,7 @@ module Semantics.C.Pretty
     -- literals
     evalPretty _ (CInt t) = pretty t
     evalPretty _ (CStr s) = dquotes $ text s
-    evalPretty _ (CFloat s) = text $ show $ ((fromRational $ toRational s) :: Double) -- shenanigans to prevent trailing zeroes.
+    evalPretty _ (CFloat s) = text $ show ((fromRational $ toRational s) :: Double) -- shenanigans to prevent trailing zeroes.
     evalPretty _ (CChar c) = text $ show c
     
     -- expressions
@@ -137,14 +140,14 @@ module Semantics.C.Pretty
     evalPretty (µ -> CompositeInfo _ _ (µ -> Empty)) (CompositeInfo { ckind, cname, .. }) = ckind <+> cname 
     -- Don't make space for a name if it's an anonymous composite
     evalPretty (µ -> CompositeInfo { cname = (Fix Empty) }) (CompositeInfo { ckind, cfields })
-      = ckind <+> "{" `above` (indent 2 cfields) `above` "}"
+      = ckind <+> "{" `above` indent 2 cfields `above` "}"
     
-    evalPretty _ (CompositeInfo { ckind, cname, cfields }) = ckind <+> cname <+> "{" `above` (indent 2 cfields) `above` "}"
+    evalPretty _ (CompositeInfo { ckind, cname, cfields }) = ckind <+> cname <+> "{" `above` indent 2 cfields `above` "}"
     
     evalPretty _ x = error $ "not defined for " ++ show x
   
-  foldArrays :: (Sem (Mu Sem)) -> Doc e
-  foldArrays (ArrayT a@(Fix (ArrayT _ _)) size) = (foldArrays $ out a) <> (brackets $ prettyPrint size)
+  foldArrays :: Sem (Mu Sem) -> Doc e
+  foldArrays (ArrayT a@(Fix (ArrayT _ _)) size) = foldArrays (out a) <> brackets (prettyPrint size)
   foldArrays (ArrayT _ size) = brackets $ prettyPrint size
   foldArrays t = error "foldArrays called improper type"
   

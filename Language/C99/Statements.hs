@@ -68,7 +68,7 @@ whether it can consume input before failing.
            <*> (L.colon *> L.commaSep stringLiteral)
 
   asmArgument :: Parser CAsmArgument
-  asmArgument = CAsmArgument <$> stringLiteral <*> (optional $ L.parens identifier)
+  asmArgument = CAsmArgument <$> stringLiteral <*> optional (L.parens identifier)
   
   expressionStmt :: Parser CStatement
   expressionStmt = maybe EmptyStmt ExpressionStmt <$> optional expression <* L.semi

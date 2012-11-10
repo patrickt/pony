@@ -86,20 +86,20 @@ module Semantics.C.Reifiable.Instances
   instance Reifiable VariableDeclaration where
     -- if there's just one DeclInfo -- i.e. a declaration like `int foo;` we return a Variable
     convert (AsVariable (CDeclaration specs [CDeclInfo { contents = Just decl, initVal, .. }])) 
-      = tie $ Variable 
+      = tie Variable 
         { vname  = name
         , vtype  = convert (DTD (specs, decl))
         , vvalue = convert initVal
         } where (Just name) = name' <$> declName decl
     -- if there are more infos, e.g. statements of the form `int foo, bar, *baz;`
     -- then we loop around and convert each of them to Variables and stick them in a Group
-    convert (AsVariable (CDeclaration specs infos)) = tie $ Group $ [ convert (AsVariable (CDeclaration specs [i])) | i <- infos ]  
+    convert (AsVariable (CDeclaration specs infos)) = tie $ Group [ convert (AsVariable (CDeclaration specs [i])) | i <- infos ]  
   
   -- CFunction -> Function
   -- hits: FunctionType -> Type, FunctionArgs -> Arguments, String -> Name, BlockItem -> Group
   -- converting a function is pretty straightforward.
   instance Reifiable CFunction where
-    convert f@(CFunction v decl (CompoundStmt body)) = tie $ Function 
+    convert f@(CFunction v decl (CompoundStmt body)) = tie Function 
       { ftype = convert $ FT f
       , fname = name
       , fargs = convert $ FA decl
@@ -154,7 +154,10 @@ module Semantics.C.Reifiable.Instances
       (Just functionName) = name' <$> nameOfDeclaration d
       (Just declarator) = contents $ head info
       params' = convert <$> declaratorParameters declarator
-      params = if (declaratorContainsVariadicSpecifier declarator) then (params' ++ [Fix Variadic]) else params'
+      params = 
+        if declaratorContainsVariadicSpecifier declarator 
+          then params' ++ [Fix Variadic]
+          else params'
       attr [] x = x
       attr as d = tie $ Attributed ((convert <$> qualifiers) ++ (convert <$> storages)) d
       in 
@@ -178,7 +181,7 @@ module Semantics.C.Reifiable.Instances
       -- if we have a name for the variable, make it a Variable,
       -- otherwise leave it as a plain type
       if hasName
-        then tie $ Variable 
+        then tie Variable 
           { vname  = name' $ fromJust dname
           , vtype  = typ
           , vvalue = nil
@@ -200,16 +203,16 @@ module Semantics.C.Reifiable.Instances
   newtype CompositeInfoDeclaration = AsComposite  { unAsComposite  :: CDeclaration }
   instance Reifiable CompositeInfoDeclaration where
     convert (AsComposite (CDeclaration [TSpec (TStructOrUnion name isStruct fields _)] [])) = 
-      tie $ CompositeInfo 
-        { cname = (convert name)
+      tie CompositeInfo 
+        { cname = convert name
         , ckind = tie $ if isStruct then Struct else Union
-        , cfields = (group (convert <$> fields)) 
+        , cfields = group (convert <$> fields)
         }
     convert (AsComposite (CDeclaration [TSpec (TEnumeration name enums _)] [])) = 
-      tie $ CompositeInfo 
+      tie CompositeInfo 
         { cname = convert name
         , ckind = tie Enum
-        , cfields = (group (convert <$> enums))
+        , cfields = group (convert <$> enums)
         }
     convert _ = error "error in conversion, invariants not respected"
     
@@ -223,9 +226,9 @@ module Semantics.C.Reifiable.Instances
   newtype ForwardCompositeDeclaration = AsForwardComposite { unFCD :: CDeclaration }
   instance Reifiable ForwardCompositeDeclaration where
     convert (AsForwardComposite (CDeclaration [TSpec (TStructOrUnion name isStruct [] _)] [])) = 
-      tie $ CompositeInfo { cname = convert name 
-                          , ckind = kind isStruct
-                          , cfields = nil }
+      tie CompositeInfo { cname = convert name 
+                        , ckind = kind isStruct
+                        , cfields = nil }
       where
         kind True = tie Struct
         kind False = tie Union

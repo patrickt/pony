@@ -80,14 +80,14 @@ module Language.C99.Lexer
   reservedOp' n = reservedOp n >> return n
   charLiteral = T.charLiteral lexer
   stringLiteral = T.stringLiteral lexer
-  natural = try cHex <|> try cOctal <|> (T.decimal lexer)
+  natural = try cHex <|> try cOctal <|> T.decimal lexer
   float = try floating <|> suffixed
     where
       floating       = assemble <$> (try float1 <|> float2) <*> optional' exponentPart <*> optional' suffix 
       suffixed       = assemble <$> some digit <*> exponentPart <*> optional' suffix
       float1         = assemble <$> many digit <*> string "." <*> some digit
       float2         = (++) <$> string "." <*> some digit
-      exponentPart   = assemble <$> (single $ oneOf "eE") <*> sign <*> some digit
+      exponentPart   = assemble <$> single (oneOf "eE") <*> sign <*> some digit
       sign           = optional' (single $ oneOf "-+")
       assemble x y z = x ++ y ++ z
       suffix         = single $ oneOf "flFL"
