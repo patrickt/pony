@@ -5,17 +5,19 @@ module Testing.HUnit.UtilityFunctions
   import Test.Framework.Providers.HUnit
   import Test.HUnit hiding (Test)
   import Language.Pony
+  import Language.Pony.Overture
   import Language.C99.Miscellany
+  import qualified Data.ByteString.Char8 as B
   
-  isTypedef :: Bool -> String -> Test
-  isTypedef b code = testCase code $ assertEqual "declarationIsTypedef is wrong" b $ declarationIsTypedef d where
+  isTypedef :: Bool -> ByteString -> Test
+  isTypedef b code = testCase (B.unpack code) $ assertEqual "declarationIsTypedef is wrong" b $ declarationIsTypedef d where
     (CTranslationUnit [ExternDecl d]) = parseUnsafe preprocessedC code
   
-  isComposite :: Bool -> String -> Test
-  isComposite b code = testCase code $ assertEqual "declarationIsComposite is wrong" b $ declarationIsComposite d where
+  isComposite :: Bool -> ByteString -> Test
+  isComposite b code = testCase (B.unpack code) $ assertEqual "declarationIsComposite is wrong" b $ declarationIsComposite d where
     (CTranslationUnit [ExternDecl d]) = parseUnsafe preprocessedC code
   
-  hasFields b code = testCase code $ assertEqual "declarationHasFields is wrong" b $ declarationHasFields d where
+  hasFields b code = testCase (B.unpack code) $ assertEqual "declarationHasFields is wrong" b $ declarationHasFields d where
     (CTranslationUnit [ExternDecl d]) = parseUnsafe preprocessedC code
   
   tests :: [Test]

@@ -7,6 +7,7 @@ module Testing.HUnit.DeclarationPrinting
   import Language.Pony
   import Text.Pretty
   import Data.Generics.Fixplate
+  import qualified Data.ByteString.Char8 as B
   
   tests :: [Test]
   tests = [ roundTrip "int a;"
@@ -19,8 +20,8 @@ module Testing.HUnit.DeclarationPrinting
           , roundTrip "int a[2][2] = {{1, 2}, {3, 4}};"
           ]
 
-  roundTrip :: String -> Test
-  roundTrip s = testCase s $ assertEqual s theory practice where
-    theory = text s
+  roundTrip :: ByteString -> Test
+  roundTrip s = testCase (B.unpack s) $ assertEqual (B.unpack s) theory practice where
+    theory = pretty s
     practice = (para' evalPretty $ convert $ parseUnsafe preprocessedC s)
   

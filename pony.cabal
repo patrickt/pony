@@ -130,7 +130,7 @@ Executable test {
   Main-is:             Testing/Main.hs
   ghc-options:         -O
   LD-Options:          -w
-  Extensions:          ViewPatterns
+  Extensions:          ViewPatterns, OverloadedStrings
   Build-depends:       QuickCheck >= 2.3,
                        HUnit == 1.2.2.3,
                        test-framework >= 0.6,
