@@ -94,13 +94,14 @@ module Semantics.C.Pretty
     evalPretty _ (CChar c) = text $ show c
     
     -- expressions
-    evalPretty _ (Cast t v)           = parens t <> v
-    evalPretty _ (Unary op a) = op <> a
+    evalPretty _ (Cast t v)      = parens t <> v
+    evalPretty (µ -> Unary (µ -> Name "sizeof") _) (Unary _ it) = "sizeof" <> parens it
+    evalPretty _ (Unary op a)    = op <> a
     evalPretty _ (Binary a op b) = a <+> op <+> b
     evalPretty _ (Ternary a b c) = a <> "?" <> b <> colon <> c
-    evalPretty _ (Paren a) = parens a
-    evalPretty _ (FunCall a bs) = a <> parens (sep $ punctuate comma bs)
-    evalPretty _ (Brackets a b) = a <> brackets b
+    evalPretty _ (Paren a)       = parens a
+    evalPretty _ (FunCall a bs)  = a <> parens (sep $ punctuate comma bs)
+    evalPretty _ (Brackets a b)  = a <> brackets b
     
     evalPretty (out -> (Attributed _ (out -> PointerToT _))) (Attributed as t) = t <+> hsep as
     evalPretty _ (Attributed as t) = hsep as <+> t
