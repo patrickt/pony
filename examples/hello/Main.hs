@@ -15,13 +15,4 @@ module Main where
   changeHello otherwise = out otherwise
   
   main :: IO ()
-  main = do 
-    parsed <- preprocessAndParse preprocessedC "examples/hello/hello.pony.c" def
-    case parsed of 
-      (Left a) -> putStrLn "ERROR" >> print a
-      (Right ast) -> do
-        let asg = convert ast
-        let transformed = ana changeHello asg
-        let prettied = prettyPrint transformed
-        handle <- openFile "./results.c" WriteMode
-        hPutDoc handle prettied
+  main = run $ def { anamorphisms = [changeHello] } 

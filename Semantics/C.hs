@@ -3,6 +3,7 @@ module Semantics.C
   
   where
   
+  import Semantics.C.Reifiable as X
   import Semantics.C.Reifiable.Instances as X
   import Semantics.C.Pretty as X
   import Semantics.C.ASG as X

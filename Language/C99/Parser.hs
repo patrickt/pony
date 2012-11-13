@@ -17,7 +17,7 @@ module Language.C99.Parser
   
   import Data.Generics
   import Language.C99.AST
-  import Language.Pony.Overture hiding (Const)
+  import Language.Pony.Overture
   import qualified Data.ByteString as B
   import qualified Data.Map as M
   import System.Cmd

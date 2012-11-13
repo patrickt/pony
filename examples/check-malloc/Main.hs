@@ -16,12 +16,5 @@ module Main where
   checkMalloc a = tie $ fmap checkMalloc (out a)
   
   main :: IO ()
-  main = do 
-    parsed <- preprocessAndParse preprocessedC "examples/check-malloc/malloc.pony.c" def
-    case parsed of 
-      (Left a) -> putStrLn "ERROR" >> print a
-      (Right ast) -> do
-        let asg = convert ast
-        let transformed = checkMalloc asg
-        let prettied = prettyPrint transformed
-        print prettied
+  main = run $ def { topDown = [checkMalloc] }
+  
