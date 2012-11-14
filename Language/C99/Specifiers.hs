@@ -30,7 +30,7 @@ where
     [ "const" `as` CConst
     , "restrict" `as` CRestrict
     , "volatile" `as` CVolatile 
-    , "inline" `as` CInline -- TODO: ensure that this only goes on functions.
+    , "inline" `as` CInline
     , "__inline" `as` CInline
     , "__inline__" `as` CInline
     ] <?> "type qualifier"

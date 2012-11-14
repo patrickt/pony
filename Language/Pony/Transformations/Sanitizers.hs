@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Language.Pony.Transformations.Sanitizers 
   (runReplacer, unfoldGroups, flatGroupsAxiom) where
   
@@ -17,7 +19,6 @@ module Language.Pony.Transformations.Sanitizers
 
   runReplacer :: FSem -> FSem
   runReplacer x = evalState (replaceTypedefs `transformM` x) []
-  
   
   unfoldGroups :: FSem -> [FSem]
   unfoldGroups (µ -> Group a) = a >>= unfoldGroups

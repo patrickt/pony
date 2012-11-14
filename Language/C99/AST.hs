@@ -38,10 +38,7 @@ module Language.C99.AST
   import Language.C99.Literals
   
   -- TODO: Add position information to all of the types, etc.
-  -- TODO: CTranslationUnit and BlockItem need to become datatypes rather than type synonyms.
   -- TODO: Rename CAsmOperand and CAsmArgument to something more descriptive.
-  -- TODO: Rename the CInitList constructor of CInitializer, as I find it really hard to read code 
-  -- where constructors and types have the same name (save for types with one constructor).
   
   -- | A translation unit is a nonempty list of external declarations (C99 9.6).
   newtype CTranslationUnit = CTranslationUnit [CExternal]

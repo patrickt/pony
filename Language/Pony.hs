@@ -11,31 +11,34 @@ module Language.Pony
   where
     -- 
   
-  import Language.Pony.Overture
   import Data.Functor.Fix hiding (foldl, sequence, mapM)
-  import Language.C99 (preprocessAndParse, preprocessedC)
+  import Language.C99 
+  import Language.Pony.Overture
+  import Language.Pony.Transformations.Sanitizers
   import Semantics.C
   import System.Environment
   import System.Exit
+
   
   data PonyOptions = PonyOptions
     { topDown :: [Fix Sem -> Fix Sem]
     , anamorphisms :: [Fix Sem -> Sem (Fix Sem)]
+    , bitwiseOperators :: [String]
     }
   
-  instance Default PonyOptions where def = PonyOptions [] []
+  instance Default PonyOptions where def = PonyOptions [] [] []
   
   run :: PonyOptions -> IO ()
-  run (PonyOptions top anas) = do
+  run (PonyOptions top anas bwo) = do
     args <- getArgs
     when (length args == 0) $ do
       putStrLn "Error: filename not provided"
       exitFailure
-    parsed <- preprocessAndParse preprocessedC (args !! 0) def
+    parsed <- preprocessAndParse preprocessedC (args !! 0) (def { bitwiseOps = bwo })
     case parsed of 
       (Left a) -> putStrLn "ERROR" >> print a >> exitFailure
       (Right ast) -> do
-        let asg = convert ast
+        let asg = runReplacer $ convert ast
         let anamorphed = foldl (flip ana) asg anas
         let topdowned = foldl apply anamorphed top where apply = flip ($)
         let prettied = prettyPrint topdowned

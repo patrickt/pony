@@ -92,16 +92,16 @@ Executable hello {
   }
 }
 
--- Executable logical-shift {
---   Main-is:  Main.hs
---   Hs-source-dirs: examples/logical-shift .
---   LD-Options:          -w
---   if flag(examples) {
---     Buildable: True
---   } else {
---     Buildable: False
---   }
--- }
+Executable logical-shift {
+  Main-is:  Main.hs
+  Hs-source-dirs: examples/logical-shift .
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
 
 -- Executable precise-gc {
 --   Main-is: Main.hs

@@ -1,19 +1,32 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Main where
   
   import Language.Pony
   import Language.C99.Literals
   
-  -- bug: need to evaluate the arguments here...
-  convertLogicalShift :: Expression -> Expression
-  convertLogicalShift (Binary l ">>>" r) = 
-    Binary (Binary l ">>" l) "&" (Binary (Unary "~" (Binary (Binary l ">>" (Binary (Binary (SizeOfSType signedInt) "<<" (Literal (CInteger 3))) "-" (Literal (CInteger 1)))) "<<" (Binary (Binary (SizeOfSType signedInt) "<<" (Literal (CInteger 3))) "-" (Literal (CInteger 1))))) ">>" (Binary l "-" (Literal (CInteger 1))))
-  convertLogicalShift other = other
+  op :: String -> Fix Sem -> Fix Sem -> Fix Sem
+  op n a b = tie $ Binary a (name' n) b
   
-  logicalShift :: GenericT
-  logicalShift = mkT convertLogicalShift
+  infixl 7 .>>.
+  (.>>.) = op ">>"
+  
+  int_ = tie $ IntT (tie Signed) nil
+  
+  uint_ = tie $ IntT (tie Unsigned) nil
+  
+  paren x = tie $ Paren x
+  
+  cast :: Fix Sem -> Fix Sem -> Fix Sem
+  cast typ arg = tie $ Cast typ arg
+  
+  -- bug: need to evaluate the arguments here...
+  convertLogicalShift :: Fix Sem -> Sem (Fix Sem)
+  convertLogicalShift (µ -> (Binary l (µ -> Name ">>>") r)) = out $ cast int_ $ paren $ cast uint_ $ l .>>. r
+  convertLogicalShift other = out other
   
   main :: IO ()
-  main = run $ pony {
-    operators = [Bitwise ">>>"],
-    transformations = [MkTrans "LogicalShift" BottomUp logicalShift ]
-  }
+  main = run $ def 
+    { bitwiseOperators = [">>>"]
+    , anamorphisms = [convertLogicalShift]
+    }
