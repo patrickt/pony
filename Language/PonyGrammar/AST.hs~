@@ -1,0 +1,17 @@
+module Language.PonyGrammar.Grammar  where
+
+  newtype PonyGrammar = Grammar [(Identifier, Expr)]
+
+  newtype Expr = [Term]
+
+  newtype Term = [Factor]
+
+  data Factor = Id Identifier
+              | Optional Expr
+              | Paren Expr
+              | Many Expr
+
+  type Identifier = String
+
+  type Literal = String
+  

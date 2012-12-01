@@ -1,0 +1,85 @@
+module Language.PonyGrammar.Parser where
+  import Text.ParserCombinators.Parsec
+  import Language.PonyGrammar.Grammar
+  
+  
+  grammarAdditionParser :: Parser PonyGrammarAddition
+  grammarAdditionParser = do
+    string "Grammar"
+    spaces
+    id <- identifierParser
+    spaces
+    extension <- optionMaybe (string "extends" >> spaces >> identifierParser)
+    spaces
+    char '{'
+    spaces
+    prodAdds <- productionAdditionParser
+    spaces
+    char '}'
+    return $ GrammarAdd id extension prodAdds
+    
+  productionAdditionParser :: Parser ProductionAddition
+  productionAdditionParser = (do
+                                 id <- identifierParser
+                                 spaces
+                                 string "::+"
+                                 spaces
+                                 expr <- expressionParser
+                                 char '.'
+                                 spaces
+                                 return $ Add id expr)
+                         <|> (productionParser >>= (\p -> Over p))
+  
+  productionParser :: Parser Production
+  productionParser = do
+        id <- identifierParser
+        spaces
+        string "::="
+        spaces
+        expr <- expressionParser
+        char '.'
+        spaces
+        return $ Prod id expr
+
+  expressionParser :: Parser Expr
+  expressionParser = do
+    head <- termParser
+    tail <- many $ char '|' >> termParser
+    return . Expr $ head : tail
+
+  termParser :: Parser Term
+  termParser = many1 factorParser >>= (\fs -> return . Term $ fs)
+
+  factorParser :: Parser Factor
+  factorParser = (identifierParser >>= (\s -> return . Id $ s))
+             <|> do char '['
+                    expr <- expressionParser
+                    char ']'
+                    return $ Optional expr
+             <|> do char '('
+                    expr <- expressionParser
+                    char ')'
+                    return $ Paren expr
+             <|> do char '{'
+                    expr <- expressionParser
+                    char '}'
+                    return $ Many expr
+
+  identifierParser :: Parser Identifier
+  identifierParser = do
+    h <- letter
+    t <- many alphaNum
+    return $ h:t
+
+
+  literalParser :: Parser Literal 
+  literalParser = do
+                    char '\''
+                    text <- many1 alphaNum
+                    char '\''
+                    return $ text
+              <|> do
+                    char '"'
+                    text <- many1 alphaNum
+                    char '"'
+                    return $ text
