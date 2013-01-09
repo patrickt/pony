@@ -14,7 +14,7 @@ Category:            Language
 Build-type:          Configure
 Stability:           alpha
 Tested-with:         GHC
-Cabal-version:       >= 1.2.3
+Cabal-version:       >= 1.8
 Extra-source-files:  README.md, CREDITS.md, configure
 
 Flag tests {
@@ -43,36 +43,48 @@ Library {
                    , wl-pprint-extras >= 3.0
                    , syb >= 0.1
                    , uniplate >= 1.6.7
+                   , QuickCheck >= 2.3
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Exposed-modules: Language.Pony, Semantics.C
-  Extensions:     DeriveDataTypeable,
-                  FlexibleContexts,
-                  FlexibleInstances,            
-                  FunctionalDependencies,
-                  GeneralizedNewtypeDeriving,
-                  MultiParamTypeClasses,
-                  NamedFieldPuns,
-                  OverloadedStrings,
-                  Rank2Types,
-                  TypeOperators,
-                  TypeSynonymInstances,
-                  ViewPatterns
+  Extensions:      DeriveDataTypeable,
+                   FlexibleContexts,
+                   FlexibleInstances,            
+                   FunctionalDependencies,
+                   GeneralizedNewtypeDeriving,
+                   MultiParamTypeClasses,
+                   NamedFieldPuns,
+                   OverloadedStrings,
+                   Rank2Types,
+                   TypeOperators,
+                   TypeSynonymInstances,
+                   ViewPatterns
 }
 
-Executable check-malloc {
-  Main-is: Main.hs
-  Hs-source-dirs: examples/check-malloc .
-  LD-Options: -w
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
-                   
--- Executable concat {
+-- Executable check-malloc {
+--   Main-is: Main.hs
+--   Hs-source-dirs: examples/check-malloc .
+--   LD-Options: -w
+--   if flag(examples) {
+--     Buildable: True
+--   } else {
+--     Buildable: False
+--   }
+-- }
+--                    
+-- -- Executable concat {
+-- --   Main-is:  Main.hs
+-- --   Hs-source-dirs: examples/concat .
+-- --   LD-Options:          -w
+-- --   if flag(examples) {
+-- --     Buildable: True
+-- --   } else {
+-- --     Buildable: False
+-- --   }
+-- -- }
+-- 
+-- Executable hello {
 --   Main-is:  Main.hs
---   Hs-source-dirs: examples/concat .
+--   Hs-source-dirs: examples/hello .
 --   LD-Options:          -w
 --   if flag(examples) {
 --     Buildable: True
@@ -80,28 +92,17 @@ Executable check-malloc {
 --     Buildable: False
 --   }
 -- }
-
-Executable hello {
-  Main-is:  Main.hs
-  Hs-source-dirs: examples/hello .
-  LD-Options:          -w
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
-
-Executable logical-shift {
-  Main-is:  Main.hs
-  Hs-source-dirs: examples/logical-shift .
-  LD-Options:          -w
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
+-- 
+-- Executable logical-shift {
+--   Main-is:  Main.hs
+--   Hs-source-dirs: examples/logical-shift .
+--   LD-Options:          -w
+--   if flag(examples) {
+--     Buildable: True
+--   } else {
+--     Buildable: False
+--   }
+-- }
 
 -- Executable precise-gc {
 --   Main-is: Main.hs
@@ -125,20 +126,45 @@ Executable logical-shift {
 --   }
 -- }
 
-Executable test {
-  Main-is:             Testing/Main.hs
-  ghc-options:         -O
-  LD-Options:          -w
-  Extensions:          ViewPatterns, OverloadedStrings
-  Build-depends:       QuickCheck >= 2.3,
-                       HUnit == 1.2.2.3,
-                       test-framework >= 0.6,
-                       test-framework-quickcheck2 >= 0.2.7,
-                       test-framework-hunit == 0.2.6
-  if flag(tests) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
+Test-suite test-pony {
+    Type: exitcode-stdio-1.0
+    Ghc-options: -fwarn-tabs -Wall -fno-warn-missing-signatures
+    -- Hs-source-dirs: Testing Testing/HUnit Testing/QuickCheck
+    Main-is: Testing/Main.hs
+    Extensions:      DeriveDataTypeable,
+                     FlexibleContexts,
+                     FlexibleInstances,            
+                     FunctionalDependencies,
+                     GeneralizedNewtypeDeriving,
+                     MultiParamTypeClasses,
+                     NamedFieldPuns,
+                     OverloadedStrings,
+                     Rank2Types,
+                     TypeOperators,
+                     TypeSynonymInstances,
+                     ViewPatterns
+
+  Build-depends:     base >= 4.2 && < 5
+                   , bytestring >= 0.9.2
+                   , containers >= 0.4.2
+                   , ghc-prim
+                   , GenericPretty >= 1.2
+                   , data-default >= 0.5
+                   , mtl >= 2.0.1.0
+                   , fixplate >= 0.1.5
+                   , parsec >= 3.1.3
+                   , pretty >= 1.0
+                   , process > 1.0
+                   , transformers >= 0.3
+                   , wl-pprint-extras >= 3.0
+                   , syb >= 0.1
+                   , uniplate >= 1.6.7
+                   , QuickCheck >= 2.3
+                   , HUnit == 1.2.2.3
+                   , test-framework >= 0.6
+                   , test-framework-quickcheck2 >= 0.2.7
+                   , test-framework-hunit == 0.2.6
+                   , pony
 }
+
 

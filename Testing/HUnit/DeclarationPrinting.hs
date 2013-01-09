@@ -5,6 +5,7 @@ module Testing.HUnit.DeclarationPrinting
   import Test.Framework.Providers.HUnit
   import Test.HUnit hiding (Test)
   import Language.Pony
+  import Language.C99
   import Text.Pretty
   import Data.Generics.Fixplate
   import qualified Data.ByteString.Char8 as B

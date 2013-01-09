@@ -6,7 +6,7 @@ module Testing.HUnit.UtilityFunctions
   import Test.HUnit hiding (Test)
   import Language.Pony
   import Language.Pony.Overture
-  import Language.C99.Miscellany
+  import Language.C99
   import qualified Data.ByteString.Char8 as B
   
   isTypedef :: Bool -> ByteString -> Test

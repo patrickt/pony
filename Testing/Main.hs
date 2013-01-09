@@ -17,7 +17,7 @@ module Main where
           , testGroup "QuickCheck: constants" QC.tests
           -- , testGroup "HUnit: space-free parsing" SFP.tests
           , testGroup "HUnit: postfix expressions" PE.tests
-          -- , testGroup "HUnit: signal(3) declaration" SD.tests
+          , testGroup "HUnit: signal(3) declaration" SD.tests
           ]
   
   main :: IO ()
