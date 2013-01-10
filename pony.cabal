@@ -140,9 +140,11 @@ Test-suite test-pony {
                      NamedFieldPuns,
                      OverloadedStrings,
                      Rank2Types,
+                     TemplateHaskell,
                      TypeOperators,
                      TypeSynonymInstances,
-                     ViewPatterns
+                     ViewPatterns,
+                     QuasiQuotes
 
   Build-depends:     base >= 4.2 && < 5
                    , bytestring >= 0.9.2
@@ -164,7 +166,7 @@ Test-suite test-pony {
                    , test-framework >= 0.6
                    , test-framework-quickcheck2 >= 0.2.7
                    , test-framework-hunit == 0.2.6
-                   , pony
+                   , template-haskell
 }
 
 
