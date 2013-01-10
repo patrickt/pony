@@ -2,18 +2,19 @@ module Testing.HUnit.TypeNames
   ( tests ) where
   
   import Data.Either
-  import Test.Framework
-  import Test.Framework.Providers.HUnit
-  import Test.HUnit hiding (Test)
+  import Data.Generics.Fixplate
+  import Language.C99
   import Language.Haskell.TH
   import Language.Haskell.TH.Quote
   import Language.Pony
-  import Language.C99
-  import Text.Pretty
-  import Data.Generics.Fixplate
-  import Testing.Heredoc
   import qualified Data.ByteString.Char8 as B
-  
+  import Test.Framework
+  import Test.Framework.Providers.HUnit
+  import Test.HUnit hiding (Test)
+  import Testing.HUnit.Asserts
+  import Testing.Heredoc
+  import Text.Pretty
+
   
   roundTrip :: ByteString -> Test
   roundTrip s = testCase (B.unpack s) $ assertEqual (B.unpack s) theory practice where
@@ -31,14 +32,6 @@ module Testing.HUnit.TypeNames
       TT y;
     } |]
   
-  assertLeft :: (Show b) => Either a b -> Assertion
-  assertLeft (Left _) = assertBool "" True
-  assertLeft (Right x) = assertFailure ("Got Right " <> show x <> ", expected a Left")
-  
-  assertRight :: (Show a) => Either a b -> Assertion
-  assertRight (Right _) = assertBool "" True
-  assertRight (Left x) = assertFailure ("Got Left " <> show x <> ", expected a Right")
-  
   innerScopeGood :: B.ByteString
   innerScopeGood = B.pack [here|
     void foo() {
@@ -48,12 +41,6 @@ module Testing.HUnit.TypeNames
     void bar() {
         unsigned TT;
     } |]
-
-  parsingSucceeds :: String -> ByteString -> Test
-  parsingSucceeds reason code = testCase reason $ assertRight (runParser preprocessedC def "test" code)
-  
-  parsingFails :: String -> ByteString -> Test
-  parsingFails reason code = testCase reason $ assertLeft (runParser preprocessedC def "test" code)
   
   tests :: [Test]
   tests = [ roundTrip "int"
@@ -72,6 +59,6 @@ module Testing.HUnit.TypeNames
           , roundTrip "char"
           , roundTrip "char[]"
           , roundTrip "char[5]"
-          , parsingSucceeds "good inner scope" innerScopeGood
-          , parsingFails "bad inner scope" innerScopeBad
+          , assertParsingSucceeds "good inner scope" innerScopeGood
+          , assertParsingFails "bad inner scope" innerScopeBad
           ]

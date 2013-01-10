@@ -11,7 +11,6 @@ where
   -- Lasciate ogne speranza, voi ch'intrate.
   
   import Control.Monad
-  import Data.Maybe
   import Data.Either
   import Language.C99.AST hiding (asmName)
   import Language.C99.Expressions

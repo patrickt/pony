@@ -5,8 +5,6 @@ module Semantics.C.ASG where
   import Control.Applicative
   import Data.Fixed
   import Data.Functor.Fix
-  import Data.Foldable (Foldable)
-  import Data.Traversable (Traversable)
   import GHC.Exts (IsString (..))
   import Test.QuickCheck
   

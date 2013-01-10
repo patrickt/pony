@@ -7,7 +7,10 @@ module Main where
   import qualified Testing.HUnit.SpaceFreeParsing as SFP
   import qualified Testing.HUnit.PostfixExpressions as PE
   import qualified Testing.HUnit.SignalDeclaration as SD
+  import qualified Testing.HUnit.Syntax as S
   import qualified Testing.HUnit.UtilityFunctions as UF
+  
+  -- TODO there's some template haskell that can help us with this
   
   tests :: [Test]
   tests = [ testGroup "HUnit: type names" TN.tests
@@ -18,6 +21,7 @@ module Main where
           -- , testGroup "HUnit: space-free parsing" SFP.tests
           , testGroup "HUnit: postfix expressions" PE.tests
           , testGroup "HUnit: signal(3) declaration" SD.tests
+          , testGroup "HUnit: syntax" S.tests
           ]
   
   main :: IO ()
