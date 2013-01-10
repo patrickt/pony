@@ -48,6 +48,7 @@ module Semantics.C.ASG where
     -- statements
     Break      :: Sem a
     Case       :: a -> [a] -> Sem a
+    CommaSep   :: [a] -> Sem a
     Continue   :: Sem a
     Compound   :: [a] -> Sem a
     Default    :: a -> Sem a

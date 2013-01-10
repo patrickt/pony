@@ -94,6 +94,7 @@ module Semantics.C.Pretty
     evalPretty _ (CChar c) = text $ show c
     
     -- expressions
+    evalPretty _ (CommaSep a)    = hsep $ punctuate comma a
     evalPretty _ (Cast t v)      = parens t <> v
     evalPretty (µ -> Unary (µ -> Name "sizeof") _) (Unary _ it) = "sizeof" <> parens it
     evalPretty _ (Unary op a)    = op <> a

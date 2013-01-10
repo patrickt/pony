@@ -25,7 +25,11 @@ module Language.C99.Expressions
     where go parser (t, msg) = buildExpressionParser t parser <?> msg
   
   expression :: Parser CExpr
-  expression = buildExpressionParser assignTable constantExpression <?> "C expression"
+  expression = do 
+    exprs <- (buildExpressionParser assignTable constantExpression) `sepBy1` L.comma
+    if length exprs == 1
+      then return $ head exprs
+      else return $ Comma exprs
   
   constantExpression :: Parser CExpr
   constantExpression = do

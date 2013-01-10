@@ -237,7 +237,7 @@ module Semantics.C.Reifiable.Instances
   -- CExpr -> expression
   -- hits: CLiteral -> constant, CBuiltInExpr -> expression
   instance Reifiable CExpr where
-    convert (Comma _)            = error "BUG: COMMA NOT DEFINED YET"
+    convert (Comma ls)           = tie $ CommaSep (convert <$> ls)
     convert (Constant l)         = convert l
     convert (Identifier i)       = name' i
     convert (Index l r)          = tie $ Brackets (convert l) (convert r)
