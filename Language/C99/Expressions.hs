@@ -148,14 +148,17 @@ module Language.C99.Expressions
     -- This is known as a "bill fold". Get it? foldr ($)? HAHAHAHAHAHAHAHAHA.
     return $ foldr ($) e (reverse r)
     where
+      freedArgs (Comma a) = a
+      freedArgs other = [other]
       increment = string "++" *> pure UnaryOp <*> pure "++ post"
       decrement = string "--" *> pure UnaryOp <*> pure "-- post"
       index = do
         idx <- L.brackets expression
         return $ \x -> Index x idx
       call = do
-        args <- L.parens $ L.commaSep expression
-        return $ \x -> Call x args
+        -- TODO: if 
+        args <- L.parens expression
+        return $ \x -> Call x $ freedArgs args
       dot = do
         ident <- L.dot *> identifier
         return $ \x -> BinaryOp "." x ident
