@@ -135,7 +135,8 @@ module Language.C99.AST
     | Index CExpr CExpr
     | Call CExpr [CExpr]
     | CCast CTypeName CExpr
-    | UnaryOp String CExpr
+    | PostfixOp CExpr String
+    | UnaryOp  String CExpr
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr
     -- | Whereas sizeof(variable) parses as a function call, sizeof(type) needs its own node.

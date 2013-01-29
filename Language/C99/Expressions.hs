@@ -12,7 +12,9 @@ module Language.C99.Expressions
   )
   where 
   
+  import Control.Monad.State
   import Data.List (foldl')
+  import Data.Monoid
   import Language.C99.Parser
   import Language.C99.AST
   import Language.C99.Literals
@@ -20,43 +22,39 @@ module Language.C99.Expressions
   import qualified Language.C99.Lexer as L
   import Text.Parsec.Expr
   
-  buildChainedParser :: Stream s m t => [(OperatorTable s u m a, String)] -> ParsecT s u m a -> ParsecT s u m a
-  buildChainedParser ts p = foldl' go p ts
-    where go parser (t, msg) = buildExpressionParser t parser <?> msg
+  -- Normally we would just use Parser a rather than ParsecT s u m a, but we need to tell the typechecker that 
+  -- the operator table is built out of the same types.
+  buildChainedParser :: Stream s m t => ParsecT s u m a -> [(OperatorTable s u m a, String)] -> ParsecT s u m a
+  buildChainedParser = foldl' go where go parser (t, msg) = buildExpressionParser t parser <?> msg
+  
+  -- read a comma-separated list of expressions; if only one's provided, just return it, otherwise wrap it in a Comma
+  expression' = do 
+    exprs <- (buildExpressionParser assignTable constantExpression) `sepBy1` L.comma
+    return $ (if length exprs == 1 then head else Comma) exprs
   
   expression :: Parser CExpr
-  expression = do 
-    exprs <- (buildExpressionParser assignTable constantExpression) `sepBy1` L.comma
-    if length exprs == 1
-      then return $ head exprs
-      else return $ Comma exprs
+  expression = expression' <?> "C expression"
   
   constantExpression :: Parser CExpr
   constantExpression = do
-    st <- getState
-    let arithTable' = arithTable ++ [map mkInfixL (arithmeticOps st)]
-    let compTable' = compTable ++ [map mkInfixL (comparativeOps st)]
-    let bitwiseTable' = bitwiseTable ++ [map mkInfixL (bitwiseOps st)]
-    let logicTable' = logicTable ++ [map mkInfixR (logicalOps st)]
-    buildChainedParser [ (arithTable', "arithmetic expression")
-                       , (compTable', "comparative expression")
-                       , (bitwiseTable', "bitwise operation")
-                       , (logicTable', "logical operation")
-                       ] castExpression <?> "constant expression"
+    ariths <- arithmeticOps <$> getState
+    compars <- comparativeOps <$> getState
+    bitwises <- bitwiseOps <$> getState
+    logics <- logicalOps <$> getState
+    
+    let buildTable t n = t <> [mkInfixL <$> n]
+    
+    let arithTable'   = buildTable arithTable ariths
+    let compTable'    = buildTable compTable compars
+    let bitwiseTable' = buildTable bitwiseTable bitwises
+    let logicTable'   = buildTable logicTable logics
+    buildChainedParser castExpression [ (arithTable', "arithmetic expression")
+                                      , (compTable', "comparative expression")
+                                      , (bitwiseTable', "bitwise operation")
+                                      , (logicTable', "logical operation")
+                                      ] <?> "constant expression"
   
-  assignTable = 
-    [ [ mkInfixL "="
-      , mkInfixL "*=" 
-      , mkInfixL "/="
-      , mkInfixL "%="
-      , mkInfixL "+="
-      , mkInfixL "-=" 
-      , mkInfixL "<<="
-      , mkInfixL ">>="
-      , mkInfixL "&="
-      , mkInfixL "&="
-      , mkInfixL "^="
-      , mkInfixL "|=" ] ]
+  assignTable = [ mkInfixL <$> ["=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "&=", "^=", "|="] ]
 
   logicTable =
     [ [mkInfixL "&&"]
@@ -69,10 +67,7 @@ module Language.C99.Expressions
         else' <- L.reservedOp ":" >> expression
         return $ \it -> TernaryOp it then' else'
 
-  bitwiseTable = 
-    [ [mkInfixL "&"]
-    , [mkInfixL "^"]
-    , [mkInfixL "|"] ]
+  bitwiseTable = fmap mkInfixL <$> [["&"], ["^"], ["|"]]
 
   compTable = 
     [ [ mkInfixL "<"
@@ -98,9 +93,7 @@ module Language.C99.Expressions
   builtinExpression = CBuiltin <$> builtinVaArg
   
   builtinVaArg :: Parser CBuiltinExpr
-  builtinVaArg =  pure BuiltinVaArg 
-              <*> (L.reserved "__builtin_va_arg" *> L.parens expression)
-              <*> typeName
+  builtinVaArg = BuiltinVaArg <$> (L.reserved "__builtin_va_arg" *> L.parens expression)<*> typeName
   
   castExpression :: Parser CExpr
   castExpression = do
@@ -150,7 +143,7 @@ module Language.C99.Expressions
     where
       freedArgs (Comma a) = a
       freedArgs other = [other]
-      increment = string "++" *> pure UnaryOp <*> pure "++ post"
+      increment = string "++" *> pure UnaryOp <*> pure "++"
       decrement = string "--" *> pure UnaryOp <*> pure "-- post"
       index = do
         idx <- L.brackets expression
@@ -172,7 +165,7 @@ module Language.C99.Expressions
     , identifier
     , constant
     , getExpr <$> stringLiteral
-    , CParen <$> L.parens expression 
+    , CParen  <$> L.parens expression 
     ]
   
   identifier :: Parser CExpr
@@ -182,12 +175,9 @@ module Language.C99.Expressions
   constant = Constant <$> choice [ try float, integer, charLiteral ] <?> "literal"
                                  
   stringLiteral :: Parser CStringLiteral
-  stringLiteral = do
-    str <- L.stringLiteral `sepBy1` L.whiteSpace
-    return CStringLiteral { getExpr = Constant (CString $ concat str) }
+  stringLiteral = CStringLiteral <$> Constant <$> CString <$> concat <$> L.stringLiteral `sepBy1` L.whiteSpace <?> "string literal"
   
-  -- remember, kids, <$> is an infix synonym for fmap.
-  -- TODO: The definition for integer suffixes is pretty gauche
+  -- TODO: clean up the way we do integer/float suffixes, and perhaps carry that on to the semantic stage
   integer, charLiteral, float :: Parser CLiteral
   integer       = CInteger <$> L.natural <* many (oneOf "uUlL") <* L.whiteSpace
   charLiteral   = CChar    <$> L.charLiteral
