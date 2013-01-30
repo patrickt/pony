@@ -10,7 +10,7 @@ module Semantics.C.Pretty
   import Data.Fixed
   import Data.Functor.Fix
   import Language.Pony.MachineSizes
-  import Semantics.C.ASG hiding (group)
+  import Semantics.C.ASG
   import Text.Pretty
   
   isEmpty x = show x == ""
@@ -58,8 +58,6 @@ module Semantics.C.Pretty
     evalPretty _ (ArrayT t size)         = t <> brackets size
     evalPretty _ (FunctionPointerT _ b)  = b
     evalPretty _ (TypedefT n)            = n
-    
-    evalPretty (µ -> (CompositeT (µ -> CompositeInfo typ name _))) _ = prettyPrint typ <+> prettyPrint name
     
     evalPretty (µ -> Variable   (µ -> (FunctionPointerT ftype args)) _ (µ -> Empty)) (Variable _ name _) = 
       prettyPrint ftype <+> parens ("*" <> name) <> prettyPrint args
