@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Language.Pony.Testing where
   
   import Language.C99 hiding (CChar, CFloat, Empty, State, parse, attribute, typedefs)
@@ -15,6 +17,7 @@ module Language.Pony.Testing where
   import Semantics.C.ASG.Newtypes
   import Semantics.C.ASG.Arbitrary
   import Debug.Trace
+  import Semantics.C.QuasiQuote
 
   repl = repl' preprocessedC
   repl' p x = prettyPrint $ conv' p x
