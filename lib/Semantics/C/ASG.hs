@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, RankNTypes, OverloadedStrings, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, RankNTypes, OverloadedStrings, TypeSynonymInstances, FlexibleInstances, UndecidableInstances #-}
 
 module Semantics.C.ASG where
   
@@ -111,6 +111,8 @@ module Semantics.C.ASG where
   instance EqF Sem where equalF = (==)
   instance IsString (Sem a) where fromString = Name
   instance OrdF Sem where compareF = compare
+  
+  deriving instance (IsString (f (Fix f))) => IsString (Fix f)
   
   -- 'nil' isn't consistent with our naming conventions unfortunately, but I like it
   nil = Fix Empty

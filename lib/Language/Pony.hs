@@ -4,6 +4,7 @@ module Language.Pony
   ( module Semantics.C
   , module Data.Functor.Fix
   , module Language.Pony.Overture
+  , module Language.C99
   , run
   , PonyOptions (..)
   ) 
@@ -11,8 +12,8 @@ module Language.Pony
   where
     -- 
   
-  import Data.Functor.Fix hiding (foldl, sequence, mapM)
-  import Language.C99 
+  import Data.Functor.Fix hiding (foldl, sequence, mapM, attribute)
+  import Language.C99 hiding (CChar, CFloat, Empty)
   import Language.Pony.Overture
   import Language.Pony.Transformations.Sanitizers
   import Semantics.C

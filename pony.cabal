@@ -14,7 +14,7 @@ Category:            Language
 Build-type:          Configure
 Stability:           alpha
 Tested-with:         GHC
-Cabal-version:       >= 1.8
+Cabal-version:       >= 1.14
 Extra-source-files:  README.md, CREDITS.md, configure
 
 Flag tests {
@@ -28,44 +28,66 @@ Flag examples {
 }
 
 Library {
+  Default-language:  Haskell2010
+  Hs-source-dirs:    lib
   Build-depends:     base >= 4.2 && < 5
                    , bytestring >= 0.9.2
                    , containers >= 0.4.2
-                   , ghc-prim
-                   , GenericPretty >= 1.2
                    , data-default >= 0.5
-                   , mtl >= 2.0.1.0
                    , fixplate >= 0.1.5
+                   , GenericPretty >= 1.2
+                   , ghc-prim
+                   , mtl >= 2.0.1.0
                    , parsec >= 3.1.3
                    , pretty >= 1.0
                    , process > 1.0
-                   , transformers >= 0.3
-                   , template-haskell
-                   , wl-pprint-extras >= 3.0
-                   , syb >= 0.1
-                   , uniplate >= 1.6.7
                    , QuickCheck >= 2.3
-  ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
-  Exposed-modules: Language.Pony, Semantics.C
-  Extensions:      DeriveDataTypeable,
-                   FlexibleContexts,
-                   FlexibleInstances,            
-                   FunctionalDependencies,
-                   GeneralizedNewtypeDeriving,
-                   MultiParamTypeClasses,
-                   NamedFieldPuns,
-                   OverloadedStrings,
-                   QuasiQuotes,
-                   Rank2Types,
-                   TemplateHaskell,
-                   TypeOperators,
-                   TypeSynonymInstances,
-                   ViewPatterns
+                   , syb >= 0.1
+                   , template-haskell
+                   , transformers >= 0.3
+                   , uniplate >= 1.6.7
+                   , wl-pprint-extras >= 3.0
+                   
+  exposed-modules: Language.Pony
+  other-modules:   Data.Functor.Fix
+                 , Language.C99
+                 , Language.C99.AST
+                 , Language.C99.ASTPretty
+                 , Language.C99.Declarations
+                 , Language.C99.Expressions
+                 , Language.C99.Functions
+                 , Language.C99.Lexer
+                 , Language.C99.Literals
+                 , Language.C99.Miscellany
+                 , Language.C99.Parser
+                 , Language.C99.Specifiers
+                 , Language.C99.Statements
+                 , Language.C99.TopLevel
+                 , Language.Pony.Overture
+                 , Language.Pony.Transformations.Sanitizers
+                 , Semantics.C.ASG
+                 , Semantics.C.Pretty
+                 , Semantics.C.Reifiable.Instances
+  -- ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
+  Default-extensions:      DeriveDataTypeable,
+                           FlexibleContexts,
+                           FlexibleInstances,            
+                           FunctionalDependencies,
+                           GeneralizedNewtypeDeriving,
+                           MultiParamTypeClasses,
+                           NamedFieldPuns,
+                           OverloadedStrings,
+                           QuasiQuotes,
+                           Rank2Types,
+                           TemplateHaskell,
+                           TypeOperators,
+                           TypeSynonymInstances,
+                           ViewPatterns
 }
 
 -- Executable check-malloc {
 --   Main-is: Main.hs
---   Hs-source-dirs: examples/check-malloc .
+--   Hs-source-dirs: examples/check-malloc
 --   LD-Options: -w
 --   if flag(examples) {
 --     Buildable: True
@@ -74,27 +96,24 @@ Library {
 --   }
 -- }
 --                    
--- -- Executable concat {
--- --   Main-is:  Main.hs
--- --   Hs-source-dirs: examples/concat .
--- --   LD-Options:          -w
--- --   if flag(examples) {
--- --     Buildable: True
--- --   } else {
--- --     Buildable: False
--- --   }
--- -- }
--- 
--- Executable hello {
---   Main-is:  Main.hs
---   Hs-source-dirs: examples/hello .
---   LD-Options:          -w
---   if flag(examples) {
---     Buildable: True
---   } else {
---     Buildable: False
---   }
--- }
+Executable concat {
+  Default-language: Haskell2010
+  Build-depends: pony, haskell2010
+  Main-is:  Main.hs
+  Hs-source-dirs: examples/concat
+}
+
+Executable hello {
+  Build-depends: pony, haskell2010
+  Default-language: Haskell2010
+  Main-is:  Main.hs
+  Hs-source-dirs: examples/hello
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
 -- 
 -- Executable logical-shift {
 --   Main-is:  Main.hs
@@ -129,47 +148,47 @@ Library {
 --   }
 -- }
 
-Test-suite test-pony {
-    Type: exitcode-stdio-1.0
-    Ghc-options: -fwarn-tabs -Wall -fno-warn-missing-signatures
-    -- Hs-source-dirs: Testing Testing/HUnit Testing/QuickCheck
-    Main-is: Testing/Main.hs
-    Extensions:      DeriveDataTypeable,
-                     FlexibleContexts,
-                     FlexibleInstances,            
-                     FunctionalDependencies,
-                     GeneralizedNewtypeDeriving,
-                     MultiParamTypeClasses,
-                     NamedFieldPuns,
-                     OverloadedStrings,
-                     Rank2Types,
-                     TemplateHaskell,
-                     TypeOperators,
-                     TypeSynonymInstances,
-                     ViewPatterns,
-                     QuasiQuotes
-
-  Build-depends:     base >= 4.2 && < 5
-                   , bytestring >= 0.9.2
-                   , containers >= 0.4.2
-                   , ghc-prim
-                   , GenericPretty >= 1.2
-                   , data-default >= 0.5
-                   , mtl >= 2.0.1.0
-                   , fixplate >= 0.1.5
-                   , parsec >= 3.1.3
-                   , pretty >= 1.0
-                   , process > 1.0
-                   , transformers >= 0.3
-                   , wl-pprint-extras >= 3.0
-                   , syb >= 0.1
-                   , uniplate >= 1.6.7
-                   , QuickCheck >= 2.3
-                   , HUnit == 1.2.2.3
-                   , test-framework >= 0.6
-                   , test-framework-quickcheck2 >= 0.2.7
-                   , test-framework-hunit == 0.2.6
-                   , template-haskell
-}
+-- Test-suite test-pony {
+--     Type: exitcode-stdio-1.0
+--     Ghc-options: -fwarn-tabs -Wall -fno-warn-missing-signatures
+--     -- Hs-source-dirs: Testing Testing/HUnit Testing/QuickCheck
+--     Main-is: Testing/Main.hs
+--     Extensions:      DeriveDataTypeable,
+--                      FlexibleContexts,
+--                      FlexibleInstances,            
+--                      FunctionalDependencies,
+--                      GeneralizedNewtypeDeriving,
+--                      MultiParamTypeClasses,
+--                      NamedFieldPuns,
+--                      OverloadedStrings,
+--                      Rank2Types,
+--                      TemplateHaskell,
+--                      TypeOperators,
+--                      TypeSynonymInstances,
+--                      ViewPatterns,
+--                      QuasiQuotes
+-- 
+--   Build-depends:     base >= 4.2 && < 5
+--                    , bytestring >= 0.9.2
+--                    , containers >= 0.4.2
+--                    , ghc-prim
+--                    , GenericPretty >= 1.2
+--                    , data-default >= 0.5
+--                    , mtl >= 2.0.1.0
+--                    , fixplate >= 0.1.5
+--                    , parsec >= 3.1.3
+--                    , pretty >= 1.0
+--                    , process > 1.0
+--                    , transformers >= 0.3
+--                    , wl-pprint-extras >= 3.0
+--                    , syb >= 0.1
+--                    , uniplate >= 1.6.7
+--                    , QuickCheck >= 2.3
+--                    , HUnit == 1.2.2.3
+--                    , test-framework >= 0.6
+--                    , test-framework-quickcheck2 >= 0.2.7
+--                    , test-framework-hunit == 0.2.6
+--                    , template-haskell
+-- }
 
 
