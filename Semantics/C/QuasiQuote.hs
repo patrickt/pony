@@ -15,7 +15,5 @@ module Semantics.C.QuasiQuote
   expr :: QuasiQuoter
   expr = QuasiQuoter { quoteExp = csplice 'expression }
   
-  --| Invoke as $(csplice 'whateverparseryouwanttouse "str")
-  csplice :: Name -> 
   csplice parser str = [| convert $ parseUnsafe $(varE parser) $(liftString str) |]
   

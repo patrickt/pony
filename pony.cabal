@@ -40,6 +40,7 @@ Library {
                    , pretty >= 1.0
                    , process > 1.0
                    , transformers >= 0.3
+                   , template-haskell
                    , wl-pprint-extras >= 3.0
                    , syb >= 0.1
                    , uniplate >= 1.6.7
@@ -54,7 +55,9 @@ Library {
                    MultiParamTypeClasses,
                    NamedFieldPuns,
                    OverloadedStrings,
+                   QuasiQuotes,
                    Rank2Types,
+                   TemplateHaskell,
                    TypeOperators,
                    TypeSynonymInstances,
                    ViewPatterns
