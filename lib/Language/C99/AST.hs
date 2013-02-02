@@ -21,6 +21,7 @@ module Language.C99.AST
   , CInitializer (..)
   , CInitializerSubfield (..)
   , CParameter (..)
+  , CPostfix (..)
   , CSpecifier (..)
   , CStatement(..) 
   , CStorageSpecifier (..)
@@ -125,17 +126,25 @@ module Language.C99.AST
     = FunctionDecl CFunction
     | ExternDecl CDeclaration
     deriving (Eq, Show, Typeable, Data, Generic)
+    
+  data CPostfix 
+    = Index CExpr
+    | Call [CExpr]
+    | MemberAccess String
+    | PointerAccess String
+    | PostIncrement
+    | PostDecrement
+    deriving (Eq, Show, Typeable, Data, Generic)
+    
   
   -- | C expressions (C99 6.5).
   -- Please note that the comma operator is currently unimplemented.
   data CExpr
     = Constant CLiteral
-    | Comma [CExpr]
-    | Identifier String
-    | Index CExpr CExpr
-    | Call CExpr [CExpr]
-    | CCast CTypeName CExpr
-    | PostfixOp CExpr String
+    | Comma CExpr CExpr
+    | Identifier { getIdent :: String }
+    | CCast [CTypeName] CExpr
+    | PostfixOp CExpr [CPostfix]
     | UnaryOp  String CExpr
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr

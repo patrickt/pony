@@ -47,7 +47,7 @@ module Semantics.C.ASG where
     -- statements
     Break      :: Sem a
     Case       :: a -> [a] -> Sem a
-    CommaSep   :: [a] -> Sem a
+    CommaSep   :: a -> a -> Sem a
     Continue   :: Sem a
     Compound   :: [a] -> Sem a
     Default    :: a -> Sem a
@@ -70,7 +70,7 @@ module Semantics.C.ASG where
     Unary    :: a -> a -> Sem a
     Binary   :: a -> a -> a -> Sem a
     Ternary  :: a -> a -> a -> Sem a
-    Cast     :: a -> a -> Sem a
+    Cast     :: [a] -> a -> Sem a
     Brackets :: a -> a -> Sem a -- rename to Index?
     FunCall  :: a -> [a] -> Sem a -- rename to Call?
     VaArg    :: a -> a -> Sem a
@@ -152,7 +152,7 @@ module Semantics.C.ASG where
   
   break'                    = Fix Break
   case' cond blk            = Fix $ Case cond blk -- this is specious, as are other case statements
-  comma'                    = Fix . CommaSep
+  comma' a b                = Fix $ CommaSep a b
   continue'                 = Fix Continue
   default'                  = Fix . Default
   dowhile' cond blk         = Fix $ DoWhile cond blk
