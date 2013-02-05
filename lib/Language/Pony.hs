@@ -24,7 +24,7 @@ module Language.Pony
   data PonyOptions = PonyOptions
     { topDown :: [Fix Sem -> Fix Sem]
     , anamorphisms :: [Fix Sem -> Sem (Fix Sem)]
-    , bitwiseOperators :: [String]
+    , binaryOperators :: [Operator]
     }
   
   instance Default PonyOptions where def = PonyOptions [] [] []
@@ -35,7 +35,7 @@ module Language.Pony
     when (length args == 0) $ do
       putStrLn "Error: filename not provided"
       exitFailure
-    parsed <- preprocessAndParse preprocessedC (args !! 0) (def { bitwiseOps = bwo })
+    parsed <- preprocessAndParse preprocessedC (args !! 0) (def { operators = bwo })
     case parsed of 
       (Left a) -> putStrLn "ERROR" >> print a >> exitFailure
       (Right ast) -> do

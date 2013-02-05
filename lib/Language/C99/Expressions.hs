@@ -1,26 +1,28 @@
 module Language.C99.Expressions
-  ( expression
-  , constantExpression
-  , builtinExpression
-  , castExpression
-  , postfixExpression
-  , unaryExpression
-  , primaryExpression
-  , constant
-  , identifier
-  , stringLiteral
-  )
+  -- ( expression
+  -- , constantExpression
+  -- , builtinExpression
+  -- , castExpression
+  -- , postfixExpression
+  -- , unaryExpression
+  -- , primaryExpression
+  -- , constant
+  -- , identifier
+  -- , stringLiteral
+  -- )
   where 
   
   import Control.Monad.State
-  import Data.List (foldl')
+  import Data.Function (on)
+  import Data.List (foldl', groupBy)
   import Data.Monoid
   import Language.C99.Parser
   import Language.C99.AST
   import Language.C99.Literals
+  import Language.C99.Operators
   import {-# SOURCE #-} Language.C99.Declarations 
   import qualified Language.C99.Lexer as L
-  import Text.Parsec.Expr
+  import Text.Parsec.Expr hiding (Operator)
   
   expression :: Parser CExpr
   expression = chainl1 assignmentExpression (Comma <$ L.comma) <?> "C expression"
@@ -32,28 +34,17 @@ module Language.C99.Expressions
   
   constantExpression :: Parser CExpr
   constantExpression = choice [try ternaryExpression, logicalOrExpression]
+    
+  parserFromOps :: [Operator] -> Parser (CExpr -> CExpr -> CExpr)
+  parserFromOps ops = BinaryOp <$> (choice $ L.symbol <$> text <$> ops)
   
-  -- TODO: clean this up
-  
-  binaryOpFor :: String -> Parser (CExpr -> CExpr -> CExpr)
-  binaryOpFor str = BinaryOp <$> L.symbol str
-  
-  binLeft :: String -> Parser CExpr -> Parser CExpr
-  binLeft str next = chainl1 next op where op = binaryOpFor str
+  groupOps :: [Operator] -> [Parser (CExpr -> CExpr -> CExpr)]
+  groupOps x = parserFromOps <$> groupBy ((==) `on` precedence) x
   
   logicalOrExpression :: Parser CExpr
-  logicalOrExpression = binLeft "||" logicalAndExpression
-  logicalAndExpression = binLeft "&&" inclusiveOrExpression
-  inclusiveOrExpression = binLeft "|" exclusiveOrExpression
-  exclusiveOrExpression = binLeft "^" andExpression
-  andExpression = binLeft "&" equalityExpression
-  equalityExpression = chainl1 relationalExpression op where op = choice $ binaryOpFor <$> ["==", "!="]
-  relationalExpression = chainl1 shiftExpression op where op = choice $ binaryOpFor <$> ["<=", ">=", "<", ">"]
-  shiftExpression = chainl1 additiveExpression op where op = choice $ binaryOpFor <$> ["<<", ">>"]
-  additiveExpression = chainl1 multiplicativeExpression op where op = choice $ binaryOpFor <$> ["+", "-"]
-  multiplicativeExpression = chainl1 castExpression op where op = choice $ binaryOpFor <$> ["*", "/", "%"]
-  
-  -- end cleanup
+  logicalOrExpression = do
+    ops <- groupOps <$> operators <$> getState
+    foldr (flip chainl1) castExpression ops
   
   ternaryExpression :: Parser CExpr
   ternaryExpression = TernaryOp <$> logicalOrExpression <*> (L.symbol "?" *> expression) <*> (L.symbol ":" *> logicalOrExpression)

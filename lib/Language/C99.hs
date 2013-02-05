@@ -11,6 +11,7 @@ module Language.C99
   -- import Language.C99.Lexer as X
   import Language.C99.Literals as X
   import Language.C99.Miscellany as X
+  import Language.C99.Operators as X
   import Language.C99.Parser as X
   import Language.C99.Specifiers as X
   import Language.C99.Statements as X
