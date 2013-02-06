@@ -21,9 +21,6 @@ module Language.C99.Operators
   ) where
   
   import Data.Data
-  import Data.Function
-  import Data.List  
-  import GHC.Exts
   
   data Operator = Operator { text :: String, precedence :: Int }
     deriving (Show, Eq, Typeable, Data)

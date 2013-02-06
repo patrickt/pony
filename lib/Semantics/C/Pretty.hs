@@ -9,7 +9,7 @@ module Semantics.C.Pretty
   import Data.Functor.Fix
   import Language.Pony.MachineSizes
   import Semantics.C.ASG
-  import Text.Pretty
+  import Text.PrettyPrint.Free
   
   isEmpty x = show x == ""
   infixr 5 <?+>

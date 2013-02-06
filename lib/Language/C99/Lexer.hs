@@ -31,7 +31,6 @@ module Language.C99.Lexer
   
   import Control.Applicative
   import Data.ByteString (ByteString)
-  import Data.ByteString.Char8 (unpack, pack)
   import Data.Functor.Identity (Identity)
   import Numeric (readOct, readHex)
   import Text.Parsec hiding ((<|>), many)

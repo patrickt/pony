@@ -12,17 +12,14 @@ module Language.C99.Expressions
   )
   where 
   
-  import Control.Monad.State
   import Data.Function (on)
-  import Data.List (foldl', groupBy)
-  import Data.Monoid
+  import Data.List (groupBy)
   import Language.C99.Parser
   import Language.C99.AST
   import Language.C99.Literals
   import Language.C99.Operators
   import {-# SOURCE #-} Language.C99.Declarations 
   import qualified Language.C99.Lexer as L
-  import Text.Parsec.Expr hiding (Operator)
   
   expression :: Parser CExpr
   expression = chainl1 assignmentExpression (Comma <$ L.comma) <?> "C expression"
