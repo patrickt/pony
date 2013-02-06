@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.C99.Operators 
   ( Operator (..)
   , logicalOr

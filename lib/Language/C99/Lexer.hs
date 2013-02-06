@@ -1,4 +1,4 @@
-{-# LANGUAGE NoMonomorphismRestriction, OverloadedStrings #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Language.C99.Lexer 
   ( identifier

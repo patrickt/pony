@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveFunctor, DeriveFoldable, DeriveTraversable, RankNTypes, OverloadedStrings, TypeSynonymInstances, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Semantics.C.ASG where
   

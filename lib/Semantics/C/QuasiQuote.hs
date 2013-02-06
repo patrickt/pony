@@ -1,13 +1,11 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Semantics.C.QuasiQuote 
-  (module Language.Haskell.TH
-  ,module Language.Haskell.TH.Quote
-  ,module Language.Haskell.TH.Syntax
-  ,c99
-  ,expr
-  ,csplice
-  ,here)
+  ( module Language.Haskell.TH
+  , module Language.Haskell.TH.Quote
+  , module Language.Haskell.TH.Syntax
+  , c99
+  , expr
+  , csplice
+  , here)
   where
   
   import Language.C99

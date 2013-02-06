@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Language.Pony.Transformations.Sanitizers 
   (runReplacer, unfoldGroups, flatGroupsAxiom) where
   

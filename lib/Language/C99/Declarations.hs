@@ -1,5 +1,3 @@
-{-# LANGUAGE NamedFieldPuns, RecordWildCards #-}
-
 module Language.C99.Declarations
   ( declaration
   , sizedDeclaration

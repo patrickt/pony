@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-
 module Language.C99.Parser 
   ( module Text.Parsec
   , module Language.Pony.Overture

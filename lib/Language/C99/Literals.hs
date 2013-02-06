@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
-
 module Language.C99.Literals 
   ( CLiteral (..) )
   where

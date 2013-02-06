@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
-
 module Language.C99.AST
   ( CTranslationUnit (..)
   , CAsmArgument (..)

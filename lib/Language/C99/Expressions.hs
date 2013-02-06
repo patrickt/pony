@@ -1,15 +1,15 @@
 module Language.C99.Expressions
-  -- ( expression
-  -- , constantExpression
-  -- , builtinExpression
-  -- , castExpression
-  -- , postfixExpression
-  -- , unaryExpression
-  -- , primaryExpression
-  -- , constant
-  -- , identifier
-  -- , stringLiteral
-  -- )
+  ( expression
+  , constantExpression
+  , builtinExpression
+  , castExpression
+  , postfixExpression
+  , unaryExpression
+  , primaryExpression
+  , constant
+  , identifier
+  , stringLiteral
+  )
   where 
   
   import Control.Monad.State
@@ -33,7 +33,7 @@ module Language.C99.Expressions
     assignmentOperator = choice $ L.symbol <$> ["=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "^=", "|="]
   
   constantExpression :: Parser CExpr
-  constantExpression = choice [try ternaryExpression, logicalOrExpression]
+  constantExpression = choice [try ternaryExpression, binaryExpression]
     
   parserFromOps :: [Operator] -> Parser (CExpr -> CExpr -> CExpr)
   parserFromOps ops = BinaryOp <$> (choice $ L.symbol <$> text <$> ops)
@@ -41,13 +41,11 @@ module Language.C99.Expressions
   groupOps :: [Operator] -> [Parser (CExpr -> CExpr -> CExpr)]
   groupOps x = parserFromOps <$> groupBy ((==) `on` precedence) x
   
-  logicalOrExpression :: Parser CExpr
-  logicalOrExpression = do
-    ops <- groupOps <$> operators <$> getState
-    foldr (flip chainl1) castExpression ops
+  binaryExpression :: Parser CExpr
+  binaryExpression = (groupOps <$> operators <$> getState) >>= foldr (flip chainl1) castExpression
   
   ternaryExpression :: Parser CExpr
-  ternaryExpression = TernaryOp <$> logicalOrExpression <*> (L.symbol "?" *> expression) <*> (L.symbol ":" *> logicalOrExpression)
+  ternaryExpression = TernaryOp <$> binaryExpression <*> (L.symbol "?" *> expression) <*> (L.symbol ":" *> binaryExpression)
   
   builtinExpression :: Parser CExpr
   builtinExpression = CBuiltin <$> builtinVaArg

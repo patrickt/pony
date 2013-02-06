@@ -68,21 +68,28 @@ Library {
                  , Semantics.C.ASG
                  , Semantics.C.Pretty
                  , Semantics.C.Reifiable.Instances
-  -- ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
-  Default-extensions:      DeriveDataTypeable,
-                           FlexibleContexts,
-                           FlexibleInstances,            
-                           FunctionalDependencies,
-                           GeneralizedNewtypeDeriving,
-                           MultiParamTypeClasses,
-                           NamedFieldPuns,
-                           OverloadedStrings,
-                           QuasiQuotes,
-                           Rank2Types,
-                           TemplateHaskell,
-                           TypeOperators,
-                           TypeSynonymInstances,
-                           ViewPatterns
+  ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
+  Default-extensions:      DeriveDataTypeable
+                         , DeriveFoldable
+                         , DeriveFunctor
+                         , DeriveGeneric
+                         , DeriveTraversable
+                         , FlexibleContexts
+                         , FlexibleInstances
+                         , FunctionalDependencies
+                         , GADTs
+                         , GeneralizedNewtypeDeriving
+                         , MultiParamTypeClasses
+                         , NamedFieldPuns
+                         , OverloadedStrings
+                         , QuasiQuotes
+                         , Rank2Types
+                         , RecordWildCards
+                         , StandaloneDeriving
+                         , TemplateHaskell
+                         , TypeOperators
+                         , TypeSynonymInstances
+                         , ViewPatterns
 }
 
 -- Executable check-malloc {

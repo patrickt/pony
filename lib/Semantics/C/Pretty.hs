@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverloadedStrings, ViewPatterns, RankNTypes, NamedFieldPuns, RecordWildCards #-}
-
 module Semantics.C.Pretty 
   ( PrettyAlg (..)
   , prettyPrint

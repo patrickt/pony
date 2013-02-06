@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
-
 module Language.Pony.Testing where
   
   import Language.C99 hiding (CChar, CFloat, Empty, State, parse, attribute, typedefs)

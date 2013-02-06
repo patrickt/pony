@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances, TypeSynonymInstances, OverloadedStrings #-}
-
 -- Delete this.
 
 module Text.Pretty

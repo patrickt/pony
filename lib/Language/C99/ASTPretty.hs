@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances #-}
 
 module Language.C99.ASTPretty 
   where
