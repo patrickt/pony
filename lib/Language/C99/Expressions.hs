@@ -54,19 +54,15 @@ module Language.C99.Expressions
   castExpression = unwrap <$> (CCast <$> (many $ L.parens typeName) <*> unaryExpression) where
     unwrap (CCast [] x) = x
     unwrap x = x
-  
-  sizeofExpr = UnaryOp <$> L.reservedOp' "sizeof" <*> unaryExpression
-  sizeofType = SizeOfType <$> (L.reservedOp "sizeof" *> L.parens typeName)
-  
-  
-  
+
   unaryExpression :: Parser CExpr
   unaryExpression = choice [ postfixExpression
                            , UnaryOp <$> L.reservedOp' "++" <*> unaryExpression
                            , UnaryOp <$> L.reservedOp' "--" <*> unaryExpression
                            , UnaryOp <$> unaryOperator   <*> castExpression
-                           , try sizeofExpr
-                           , try sizeofType ] <?> "unary expression"
+                           , try $ UnaryOp    <$> L.reservedOp' "sizeof" <*> unaryExpression
+                           , try $ SizeOfType <$> (L.reservedOp "sizeof" *> L.parens typeName) 
+                           ] <?> "unary expression"
                            
   unaryOperator :: Parser String
   unaryOperator = choice $ L.symbol <$> ["&", "*", "+", "-", "~", "!"]

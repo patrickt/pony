@@ -1,28 +1,30 @@
 module Testing.HUnit.DeclarationPrinting 
-  ( tests ) where
+  ( declarationTestGroup ) where
   
   import Test.Framework
   import Test.Framework.Providers.HUnit
+  import Test.Framework.TH
   import Test.HUnit hiding (Test)
   import Language.Pony
-  import Language.C99
-  import Text.Pretty
-  import Data.Generics.Fixplate
-  import qualified Data.ByteString.Char8 as B
+  import Text.PrettyPrint.Free
   
-  tests :: [Test]
-  tests = [ roundTrip "int a;"
-          , roundTrip "int a[];"
-          , roundTrip "int a[3];"
-          , roundTrip "int a[x];"
-          , roundTrip "int a[3] = {1, 2, 3};"
-          , roundTrip "int a[] = {1, 2, 3};"
-          , roundTrip "int a[][] = {{1, 2, 3}};"
-          , roundTrip "int a[2][2] = {{1, 2}, {3, 4}};"
-          ]
+  instance Eq (Doc a) where
+    a == b = (show a) == (show b)
+  
+  declarationTestGroup :: Test
+  declarationTestGroup = $(testGroupGenerator)
+  
+  case_int            = roundTrip "int a;"
+  case_intarr         = roundTrip "int a[];"
+  case_intarr3        = roundTrip "int a[3];"
+  case_intarrx        = roundTrip "int a[x];"
+  case_intarr3list    = roundTrip "int a[3] = {1, 2, 3};"
+  case_intarrlist     = roundTrip "int a[] = {1, 2, 3};"
+  case_intarrarrlist  = roundTrip "int a[][] = {{1, 2, 3}};"
+  case_intarrarrlist2 = roundTrip "int a[2][2] = {{1, 2}, {3, 4}};"
 
-  roundTrip :: ByteString -> Test
-  roundTrip s = testCase (B.unpack s) $ assertEqual (B.unpack s) theory practice where
+  roundTrip :: ByteString -> Assertion
+  roundTrip s = theory @=? practice where
     theory = pretty s
     practice = (para' evalPretty $ convert $ parseUnsafe preprocessedC s)
   

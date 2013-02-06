@@ -59,6 +59,7 @@ Library {
                  , Language.C99.Lexer
                  , Language.C99.Literals
                  , Language.C99.Miscellany
+                 , Language.C99.Operators
                  , Language.C99.Parser
                  , Language.C99.Specifiers
                  , Language.C99.Statements
@@ -67,6 +68,7 @@ Library {
                  , Language.Pony.Transformations.Sanitizers
                  , Semantics.C.ASG
                  , Semantics.C.Pretty
+                 , Semantics.C.QuasiQuote
                  , Semantics.C.Reifiable.Instances
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Default-extensions:      DeriveDataTypeable
@@ -161,7 +163,41 @@ Test-suite test-pony {
     Ghc-options: -fwarn-tabs -Wall -fno-warn-missing-signatures
     -- Hs-source-dirs: Testing Testing/HUnit Testing/QuickCheck
     Main-is: Testing/Main.hs
-    Build-depends: pony
+    Build-depends: base
+                 , pony
+                 , bytestring
+                 , data-default
+                 , fixplate
+                 , HUnit == 1.2.2.3
+                 , template-haskell
+                 , test-framework
+                 , test-framework-hunit
+                 , test-framework-quickcheck2
+                 , test-framework-th
+                 , QuickCheck
+                 , wl-pprint-extras
+    ghc-options:     -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
+    Default-extensions:      DeriveDataTypeable
+                           , DeriveFoldable
+                           , DeriveFunctor
+                           , DeriveGeneric
+                           , DeriveTraversable
+                           , FlexibleContexts
+                           , FlexibleInstances
+                           , FunctionalDependencies
+                           , GADTs
+                           , GeneralizedNewtypeDeriving
+                           , MultiParamTypeClasses
+                           , NamedFieldPuns
+                           , OverloadedStrings
+                           , QuasiQuotes
+                           , Rank2Types
+                           , RecordWildCards
+                           , StandaloneDeriving
+                           , TemplateHaskell
+                           , TypeOperators
+                           , TypeSynonymInstances
+                           , ViewPatterns
 }
 
 

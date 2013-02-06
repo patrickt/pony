@@ -1,25 +1,28 @@
 module Testing.HUnit.TypeNames 
-  ( tests ) where
+  ( typenameTestGroup
+  ) where
   
   import Data.Either
   import Data.Generics.Fixplate
-  import Language.C99
   import Language.Haskell.TH
   import Language.Haskell.TH.Quote
   import Language.Pony
   import qualified Data.ByteString.Char8 as B
   import Test.Framework
   import Test.Framework.Providers.HUnit
+  import Test.Framework.TH
   import Test.HUnit hiding (Test)
   import Testing.HUnit.Asserts
-  import Testing.Heredoc
-  import Text.Pretty
-
+  import Text.PrettyPrint.Free
   
-  roundTrip :: ByteString -> Test
-  roundTrip s = testCase (B.unpack s) $ assertEqual (B.unpack s) theory practice where
-    theory = pretty s
-    practice = para' evalPretty $ convert $ parseUnsafe typeName s
+  emit :: String -> Doc a
+  emit x = para' evalPretty $ convert $ parseUnsafe typeName (B.pack x)
+  
+  instance Eq (Doc a) where
+    a == b = (show a) == (show b)
+    
+  roundTrip :: ByteString -> Assertion
+  roundTrip b = pretty b @=? emit (B.unpack b)
   
   -- should fail since TT is not a type in bar
   innerScopeBad :: B.ByteString
@@ -42,23 +45,24 @@ module Testing.HUnit.TypeNames
         unsigned TT;
     } |]
   
-  tests :: [Test]
-  tests = [ roundTrip "int"
-          , roundTrip "int *"
-          , roundTrip "const int"
-          , roundTrip "const int *"
-          , roundTrip "static const int"
-          , roundTrip "static const int *"
-          , roundTrip "int * const"
-          , roundTrip "const int * const"
-          , roundTrip "static const int * const"
-          , roundTrip "int * *"
-          , roundTrip "int * const *"
-          , roundTrip "const int * const *"
-          , roundTrip "const int * const * restrict"
-          , roundTrip "char"
-          , roundTrip "char[]"
-          , roundTrip "char[5]"
-          , assertParsingSucceeds "good inner scope" innerScopeGood
-          , assertParsingFails "bad inner scope" innerScopeBad
-          ]
+  case_int                     = roundTrip "int"
+  case_intp                    = roundTrip "int *"
+  case_constint                = roundTrip "const int"
+  case_constintp               = roundTrip "const int *"
+  case_staticconstint          = roundTrip "static const int"
+  case_staticconstintp         = roundTrip "static const int *"
+  case_intpconst               = roundTrip "int * const"
+  case_constintpconst          = roundTrip "const int * const"
+  case_staticconstintpconst    = roundTrip "static const int * const"
+  case_intpp                   = roundTrip "int * *"
+  case_intpconstp              = roundTrip "int * const *"
+  case_constintpconstp         = roundTrip "const int * const *"
+  case_constintpconstprestrict = roundTrip "const int * const * restrict"
+  case_char                    = roundTrip "char"
+  case_chararr                 = roundTrip "char[]"
+  case_chararr5                = roundTrip "char[5]"
+  case_typedefscopegood        = assertParsingSucceeds innerScopeGood
+  case_typedefscopebad         = assertParsingFails innerScopeBad
+  
+  typenameTestGroup :: Test
+  typenameTestGroup = $(testGroupGenerator)
