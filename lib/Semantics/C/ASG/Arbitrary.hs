@@ -39,4 +39,4 @@ module Semantics.C.ASG.Arbitrary where
     arbitrary = do
       (FType typ) <- arbitrary
       (FName nam) <- arbitrary
-      return $ FVar $ tie $ Variable typ nam nil
+      return $ FVar $ tie $ Variable typ nam nil'

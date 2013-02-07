@@ -1,5 +1,5 @@
 module Language.Pony.Transformations.Sanitizers 
-  (runReplacer, unfoldGroups, flatGroupsAxiom) where
+  (runReplacer, unfoldGroups, flatGroupsAxiom, convertToASG) where
   
   import Semantics.C
   import Control.Monad.State
@@ -9,7 +9,7 @@ module Language.Pony.Transformations.Sanitizers
   type Recorder = State [FSem]
   
   replaceTypedefs :: FSem -> Recorder FSem
-  replaceTypedefs x@(Fix (Typedef name@(Fix (Name _)) _)) = do
+  replaceTypedefs x@(Fix (Typedef _ name@(Fix (Name _)))) = do
     contained <- gets (elem x)
     unless contained (modify (x :))
     return $ if contained then (tie $ TypedefT name) else x
@@ -27,6 +27,7 @@ module Language.Pony.Transformations.Sanitizers
   flatGroupsAxiom (µ -> Program a) = Program $ a >>= unfoldGroups
   flatGroupsAxiom x = out x
   
-    
+  convertToASG :: (Reifiable a) => a -> Fix Sem
+  convertToASG = runReplacer . convert
   
 

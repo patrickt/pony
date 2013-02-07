@@ -15,7 +15,7 @@ module Semantics.C.Reifiable.Instances
   -- CTranslationUnit -> Program.
   -- hits: CExternal -> global
   instance Reifiable CTranslationUnit where
-    convert (CTranslationUnit ts) = program $ convert <$> ts
+    convert (CTranslationUnit ts) = program' $ convert <$> ts
   
   -- CExternal -> Function | Typedef | FunctionProto? | Variable | Declarations
   -- hits: CFunction -> Function
@@ -32,7 +32,7 @@ module Semantics.C.Reifiable.Instances
           && not (declarationHasFields d)
           && declarationIsUnnamed d        = convert (AsForwardComposite d)
       | declarationIsFunctionPrototype d   = convert (AsPrototype d) -- function prototype
-      | otherwise                          = convert (AsVariable d)  -- variable declaration
+      | otherwise                          = convert (AsVariable d)  -- variable' declaration
       
   -- CBlockItem -> Variable | Expression
   -- Because in open recursion style we can mix statements and declarations freely, the BlockItem class is not useful.
@@ -45,7 +45,7 @@ module Semantics.C.Reifiable.Instances
   -- SOMEDAY: `typedef foo;` on its own is legal, declaring foo as a type for int (curse you, implicit int)
   newtype TypedefDeclaration = AsTypedef { unAsTypedef  :: CDeclaration }
   instance Reifiable TypedefDeclaration where
-      convert (AsTypedef decl@(CDeclaration _ [info])) = tie $ Typedef alias aliasedType
+      convert (AsTypedef decl@(CDeclaration _ [info])) = tie $ Typedef aliasedType alias
         where 
           -- first we drop the leading Typedef specifier from the declaration specifiers
           specs = declrSpecifiers $ dropTypedef decl
@@ -122,7 +122,7 @@ module Semantics.C.Reifiable.Instances
   newtype FunctionArgs = FA { unFA :: CDeclarator }
   instance Reifiable FunctionArgs where
     -- we're going to find one and only one (assuming the parser is right) 
-    -- DerivedFunction derived declarator inside here, and it's going to have a list of CParameters. we convert those into Variables.
+    -- DerivedFunction derived declarator inside here, and it's going to have a list' of CParameters. we convert those into Variables.
     convert (FA (CDeclarator _ derived _ _)) = tie $ Arguments fromArgs
       where (Just (DerivedFunction args variad)) = find isFunction derived
             isFunction (DerivedFunction _ _) = True
@@ -140,7 +140,7 @@ module Semantics.C.Reifiable.Instances
     -- this is pretty sus but cool also
   instance (Reifiable a) => Reifiable (Maybe a) where
     convert (Just a) = convert a
-    convert _ = nil
+    convert _ = nil'
   
   newtype FunctionPrototypeDeclaration = AsPrototype { unAsPrototype :: CDeclaration }
   instance Reifiable FunctionPrototypeDeclaration where
@@ -168,7 +168,7 @@ module Semantics.C.Reifiable.Instances
   
   instance Reifiable CInitializer where
     convert (CInitExpression e) = convert e
-    convert (CInitList l) = list $ convert <$> l
+    convert (CInitList l) = list' $ convert <$> l
   
   -- BUG: WE still need something to indicate .a=5 and whatnot
   instance Reifiable CInitializerSubfield where
@@ -178,13 +178,13 @@ module Semantics.C.Reifiable.Instances
   -- hits: declaration+specifiers -> type
   instance Reifiable CParameter where
     convert (CParameter specs (Just contents)) = 
-      -- if we have a name for the variable, make it a Variable,
+      -- if we have a name for the variable', make it a Variable,
       -- otherwise leave it as a plain type
       if hasName
         then tie Variable 
           { vname  = name' $ fromJust dname
           , vtype  = typ
-          , vvalue = nil
+          , vvalue = nil'
           }
         else typ
       where 
@@ -198,7 +198,7 @@ module Semantics.C.Reifiable.Instances
   -- Composite info declarations are of the form:
   -- (struct|union|enum) { fields+ };
   -- i.e. they are not predeclarations of future composite types,
-  -- nor do they declare any variables.
+  -- nor do they declare any variable's.
   -- BUG: NOT CONVERTING __ATTRIBUTES__
   newtype CompositeInfoDeclaration = AsComposite  { unAsComposite  :: CDeclaration }
   instance Reifiable CompositeInfoDeclaration where
@@ -206,13 +206,13 @@ module Semantics.C.Reifiable.Instances
       tie CompositeInfo 
         { cname = convert name
         , ckind = tie $ if isStruct then Struct else Union
-        , cfields = group (convert <$> fields)
+        , cfields = group' (convert <$> fields)
         }
     convert (AsComposite (CDeclaration [TSpec (TEnumeration name enums _)] [])) = 
       tie CompositeInfo 
         { cname = convert name
         , ckind = tie Enum
-        , cfields = group (convert <$> enums)
+        , cfields = group' (convert <$> enums)
         }
     convert _ = error "error in conversion, invariants not respected"
     
@@ -228,7 +228,7 @@ module Semantics.C.Reifiable.Instances
     convert (AsForwardComposite (CDeclaration [TSpec (TStructOrUnion name isStruct [] _)] [])) = 
       tie CompositeInfo { cname = convert name 
                         , ckind = kind isStruct
-                        , cfields = nil }
+                        , cfields = nil' }
       where
         kind True = tie Struct
         kind False = tie Union
@@ -317,49 +317,49 @@ module Semantics.C.Reifiable.Instances
   -- This is where type aliases go, as defined in C99, 6.7.2.2
   instance Reifiable [CTypeSpecifier] where
     convert [TVoid]                         = void'
-    convert [TChar]                         = signed' CharT
-    convert [TSigned, TChar]                = signed' CharT
-    convert [TUnsigned, TChar]              = unsigned' CharT
-    convert [TShort]                        = int' Signed [ShortM]
-    convert [TSigned, TShort]               = int' Signed [ShortM]
-    convert [TShort, TInt]                  = int' Signed [ShortM]
-    convert [TSigned, TShort, TInt]         = int' Signed [ShortM]
-    convert [TBool]                         = int' Signed [ShortM] 
-    convert [TUnsigned, TShort]             = int' Unsigned [ShortM]
-    convert [TUnsigned, TShort, TInt]       = int' Unsigned [ShortM]
-    convert [TInt]                          = int' Signed []
-    convert [TSigned]                       = int' Signed []
-    convert [TSigned, TInt]                 = int' Signed []
-    convert [TUnsigned]                     = int' Unsigned []
-    convert [TUnsigned, TInt]               = int' Unsigned []
-    convert [TLong]                         = int' Signed [LongM]
-    convert [TSigned, TLong]                = int' Signed [LongM]
-    convert [TLong, TInt]                   = int' Signed [LongM]
-    convert [TSigned, TLong, TInt]          = int' Signed [LongM]
-    convert [TUnsigned, TLong]              = int' Unsigned [LongM]
-    convert [TLong, TUnsigned, TInt]        = int' Unsigned [LongM]
-    convert [TUnsigned, TLong, TInt]        = int' Unsigned [LongM]
-    convert [TLong, TLong]                  = int' Signed [LongM, LongM]
-    convert [TSigned, TLong, TLong]         = int' Signed [LongM, LongM]
-    convert [TLong, TLong, TInt]            = int' Signed [LongM, LongM]
-    convert [TSigned, TLong, TLong, TInt]   = int' Unsigned [LongM, LongM]
-    convert [TUnsigned, TLong, TLong]       = int' Unsigned [LongM, LongM]
-    convert [TUnsigned, TLong, TLong, TInt] = int' Unsigned [LongM, LongM]
-    convert [TInt128]                       = int' Unsigned [VeryLongM]
-    convert [TUInt128]                      = int' Unsigned [VeryLongM]
-    convert [TFloat]                        = tie FloatT
-    convert [TDouble]                       = tie DoubleT
-    convert [TLong, TDouble]                = tie $ MultipartT $ tie <$> [LongM, DoubleT] -- this is weird and doesn't match the way we do ints
+    convert [TChar]                         = char' signed'
+    convert [TSigned, TChar]                = char' signed'
+    convert [TUnsigned, TChar]              = char' unsigned'
+    convert [TShort]                        = int' signed' [short']
+    convert [TSigned, TShort]               = int' signed' [short']
+    convert [TShort, TInt]                  = int' signed' [short']
+    convert [TSigned, TShort, TInt]         = int' signed' [short']
+    convert [TBool]                         = int' signed' [short'] 
+    convert [TUnsigned, TShort]             = int' unsigned' [short']
+    convert [TUnsigned, TShort, TInt]       = int' unsigned' [short']
+    convert [TInt]                          = int' signed' []
+    convert [TSigned]                       = int' signed' []
+    convert [TSigned, TInt]                 = int' signed' []
+    convert [TUnsigned]                     = int' unsigned' []
+    convert [TUnsigned, TInt]               = int' unsigned' []
+    convert [TLong]                         = int' signed' [long']
+    convert [TSigned, TLong]                = int' signed' [long']
+    convert [TLong, TInt]                   = int' signed' [long']
+    convert [TSigned, TLong, TInt]          = int' signed' [long']
+    convert [TUnsigned, TLong]              = int' unsigned' [long']
+    convert [TLong, TUnsigned, TInt]        = int' unsigned' [long']
+    convert [TUnsigned, TLong, TInt]        = int' unsigned' [long']
+    convert [TLong, TLong]                  = int' signed' [long', long']
+    convert [TSigned, TLong, TLong]         = int' signed' [long', long']
+    convert [TLong, TLong, TInt]            = int' signed' [long', long']
+    convert [TSigned, TLong, TLong, TInt]   = int' unsigned' [long', long']
+    convert [TUnsigned, TLong, TLong]       = int' unsigned' [long', long']
+    convert [TUnsigned, TLong, TLong, TInt] = int' unsigned' [long', long']
+    convert [TInt128]                       = int' unsigned' [verylong']
+    convert [TUInt128]                      = int' unsigned' [verylong']
+    convert [TFloat]                        = float'
+    convert [TDouble]                       = double'
+    convert [TLong, TDouble]                = multipart' [long', double'] -- this is weird and doesn't match the way we do ints
     -- FIXME: this is so wrong
-    convert [TStructOrUnion mName sou fields attrs] = tie $ CompositeInfo (tie comp) (fromMaybe nil (name' <$> mName)) (group $ convert <$> fields) where comp = if sou then Struct else Union
+    convert [TStructOrUnion mName sou fields attrs] = tie $ CompositeInfo (tie comp) (fromMaybe nil' (name' <$> mName)) (group' $ convert <$> fields) where comp = if sou then Struct else Union
     convert [TEnumeration n a attrs]        = convert n
-    convert [TTypedef n d]                  = tie $ Typedef (name' n) (convert d)
+    convert [TTypedef n d]                  = tie $ Typedef (convert d) (name' n)
     convert [TBuiltin s]                    = tie $ BuiltinT $ name' s
     convert other                           = dieInBreakpoint $ show other
   
   instance Reifiable CEnumerator where
-    convert (EnumIdent s) = variable nil (name' s) nil
-    convert (EnumAssign s v) = variable nil (name' s) (convert v)
+    convert (EnumIdent s) = variable' nil' (name' s) nil'
+    convert (EnumAssign s v) = variable' nil' (name' s) (convert v)
   
   instance Reifiable CStringLiteral where
     convert = convert . getExpr

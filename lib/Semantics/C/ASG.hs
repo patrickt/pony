@@ -88,7 +88,7 @@ module Semantics.C.ASG where
     Custom   :: [a] -> Sem a
   
     -- other stuff
-    Prototype :: { pname :: a, ptype :: a, pargs :: a } -> Sem a -- we should be able to get rid of this and just have a Function with a nil body
+    Prototype :: { pname :: a, ptype :: a, pargs :: a } -> Sem a -- we should be able to get rid of this and just have a Function with a nil' body
     CompositeInfo :: { ckind :: a, cname :: a, cfields :: a } -> Sem a
     Enumeration :: a -> [a] -> Sem a -- [Variables] -> Name? ->  Composite
     Program :: [a] -> Sem a
@@ -98,7 +98,7 @@ module Semantics.C.ASG where
     -- gotta be a nicer way to do this
     -- type -> name -> initial value?
     Variable :: { vtype :: a, vname :: a, vvalue :: a } -> Sem a
-    Typedef :: a -> a -> Sem a
+    Typedef :: { ttype :: a, tname :: a } -> Sem a
     Sized :: a -> a -> Sem a
   
   deriving instance (Show a) => Show (Sem a)
@@ -114,17 +114,17 @@ module Semantics.C.ASG where
   
   deriving instance (IsString (f (Fix f))) => IsString (Fix f)
   
-  -- 'nil' isn't consistent with our naming conventions unfortunately, but I like it
-  nil = Fix Empty
+  -- 'nil'' isn't consistent with our naming conventions unfortunately, but I like it
+  nil' = Fix Empty
   
   name' = Fix . Name
   enum' = Fix Enum
   -- TODO: investigate signed', unsigned', and int' - is this the most idiomatic way to express
-  signed' t = Fix (t (Fix Signed))
+  signed'   = Fix Signed
   size'     = Fix . Size
   struct'   = Fix Struct
   union'    = Fix Union
-  unsigned' t = Fix (t (Fix Unsigned))
+  unsigned' = Fix Unsigned
   -- unsigned' = Fix Unsigned
   variadic' = Fix Variadic
   
@@ -137,8 +137,8 @@ module Semantics.C.ASG where
   arguments' = Fix . Arguments
   
   void'          = Fix VoidT
-  int' sign []   = Fix (IntT (Fix sign) nil)
-  int' sign base = Fix (IntT (Fix sign) (Fix (MultipartT (tie <$> base))))
+  int' sign []   = Fix (IntT sign nil')
+  int' sign base = Fix (IntT sign (Fix (MultipartT base)))
   float'         = Fix FloatT
   double'        = Fix DoubleT
   multipart'     = Fix . MultipartT
@@ -157,7 +157,7 @@ module Semantics.C.ASG where
   default'                  = Fix . Default
   dowhile' cond blk         = Fix $ DoWhile cond blk
   for' var cond inc blk     = Fix $ For var cond inc blk
-  goto                      = Fix . Goto
+  goto'                     = Fix . Goto
   ifthen' cond blk          = Fix $ IfThen cond blk
   ifthenelse' cond blk blk2 = Fix $ IfThenElse cond blk blk2
   labeled' label stmt       = Fix $ Labeled label stmt
@@ -192,12 +192,12 @@ module Semantics.C.ASG where
   composite' kind nam fields = Fix $ CompositeInfo kind nam fields
   enumeration' nam vars = Fix $ Enumeration nam vars
   -- TODO fix these nomenclatures
-  program = Fix . Program
-  group = Fix . Group
-  list = Fix . List
+  program' = Fix . Program
+  group' = Fix . Group
+  list' = Fix . List
   
-  variable a b c = tie $ Variable a b c -- TODO fix this nomenclature
-  typedef typ nam = tie $ Typedef typ nam
+  variable' a b c = tie $ Variable a b c -- TODO fix this nomenclature
+  typedef' typ nam = tie $ Typedef typ nam
   sized' thing size = tie $ Sized thing size
   
   type CSem = forall a. Sem a
