@@ -8,6 +8,9 @@ module Language.C99.AST
   , CBuiltinExpr (..)
   , CDeclaration (..)
   , CDeclarator (..)
+  , derived
+  , declName
+  , CDeclaratorBody (..)
   , CDeclInfo (..)
   , CDerivedDeclarator (..) 
   , CDesignator (..)
@@ -33,7 +36,7 @@ module Language.C99.AST
   
   import GHC.Generics
   import Data.Default
-  import Data.Generics hiding (Generic)
+  import Data.Generics hiding (Generic, GT)
   import Language.C99.Literals
   
   -- TODO: Add position information to all of the types, etc.
@@ -175,6 +178,9 @@ module Language.C99.AST
     | CAttr CAttribute
     deriving (Eq, Show, Typeable, Data, Generic)
   
+  instance Ord CStorageSpecifier where
+    compare _ _ = EQ
+  
   -- | Type qualifiers (C99 6.7.3) and function specifiers (C99 6.7.4).
   -- Please note that the 'FInline' qualifier must only be applied to functions.
   data CTypeQualifier
@@ -184,12 +190,15 @@ module Language.C99.AST
     | CInline
     deriving (Eq, Show, Typeable, Data, Generic)
   
+  instance Ord CTypeQualifier where
+    compare _ _ = EQ
+  
   -- | C qualifiers and specifiers.
   data CSpecifier 
-    = TSpec CTypeSpecifier
+    = SSpec CStorageSpecifier
     | TQual CTypeQualifier
-    | SSpec CStorageSpecifier
-    deriving (Eq, Show, Typeable, Data, Generic)
+    | TSpec CTypeSpecifier
+    deriving (Eq, Show, Typeable, Ord, Data, Generic)
   
   -- | C type specifiers (6.7.2).
   -- As a GNU extension, @typeof(expr)@ is supported.
@@ -213,7 +222,19 @@ module Language.C99.AST
      | TTypedef String CTypeName
      | TTypeOfExpr CExpr
      deriving (Eq, Show, Typeable, Data, Generic)
-
+  
+  -- Signedness comes first, then modifiers, then base types
+  instance Ord CTypeSpecifier where
+    compare a b 
+      | isSignedness a = LT
+      | isSignedness b = GT
+      | isModifier a = LT
+      | isModifier b = GT
+      | otherwise = EQ
+      where
+        isSignedness a = (a == TSigned) || (a == TUnsigned)
+        isModifier a = (a == TShort) || (a == TLong)
+      
   -- | C enumeration specifiers (C99 6.7.2.2).
   data CEnumerator 
     = EnumIdent String
@@ -226,12 +247,13 @@ module Language.C99.AST
   
   -- | Record type that wraps the various fields a declaration may have.
   data CDeclInfo = CDeclInfo {
-    contents :: Maybe CDeclarator,
+    contents :: CDeclarator,
     initVal :: Maybe CInitializer,
     size :: Maybe CExpr
   } deriving (Show, Eq, Typeable, Data, Generic)
-
-  instance Default CDeclInfo where def = CDeclInfo Nothing Nothing Nothing
+  
+  -- TODO: these Default things are stupid
+  instance Default CDeclInfo where def = CDeclInfo def Nothing Nothing
   
   -- | C declarations (C99 6.7).
   -- This method of structuring declarations was innovated by Benedikt Huber.
@@ -241,7 +263,7 @@ module Language.C99.AST
   } deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | Represents C type names. The list of specifiers will not be empty.
-  data CTypeName = CTypeName [CSpecifier] (Maybe CDeclarator) deriving (Show, Eq, Typeable, Data, Generic)
+  data CTypeName = CTypeName [CSpecifier] CDeclarator deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | Represents C parameters. There will be at least one 'Specifier', and only 
   -- one 'CDeclInfo', which will contain a possibly-named declarator
@@ -251,20 +273,38 @@ module Language.C99.AST
   -- | Represents fields of structs or unions. There will be at least one specifier,
   -- at least one 'CDeclInfo', all of which will not have an initVal (but may be 
   -- named, sized, named and sized, or unnamed and sized.)
-  newtype CField = CField CDeclaration deriving (Show, Eq, Typeable, Data, Generic)
+  newtype CField = CField { unCField :: CDeclaration } deriving (Show, Eq, Typeable, Data, Generic)
   
   -- As a GNU extension, the user can specify the assembly name for a C function 
   -- or variable.
   type CAsmName = Maybe String
   
+  data CDeclaratorBody 
+    = CIdentBody String
+    | CParenBody CDeclarator
+    | CEmptyBody
+    deriving (Show, Eq, Typeable, Data, Generic)
+    
+  declName :: CDeclarator -> Maybe String
+  declName d = case (body d) of
+    (CIdentBody s) -> Just s
+    (CParenBody d) -> declName d
+    CEmptyBody -> Nothing
+    
+  derived :: CDeclarator -> [CDerivedDeclarator]
+  derived (CDeclarator {pointers, modifiers, ..}) = pointers ++ modifiers
+  
   -- | C declarators, both abstract and concrete (C99 6.7.5 and 6.7.6).
   data CDeclarator 
-   = CDeclarator {
-      declName :: Maybe String,
-      derived :: [CDerivedDeclarator],
-      asmName :: CAsmName,
-      declAttributes :: [CAttribute]
+   = CDeclarator 
+     { pointers :: [CDerivedDeclarator]
+     , body :: CDeclaratorBody
+     , modifiers :: [CDerivedDeclarator]
+     , asmName :: CAsmName
+     , declAttributes :: [CAttribute]
    } deriving (Eq, Show, Typeable, Data, Generic)
+   
+  instance Default CDeclarator where def = CDeclarator [] CEmptyBody [] Nothing []
   
   -- | C designators, i.e. that which can appear inside compound initialization statements.
   data CDesignator 

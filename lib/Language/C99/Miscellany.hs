@@ -22,8 +22,8 @@ module Language.C99.Miscellany where
   -- A declaration is a function or function prototype if its derived declarations 
   -- contain the DerivedFunction attribute.
   declarationIsFunctionPrototype :: CDeclaration -> Bool
-  declarationIsFunctionPrototype (CDeclaration _ (CDeclInfo { contents = Just (CDeclarator (Just _) derived _ _), ..} : _)) = 
-    any isFunction derived where
+  declarationIsFunctionPrototype (CDeclaration _ (CDeclInfo { contents, .. } : _)) = 
+    any isFunction (derived contents) where
       isFunction (DerivedFunction _ _) = True
       isFunction _ = False
   declarationIsFunctionPrototype _ = False
@@ -38,7 +38,7 @@ module Language.C99.Miscellany where
   declarationHasFields d = any' [f | f@(CField _) <- universeBi d]
   
   nameOfDeclaration :: CDeclaration -> Maybe String
-  nameOfDeclaration (CDeclaration _ [CDeclInfo {contents, ..}]) = contents >>= declName
+  nameOfDeclaration (CDeclaration _ [CDeclInfo {contents, ..}]) = declName contents 
   nameOfDeclaration _ = Nothing
   
   declarationIsNamed :: CDeclaration -> Bool
@@ -67,7 +67,7 @@ module Language.C99.Miscellany where
     storageSpecs = [ a | (SSpec a) <- them ]
     
   declaratorParameters :: CDeclarator -> [CParameter]
-  declaratorParameters (CDeclarator _ derived _ _) = mconcat $ go <$> derived where
+  declaratorParameters d = mconcat $ go <$> (derived d) where
     go (DerivedFunction ps _) = ps
     go _ = []
 

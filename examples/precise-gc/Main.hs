@@ -57,7 +57,7 @@ module Main where
       gcList = globalVar "all_lists" listPointer sNull
       refListDeclaration = GComposite info where (SComposite info _) = refList
       refListInstance = globalVar "referenced_list" (pointerTo forwardRefList) sNull
-      convert nil@(GVariable (Variable "nil" _ _)) = [nil, gcList, refListDeclaration, refListInstance]
+      convert nil'@(GVariable (Variable "nil'" _ _)) = [nil', gcList, refListDeclaration, refListInstance]
       convert x = [x]
     in 
       if gcList `elem` x then x else concatMap convert x

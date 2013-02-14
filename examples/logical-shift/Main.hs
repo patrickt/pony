@@ -11,9 +11,9 @@ module Main where
   infixl 7 .>>.
   (.>>.) = op ">>"
   
-  int_ = tie $ IntT (tie Signed) nil
+  int_ = tie $ IntT (tie Signed) nil'
   
-  uint_ = tie $ IntT (tie Unsigned) nil
+  uint_ = tie $ IntT (tie Unsigned) nil'
   
   paren x = tie $ Paren x
   

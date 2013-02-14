@@ -21,6 +21,9 @@ module Semantics.C.Pretty
   class (Functor f) => PrettyAlg f where
     evalPretty :: Mu f -> f (Doc e) -> Doc e
   
+  instance PrettyAlg Sem
+  
+  {-
   instance PrettyAlg Sem where
     evalPretty _ (Name n)  = text n
     
@@ -143,6 +146,8 @@ module Semantics.C.Pretty
     evalPretty _ (CompositeInfo { ckind, cname, cfields }) = ckind <+> cname <+> "{" `above` indent 2 cfields `above` "}"
     
     evalPretty _ x = error $ "not defined for " ++ show x
+  
+  -}
   
   foldArrays :: Sem (Mu Sem) -> Doc e
   foldArrays (ArrayT a@(Fix (ArrayT _ _)) size) = foldArrays (out a) <> brackets (prettyPrint size)

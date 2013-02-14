@@ -9,4 +9,5 @@ module Language.Pony.Overture
   import Data.ByteString (ByteString)
   import Data.Default as X
   import Data.Map (Map)
+  import Data.Maybe as X
   

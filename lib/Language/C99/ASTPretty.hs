@@ -21,6 +21,7 @@ module Language.C99.ASTPretty
   instance Out CBuiltinExpr
   instance Out CDeclaration
   instance Out CDeclarator
+  instance Out CDeclaratorBody
   instance Out CDeclInfo
   instance Out CDerivedDeclarator
   instance Out CDesignator

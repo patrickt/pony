@@ -11,35 +11,32 @@ module Semantics.C.ASG where
   data Sem a where
     -- logical constructs
     Name     :: String -> Sem a -- used for binary operators as well as identifiers
-    Enum     :: Sem a
-    Signed   :: Sem a
-    Size     :: Int -> Sem a
+    Signed   :: a -> Sem a
     Struct   :: Sem a
     Union    :: Sem a
-    Unsigned :: Sem a
+    Unsigned :: a -> Sem a
     Variadic :: Sem a
     
     -- modifiers for types
-    ShortM     :: Sem a
-    LongM      :: Sem a
-    VeryLongM  :: Sem a
+    ShortM     :: a -> Sem a
+    LongM      :: a -> Sem a
     
     Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a 
-    
-    Arguments :: [a] -> Sem a
-  
+      
     -- Attributed :: Attribute -> Anything -> Anything
     Attributed :: [a] -> a -> Sem a
   
     -- types
     VoidT            :: Sem a
-    IntT             :: { isign :: a, ibase :: a } -> Sem a
+    IntT             :: Sem a
     FloatT           :: Sem a
     DoubleT          :: Sem a
-    MultipartT       :: { mparts :: [a] } -> Sem a
-    CharT            :: a -> Sem a -- Char  :: Signedness -> Type
+    CharT            :: Sem a
+    ShortT           :: Sem a
+    LongT            :: Sem a
+    VeryLongT        :: Sem a
     PointerToT       :: a -> Sem a -- Pointer :: Type -> Type
-    ArrayT           :: { atype :: a, alength :: a } -> Sem a
+    ArrayT           :: { array_length :: a, array_of :: a } -> Sem a
     FunctionPointerT :: a -> a -> Sem a
     BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
     TypedefT         :: a -> Sem a
@@ -77,26 +74,28 @@ module Semantics.C.ASG where
     Paren    :: a -> Sem a
   
     -- attributes
-    Auto     :: Sem a
-    Const    :: Sem a
-    Extern   :: Sem a
-    Inline   :: Sem a
-    Register :: Sem a
-    Restrict :: Sem a
-    Static   :: Sem a
-    Volatile :: Sem a
-    Custom   :: [a] -> Sem a
+    Auto     :: a -> Sem a
+    Const    :: a -> Sem a
+    Extern   :: a -> Sem a
+    Inline   :: a -> Sem a
+    Register :: a -> Sem a
+    Restrict :: a -> Sem a
+    Static   :: a -> Sem a
+    Volatile :: a -> Sem a
+    Custom   :: [a] -> a -> Sem a
   
     -- other stuff
+    Enumeration :: { ename :: a, emembers :: a } -> Sem a
     Prototype :: { pname :: a, ptype :: a, pargs :: a } -> Sem a -- we should be able to get rid of this and just have a Function with a nil' body
-    CompositeInfo :: { ckind :: a, cname :: a, cfields :: a } -> Sem a
-    Enumeration :: a -> [a] -> Sem a -- [Variables] -> Name? ->  Composite
+    Composite :: { ckind :: a, cname :: a, cfields :: a } -> Sem a
     Program :: [a] -> Sem a
     Group :: [a] -> Sem a
     List  :: [a] -> Sem a -- do we use this anywhere?
+    Assembly :: { avolatile :: Bool, atext :: a, ainregs :: a, aoutregs :: a, aclobber :: a } -> Sem a
+    AssemblyOperand :: { opconstraint :: a, opvar :: a } -> Sem a
     
-    -- gotta be a nicer way to do this
-    -- type -> name -> initial value?
+    Arguments :: [a] -> Bool -> Sem a
+    ForwardTypeDeclaration :: a -> Sem a
     Variable :: { vtype :: a, vname :: a, vvalue :: a } -> Sem a
     Typedef :: { ttype :: a, tname :: a } -> Sem a
     Sized :: a -> a -> Sem a
@@ -118,37 +117,33 @@ module Semantics.C.ASG where
   nil' = Fix Empty
   
   name' = Fix . Name
-  enum' = Fix Enum
   -- TODO: investigate signed', unsigned', and int' - is this the most idiomatic way to express
-  signed'   = Fix Signed
-  size'     = Fix . Size
+  signed'   = Fix . Signed
   struct'   = Fix Struct
   union'    = Fix Union
-  unsigned' = Fix Unsigned
+  unsigned' = Fix . Unsigned
   -- unsigned' = Fix Unsigned
   variadic' = Fix Variadic
   
-  short' = Fix ShortM
-  long'  = Fix LongM
-  verylong' = Fix VeryLongM
+  short' = Fix . ShortM
+  long'  = Fix . LongM
   
   function' nam typ args body = Fix $ Function nam typ args body
   
-  arguments' = Fix . Arguments
+  arguments' l v = Fix $ Arguments l v
   
   void'          = Fix VoidT
-  int' sign []   = Fix (IntT sign nil')
-  int' sign base = Fix (IntT sign (Fix (MultipartT base)))
+  int'           = Fix IntT
   float'         = Fix FloatT
   double'        = Fix DoubleT
-  multipart'     = Fix . MultipartT
-  char'          = Fix . CharT
+  char'          = Fix CharT
+  verylong'      = Fix VeryLongT
   pointer_to'    = Fix . PointerToT
   builtin'       = Fix . BuiltinT
-  array' typ len = Fix $ ArrayT typ len
+  array' len typ = Fix $ ArrayT len typ
   typedef_t'       = Fix . TypedefT
   
-  functionponter' specs params = Fix $ FunctionPointerT specs params
+  functionpointer' params returning = Fix $ FunctionPointerT params returning
   
   break'                    = Fix Break
   case' cond blk            = Fix $ Case cond blk -- this is specious, as are other case statements
@@ -178,27 +173,27 @@ module Semantics.C.ASG where
   vaarg' typ value        = Fix $ VaArg typ value
   paren' stmt             = Fix . Paren
   
-  auto' = Fix Auto
-  const' = Fix Const
-  extern' = Fix Extern
-  inline' = Fix Inline
-  register' = Fix Register
-  restrict' = Fix Restrict
-  static' = Fix Static
-  volatile' = Fix Volatile
-  custom' = Fix . Custom
+  auto' = Fix . Auto
+  const' = Fix . Const
+  extern' = Fix . Extern
+  inline' = Fix . Inline
+  register' = Fix . Register
+  restrict' = Fix . Restrict
+  static' = Fix . Static
+  volatile' = Fix . Volatile
+  custom' t a = Fix $ Custom t a
   
   prototype' nam typ args = Fix $ Prototype nam typ args
-  composite' kind nam fields = Fix $ CompositeInfo kind nam fields
+  composite' kind nam fields = Fix $ Composite kind nam fields
   enumeration' nam vars = Fix $ Enumeration nam vars
   -- TODO fix these nomenclatures
   program' = Fix . Program
   group' = Fix . Group
   list' = Fix . List
+  sized' t s = Fix $ Sized t s
   
   variable' a b c = tie $ Variable a b c -- TODO fix this nomenclature
   typedef' typ nam = tie $ Typedef typ nam
-  sized' thing size = tie $ Sized thing size
   
   type CSem = forall a. Sem a
   type FSem = Fix Sem
