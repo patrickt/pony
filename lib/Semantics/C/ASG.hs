@@ -46,7 +46,6 @@ module Semantics.C.ASG where
     Case       :: a -> [a] -> Sem a
     CommaSep   :: a -> a -> Sem a
     Continue   :: Sem a
-    Compound   :: [a] -> Sem a
     Default    :: a -> Sem a
     DoWhile    :: a -> a -> Sem a
     Empty      :: Sem a
@@ -171,7 +170,7 @@ module Semantics.C.ASG where
   brackets' stmt idx      = Fix $ Brackets stmt idx
   funcall' stmt args      = Fix $ FunCall stmt args
   vaarg' typ value        = Fix $ VaArg typ value
-  paren' stmt             = Fix . Paren
+  paren'                  = Fix . Paren
   
   auto' = Fix . Auto
   const' = Fix . Const

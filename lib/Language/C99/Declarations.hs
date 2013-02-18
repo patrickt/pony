@@ -38,9 +38,10 @@ where
   -- | Parameter declarations. Must have types, but may be anonymous if they appear
   -- as a forward declaration.
   parameter :: Parser CParameter
-  parameter = CParameter <$> some specifier <*> optional declarator
+  parameter = CParameter <$> some specifier <*> declarator
   
   -- | Type names, used in cast operations and typedefs.
+  -- TODO: ensure that these are not named
   typeName :: Parser CTypeName
   typeName = CTypeName <$> some specifier <*> declarator
   
