@@ -23,9 +23,12 @@ where
     where declaration' = CDeclaration <$> some specifier <*> L.commaSep initDeclarator <* L.semi
   
   checkTypedefs :: CDeclaration -> Parser CDeclaration
-  checkTypedefs d@(CDeclaration (SSpec CTypedef : rest) ((CDeclInfo { contents, .. }) : _)) = do
-    let (Just name) = declName contents
-    updateState $ addTypeDef name (CTypeName rest contents)
+  checkTypedefs d@(CDeclaration (SSpec CTypedef : rest) infos) = do
+    forM infos $ \info -> do 
+      let name = infoName info
+      when (isNothing name) (fail "unnamed declaration passed to typedef")
+      let name' = fromJust name
+      updateState $ addTypeDef name' (CTypeName rest (contents info))
     return d
   checkTypedefs x = return x
   

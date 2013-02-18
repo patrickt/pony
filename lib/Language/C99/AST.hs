@@ -12,6 +12,7 @@ module Language.C99.AST
   , declName
   , CDeclaratorBody (..)
   , CDeclInfo (..)
+  , infoName
   , CDerivedDeclarator (..) 
   , CDesignator (..)
   , CEnumerator (..)
@@ -251,6 +252,9 @@ module Language.C99.AST
     initVal :: Maybe CInitializer,
     size :: Maybe CExpr
   } deriving (Show, Eq, Typeable, Data, Generic)
+  
+  infoName :: CDeclInfo -> Maybe String
+  infoName = declName . contents
   
   -- TODO: these Default things are stupid
   instance Default CDeclInfo where def = CDeclInfo def Nothing Nothing
