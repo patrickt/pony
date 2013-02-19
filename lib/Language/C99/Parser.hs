@@ -15,7 +15,6 @@ module Language.C99.Parser
   
   import Data.Generics
   import Language.C99.AST
-  import Language.C99.Operators
   import Language.Pony.Overture
   import qualified Data.ByteString as B
   import qualified Data.Map as M
@@ -29,10 +28,13 @@ module Language.C99.Parser
   -- to define new operators at different precedence levels.
   data Internals = Internals 
     { typedefs :: Map String CTypeName
-    , operators :: [Operator]
+    , arithmeticOps :: [String]
+    , comparativeOps :: [String]
+    , bitwiseOps :: [String]
+    , logicalOps :: [String]
     } deriving (Show, Eq, Typeable, Data)
   
-  instance Default Internals where def = Internals def defaultOperators
+  instance Default Internals where def = Internals def def def def def
   
   -- | Updates an 'Internals' record by adding a new (name, type) pair to the 
   -- lookup table. There are a number of problems with this: typedefs do not 

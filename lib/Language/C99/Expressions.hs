@@ -12,38 +12,83 @@ module Language.C99.Expressions
   )
   where 
   
-  import Data.Function (on)
-  import Data.List (groupBy)
+  import Control.Monad.State
+  import Data.List (foldl')
+  import Data.Monoid
   import Language.C99.Parser
   import Language.C99.AST
   import Language.C99.Literals
-  import Language.C99.Operators
   import {-# SOURCE #-} Language.C99.Declarations 
   import qualified Language.C99.Lexer as L
+  import Text.Parsec.Expr
+  
+  -- Normally we would just use Parser a rather than ParsecT s u m a, but we need to tell the typechecker that 
+  -- the operator table is built out of the same types.
+  buildChainedParser :: Stream s m t => ParsecT s u m a -> [(OperatorTable s u m a, String)] -> ParsecT s u m a
+  buildChainedParser = foldl' go where go parser (t, msg) = buildExpressionParser t parser <?> msg
+  
+  -- read a comma-separated list of expressions; if only one's provided, just return it, otherwise wrap it in a Comma
+  expression' = do 
+    exprs <- (buildExpressionParser assignTable constantExpression) `sepBy1` L.comma
+    return $ (if length exprs == 1 then head else Comma) exprs
   
   expression :: Parser CExpr
-  expression = chainl1 assignmentExpression (Comma <$ L.comma) <?> "C expression"
-  
-  assignmentExpression :: Parser CExpr
-  assignmentExpression = try assign <|> constantExpression where 
-    assign = ((flip BinaryOp) <$> unaryExpression <*> assignmentOperator <*> assignmentExpression)
-    assignmentOperator = choice $ L.symbol <$> ["=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "^=", "|="]
+  expression = expression' <?> "C expression"
   
   constantExpression :: Parser CExpr
-  constantExpression = choice [try ternaryExpression, binaryExpression]
+  constantExpression = do
+    ariths <- arithmeticOps <$> getState
+    compars <- comparativeOps <$> getState
+    bitwises <- bitwiseOps <$> getState
+    logics <- logicalOps <$> getState
     
-  parserFromOps :: [Operator] -> Parser (CExpr -> CExpr -> CExpr)
-  parserFromOps ops = BinaryOp <$> (choice $ L.symbol <$> text <$> ops)
+    let buildTable t n = t <> [mkInfixL <$> n]
+    
+    let arithTable'   = buildTable arithTable ariths
+    let compTable'    = buildTable compTable compars
+    let bitwiseTable' = buildTable bitwiseTable bitwises
+    let logicTable'   = buildTable logicTable logics
+    buildChainedParser castExpression [ (arithTable', "arithmetic expression")
+                                      , (compTable', "comparative expression")
+                                      , (bitwiseTable', "bitwise operation")
+                                      , (logicTable', "logical operation")
+                                      ] <?> "constant expression"
   
-  groupOps :: [Operator] -> [Parser (CExpr -> CExpr -> CExpr)]
-  groupOps x = parserFromOps <$> groupBy ((==) `on` precedence) x
-  
-  binaryExpression :: Parser CExpr
-  binaryExpression = (groupOps <$> operators <$> getState) >>= foldr (flip chainl1) castExpression
-  
-  ternaryExpression :: Parser CExpr
-  ternaryExpression = TernaryOp <$> binaryExpression <*> (L.symbol "?" *> expression) <*> (L.symbol ":" *> binaryExpression)
-  
+  assignTable = [ mkInfixL <$> ["=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "&=", "^=", "|="] ]
+
+  logicTable =
+    [ [mkInfixL "&&"]
+    , [mkInfixL "||"]
+    , [Postfix ternaryOp]
+    , [mkInfixL "?:"] ]
+    where
+      ternaryOp = do
+        then' <- L.reservedOp "?" >> expression
+        else' <- L.reservedOp ":" >> expression
+        return $ \it -> TernaryOp it then' else'
+
+  bitwiseTable = fmap mkInfixL <$> [["&"], ["^"], ["|"]]
+
+  compTable = 
+    [ [ mkInfixL "<"
+      , mkInfixL ">"
+      , mkInfixL "<="
+      , mkInfixL ">=" ]
+    , [ mkInfixL "=="
+      , mkInfixL "!=" ] ]
+
+  arithTable = 
+    [ [ mkInfixL "*"
+      , mkInfixL "/"
+      , mkInfixL "%" ]
+    , [ mkInfixL "+"
+      , mkInfixL "-" ]
+    , [ mkInfixL "<<"
+      , mkInfixL ">>" ] ]
+    
+  mkInfixL name = Infix (BinaryOp <$> L.reservedOp' name) AssocLeft
+  mkInfixR name = Infix (BinaryOp <$> L.reservedOp' name) AssocRight
+
   builtinExpression :: Parser CExpr
   builtinExpression = CBuiltin <$> builtinVaArg
   
@@ -51,36 +96,68 @@ module Language.C99.Expressions
   builtinVaArg = BuiltinVaArg <$> (L.reserved "__builtin_va_arg" *> L.parens expression)<*> typeName
   
   castExpression :: Parser CExpr
-  castExpression = unwrap <$> (CCast <$> (many $ L.parens typeName) <*> unaryExpression) where
-    unwrap (CCast [] x) = x
-    unwrap x = x
-
-  unaryExpression :: Parser CExpr
-  unaryExpression = choice [ postfixExpression
-                           , UnaryOp <$> L.reservedOp' "++" <*> unaryExpression
-                           , UnaryOp <$> L.reservedOp' "--" <*> unaryExpression
-                           , UnaryOp <$> unaryOperator   <*> castExpression
-                           , try $ UnaryOp    <$> L.reservedOp' "sizeof" <*> unaryExpression
-                           , try $ SizeOfType <$> (L.reservedOp "sizeof" *> L.parens typeName) 
-                           ] <?> "unary expression"
-                           
-  unaryOperator :: Parser String
-  unaryOperator = choice $ L.symbol <$> ["&", "*", "+", "-", "~", "!"]
+  castExpression = do
+    types <- many $ try (L.parens typeName)
+    expr <- unaryExpression
+    return (foldl (flip CCast) expr types) <?> "cast expression"
   
-  postfixOperand :: Parser CPostfix
-  postfixOperand = choice 
-    [ Index         <$> L.brackets expression
-    , Call          <$> (L.parens $ L.commaSep assignmentExpression)
-    , MemberAccess  <$> (L.dot *> (getIdent <$> identifier))
-    , PointerAccess <$> (L.arrow *> (getIdent <$> identifier))
-    , PostIncrement <$ L.reservedOp "++"
-    , PostDecrement <$ L.reservedOp "--"
-    ]
+  sizeofExpr = pure UnaryOp <*> pure "sizeof" <*> (L.reservedOp "sizeof" *> unaryExpression)
+  sizeofType = pure SizeOfType <*> (L.reservedOp "sizeof" *> L.parens typeName)
+  
+  unaryExpression :: Parser CExpr
+  unaryExpression = choice [ try sizeofExpr
+                           , sizeofType
+                           , unaryOperator ] <?> "unary expression"
+  
+  prefixOperator :: Parser String
+  prefixOperator = 
+    choice [ try $ s "&&"
+           , s "&"
+           , s "!"
+           , try $ s "++"
+           , s "+"
+           , try $ s "--"
+           , s "-"
+           , s "~"
+           , s "*" 
+           ]
+           where s = L.symbol
+  
+  unaryOperator :: Parser CExpr
+  unaryOperator = do
+    -- We can't use L.reservedOp' because it checks that its input is not a prefix of a valid operator. Ugh.
+    c <- many prefixOperator
+    -- FIXME: this is technically wrong, it should be `e <- castExpression`, but that's left-recursive if no casts are found.
+    -- there are ways around this - `chainl` and such - but until this actually shows up in code as being a problem, 
+    -- I'm going to leave it as is.
+    e <- postfixExpression
+    return $ foldr UnaryOp e c
   
   postfixExpression :: Parser CExpr
-  postfixExpression = unwrap <$> (PostfixOp <$> primaryExpression <*> many postfixOperand) where
-    unwrap (PostfixOp just []) = just
-    unwrap x = x
+  postfixExpression = do
+    e <- primaryExpression
+    r <- many $ choice [ arrow, dot, call, index, try increment, try decrement ]
+    L.whiteSpace
+    -- This is known as a "bill fold". Get it? foldr ($)? HAHAHAHAHAHAHAHAHA.
+    return $ foldr ($) e (reverse r)
+    where
+      freedArgs (Comma a) = a
+      freedArgs other = [other]
+      increment = string "++" *> pure UnaryOp <*> pure "++"
+      decrement = string "--" *> pure UnaryOp <*> pure "-- post"
+      index = do
+        idx <- L.brackets expression
+        return $ \x -> Index x idx
+      call = do
+        -- TODO: if 
+        args <- L.parens expression
+        return $ \x -> Call x $ freedArgs args
+      dot = do
+        ident <- L.dot *> identifier
+        return $ \x -> BinaryOp "." x ident
+      arrow = do
+        ident <- L.arrow *> identifier
+        return $ \x -> BinaryOp "->" x ident
 
   primaryExpression :: Parser CExpr
   primaryExpression = choice

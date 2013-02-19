@@ -5,7 +5,6 @@ module Semantics.C.Reifiable.Instances
   import Data.List (find, foldl', partition)
   import Data.Maybe
   import Language.C99 hiding (char, Empty)
-  import qualified Language.C99 as C99
   -- TODO: Provide a sizeOfType function hooking into MachineSizes
   -- import Language.Pony.MachineSizes
   import qualified Language.C99.Literals as Lit
@@ -233,25 +232,15 @@ module Semantics.C.Reifiable.Instances
         kind True = tie Struct
         kind False = tie Union
   
-  
-  foldPostfix :: FSem -> CPostfix -> FSem
-  foldPostfix a (Index b) = brackets' a (convert b)
-  foldPostfix a (Call fs) = funcall' a (convert <$> fs)
-  foldPostfix a (MemberAccess s) = binary' a "." (name' s)
-  foldPostfix a (PointerAccess s) = binary' a "->" (name' s)
-  foldPostfix a PostIncrement = unary' a "++"
-  foldPostfix a PostDecrement = unary' a "--"
-  
   -- CExpr -> expression
   -- hits: CLiteral -> constant, CBuiltInExpr -> expression
   instance Reifiable CExpr where
-    convert (Comma l r)          = comma' (convert l) (convert r)
+    convert (Comma ls)           = tie $ CommaSep (convert <$> ls)
     convert (Constant l)         = convert l
     convert (Identifier i)       = name' i
-    -- convert (Index l r)          = tie $ Brackets (convert l) (convert r)
-    -- convert (Call f args)        = tie $ FunCall (convert f) (convert <$> args)
-    convert (PostfixOp base args)= Prelude.foldl foldPostfix (convert base) args
-    convert (CCast tn arg)       = tie $ Cast (convert <$> tn) (convert arg)
+    convert (Index l r)          = tie $ Brackets (convert l) (convert r)
+    convert (Call f args)        = tie $ FunCall (convert f) (convert <$> args)
+    convert (CCast tn arg)       = tie $ Cast (convert tn) (convert arg)
     convert (UnaryOp n arg)      = tie $ Unary (name' n) (convert arg)
     convert (BinaryOp n lhs rhs) = tie $ Binary (convert lhs) (name' n) (convert rhs)
     convert (TernaryOp a b c)    = tie $ Ternary (convert a) (convert b) (convert c)

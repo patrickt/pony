@@ -32,7 +32,6 @@ module Language.C99.ASTPretty
   instance Out CInitializer
   instance Out CInitializerSubfield
   instance Out CParameter
-  instance Out CPostfix
   instance Out CSpecifier
   instance Out CStatement
   instance Out CStorageSpecifier
