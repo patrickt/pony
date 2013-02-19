@@ -8,22 +8,20 @@ module Semantics.C.ASG where
   import GHC.Exts (IsString (..))
   import Test.QuickCheck
   
+  µ1 :: Functor f => Fix f -> f (f (Fix f))
+  µ1 = fmap µ . µ
+  
+  µ2 :: Functor f => Mu f -> f (f (f (Fix f)))
+  µ2 = fmap µ1 . µ
+  
   data Sem a where
     -- logical constructs
     Name     :: String -> Sem a -- used for binary operators as well as identifiers
+    
     Signed   :: a -> Sem a
-    Struct   :: Sem a
-    Union    :: Sem a
     Unsigned :: a -> Sem a
-    Variadic :: Sem a
-    
-    -- modifiers for types
-    ShortM     :: a -> Sem a
-    LongM      :: a -> Sem a
-    
-    Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a 
-      
-    -- Attributed :: Attribute -> Anything -> Anything
+    ShortM   :: a -> Sem a
+    LongM    :: a -> Sem a
     Attributed :: [a] -> a -> Sem a
   
     -- types
@@ -32,9 +30,9 @@ module Semantics.C.ASG where
     FloatT           :: Sem a
     DoubleT          :: Sem a
     CharT            :: Sem a
-    ShortT           :: Sem a
-    LongT            :: Sem a
     VeryLongT        :: Sem a
+    Struct           :: Sem a
+    Union            :: Sem a
     PointerToT       :: a -> Sem a -- Pointer :: Type -> Type
     ArrayT           :: { array_length :: a, array_of :: a } -> Sem a
     FunctionPointerT :: a -> a -> Sem a
@@ -43,10 +41,11 @@ module Semantics.C.ASG where
     BoolT            :: Sem a
     TypeOfT          :: a -> Sem a
     
+    Function :: { fname :: a, ftype :: a, fargs :: a, fbody :: a } -> Sem a
+    
     -- statements
     Break      :: Sem a
     Case       :: a -> [a] -> Sem a
-    CommaSep   :: a -> a -> Sem a
     Continue   :: Sem a
     Default    :: a -> Sem a
     DoWhile    :: a -> a -> Sem a
@@ -65,6 +64,7 @@ module Semantics.C.ASG where
     CInt     :: Integer -> Sem a
     CFloat   :: Nano -> Sem a
     CChar    :: Char -> Sem a
+    CommaSep   :: a -> a -> Sem a
     Unary    :: a -> a -> Sem a
     Binary   :: a -> a -> a -> Sem a
     Ternary  :: a -> a -> a -> Sem a
@@ -83,11 +83,9 @@ module Semantics.C.ASG where
     Restrict :: a -> Sem a
     Static   :: a -> Sem a
     Volatile :: a -> Sem a
-    Custom   :: [a] -> a -> Sem a
-  
+    
     -- other stuff
     Enumeration :: { ename :: a, emembers :: a } -> Sem a
-    Prototype :: { pname :: a, ptype :: a, pargs :: a } -> Sem a -- we should be able to get rid of this and just have a Function with a nil' body
     Composite :: { ckind :: a, cname :: a, cfields :: a } -> Sem a
     Program :: [a] -> Sem a
     Group :: [a] -> Sem a
@@ -123,8 +121,6 @@ module Semantics.C.ASG where
   struct'   = Fix Struct
   union'    = Fix Union
   unsigned' = Fix . Unsigned
-  -- unsigned' = Fix Unsigned
-  variadic' = Fix Variadic
   
   short' = Fix . ShortM
   long'  = Fix . LongM
@@ -145,6 +141,7 @@ module Semantics.C.ASG where
   typedef_t'     = Fix . TypedefT
   bool'          = Fix BoolT 
   typeof'        = Fix . TypeOfT
+  attribute' as t = Fix $ Attributed as t
   
   functionpointer' params returning = Fix $ FunctionPointerT params returning
   
@@ -184,9 +181,7 @@ module Semantics.C.ASG where
   restrict' = Fix . Restrict
   static' = Fix . Static
   volatile' = Fix . Volatile
-  custom' t a = Fix $ Custom t a
   
-  prototype' nam typ args = Fix $ Prototype nam typ args
   composite' kind nam fields = Fix $ Composite kind nam fields
   enumeration' nam vars = Fix $ Enumeration nam vars
   -- TODO fix these nomenclatures

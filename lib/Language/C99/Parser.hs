@@ -24,9 +24,9 @@ module Language.C99.Parser
   import Text.Parsec.ByteString hiding (Parser, parseFromFile)
   import Text.Printf
 
-  -- | The internal data type carried along by the parser monad: a lookup table 
-  -- that maps names to types, and four arrays of strings that provide the ability
-  -- to define new operators at different precedence levels.
+  -- | The internal data type carried along by the parser monad: a map from
+  -- names to types, and an array of 'Operator's that will be decomposed into 
+  -- parser actions based on the precedence specified therein.
   data Internals = Internals 
     { typedefs :: Map String CTypeName
     , operators :: [Operator]
@@ -34,10 +34,7 @@ module Language.C99.Parser
   
   instance Default Internals where def = Internals def defaultOperators
   
-  -- | Updates an 'Internals' record by adding a new (name, type) pair to the 
-  -- lookup table. There are a number of problems with this: typedefs do not 
-  -- know about their scopes (issue #41), multiple typedefs could be defined at 
-  -- once, lookup tables are slow, et cetera. 
+  -- | Updates an 'Internals' record by adding a new (name, type) pair.
   -- tl;dr: this needs some work.
   addTypeDef :: String -> CTypeName -> Internals -> Internals
   addTypeDef name decl record = record { typedefs = M.insert name decl (typedefs record) }

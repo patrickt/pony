@@ -96,6 +96,7 @@ module Semantics.C.Reifiable.Instances
   builderFromSpecifier (SSpec CAuto) = auto'
   builderFromSpecifier (SSpec CStatic) = static'
   builderFromSpecifier (SSpec CExtern) = extern'
+  builderFromSpecifier (SSpec (CAttr (CAttribute es))) = attribute' (convert <$> es)
   builderFromSpecifier x = error $ show x
   
   group'' [] = nil'
@@ -137,16 +138,14 @@ module Semantics.C.Reifiable.Instances
   
   fpointer' params = \x -> function' nil' x params nil'
   
-  
   builderFromDerived :: CDerivedDeclarator -> (Fix Sem -> Fix Sem) -> (Fix Sem -> Fix Sem)
-  builderFromDerived (Pointer qs) base = (foldl (flip makeModifiersFromSpec) base (TQual <$> qs)) . pointer_to'
-  builderFromDerived (Array qs Nothing) base = (foldl (flip makeModifiersFromSpec) base (TQual <$> qs)) . (array' nil')
+  builderFromDerived (Pointer qs) base = foldl (flip makeModifiersFromSpec) base (TQual <$> qs) . pointer_to'
+  builderFromDerived (Array qs len) base = foldl (flip makeModifiersFromSpec) base (TQual <$> qs) . array' (convert len)
   builderFromDerived (DerivedFunction params variadic) base = fpointer' (arguments' (convert <$> params) variadic) . base
   
   makeModifiersFromSpec :: CSpecifier -> (Fix Sem -> Fix Sem) -> (Fix Sem -> Fix Sem)
-  makeModifiersFromSpec spec base = (builderFromSpecifier spec) . base
+  makeModifiersFromSpec spec base = builderFromSpecifier spec . base
   
-  -- TODO: assert that the last specifier is a type specifier (implicit int?)
   typeFromSpecifiers :: [CSpecifier] -> Fix Sem
   typeFromSpecifiers specs = (foldr (makeModifiersFromSpec) id (init specs')) (convert typeSpec)
     where 
@@ -177,7 +176,7 @@ module Semantics.C.Reifiable.Instances
     convert = name'
     
   constructType :: [CSpecifier] -> CDeclarator -> Fix Sem
-  constructType specs contents = (makeModifiersFromDeclarator contents) (typeFromSpecifiers specs)
+  constructType specs contents = makeModifiersFromDeclarator contents $ typeFromSpecifiers specs
   
     
   foldPostfix :: FSem -> CPostfix -> FSem
