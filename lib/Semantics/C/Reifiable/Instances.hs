@@ -20,15 +20,16 @@ module Semantics.C.Reifiable.Instances
     convert (FunctionDecl f) = convert f
     convert (ExternDecl d)   = convert d
   
-  -- TODO: dropping inline qualifiers
   instance Reifiable CFunction where
-    convert (CFunction specs (decl@CDeclarator { modifiers = [(DerivedFunction args var)] }) (CompoundStmt body)) = tie Function 
-      { ftype = constructType relevantSpecs (decl { modifiers = [] })
+    convert (CFunction specs (decl@CDeclarator { modifiers = [(DerivedFunction args var)] }) (CompoundStmt body)) = inlines $ tie Function 
+      { ftype = constructType typeSpecs (decl { modifiers = [] })
       , fname = convert $ declName decl
       , fargs = arguments' (convert <$> args) var
       , fbody = group' $ convert <$> body
       } where 
-        relevantSpecs = filter (not . specifierBelongsToFunction) specs
+        (funcSpecs, typeSpecs) = partition specifierBelongsToFunction specs
+        inlines = foldl (flip makeModifiersFromSpec) id funcSpecs
+        
     convert other = error $ "converting function " ++ show other ++ " failed: invariants not respected"
   
   instance Reifiable CDeclaration where
@@ -103,22 +104,32 @@ module Semantics.C.Reifiable.Instances
   list'' a = list' $ convert <$> a
   
   instance Reifiable CTypeSpecifier where
-    convert TVoid = void'
-    convert TDouble = double'
-    convert TFloat = float' 
-    convert TInt = int'
-    convert TShort = short' int'
-    convert TInt128 = verylong'
-    convert TUInt128 = unsigned' verylong'
+    convert TVoid           = void'
+    convert TChar           = char'
+    convert TShort          = short' int'
+    convert TInt            = int'
+    convert TLong           = long' int'
+    convert TInt128         = verylong'
+    convert TUInt128        = unsigned' verylong'
+    convert TFloat          = float'
+    convert TDouble         = double'
+    convert TSigned         = signed' int'
+    convert TUnsigned       = unsigned' int'
+    convert TBool           = bool'
+    convert (TTypedef n _)  = typedef_t' $ name' n
+    convert (TBuiltin n)    = builtin' $ convert n
+    convert (TTypeOfExpr e) = typeof' $ convert e 
     convert (TStructOrUnion name isStruct fields attrs) 
-      = tie $ Composite { ckind = if isStruct then struct' else union'
-                        , cname = convert name
-                        , cfields = group'' $ unCField <$> fields
-                        }
+      = tie $ Composite 
+        { ckind = if isStruct then struct' else union'
+        , cname = convert name
+        , cfields = group'' $ unCField <$> fields
+        }
     convert (TEnumeration name enums attrs)
-      = tie $ Enumeration { ename = convert name
-                          , emembers = group'' enums
-                          }
+      = tie $ Enumeration 
+        { ename = convert name
+        , emembers = group'' enums
+        }
   
   instance Reifiable CEnumerator where
     convert (EnumIdent s) = variable' nil' (name' s) nil'

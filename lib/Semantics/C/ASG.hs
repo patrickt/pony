@@ -40,6 +40,8 @@ module Semantics.C.ASG where
     FunctionPointerT :: a -> a -> Sem a
     BuiltinT         :: a -> Sem a -- Builtin :: Name -> Type
     TypedefT         :: a -> Sem a
+    BoolT            :: Sem a
+    TypeOfT          :: a -> Sem a
     
     -- statements
     Break      :: Sem a
@@ -140,7 +142,9 @@ module Semantics.C.ASG where
   pointer_to'    = Fix . PointerToT
   builtin'       = Fix . BuiltinT
   array' len typ = Fix $ ArrayT len typ
-  typedef_t'       = Fix . TypedefT
+  typedef_t'     = Fix . TypedefT
+  bool'          = Fix BoolT 
+  typeof'        = Fix . TypeOfT
   
   functionpointer' params returning = Fix $ FunctionPointerT params returning
   
