@@ -56,8 +56,8 @@ module Language.C99.Lexer
     , T.identLetter = alphaNum <|> oneOf "_'"
     , T.commentStart = "/*"
     , T.commentEnd = "*/"
-    , T.opStart = oneOf ":!#$%&*+./<=>?@\\^|-~"
-    , T.opLetter = oneOf ":!#$%&*+./<=>?@\\^|-~"
+    , T.opStart = oneOf ":!#$%&*+./<=>?@/^|-~"
+    , T.opLetter = oneOf ":!#$%&*+./<=>?@/^|-~"
     , T.commentLine = "#"
     , T.caseSensitive = True
     , T.nestedComments = True

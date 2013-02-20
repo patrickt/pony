@@ -20,6 +20,7 @@ module Language.C99.Expressions
   import Language.C99.Operators
   import {-# SOURCE #-} Language.C99.Declarations 
   import qualified Language.C99.Lexer as L
+  import qualified Text.Parsec.Expr as E
   
   expression :: Parser CExpr
   expression = chainl1 assignmentExpression (Comma <$ L.comma) <?> "C expression"
@@ -31,15 +32,24 @@ module Language.C99.Expressions
   
   constantExpression :: Parser CExpr
   constantExpression = choice [try ternaryExpression, binaryExpression]
-    
-  parserFromOps :: [Operator] -> Parser (CExpr -> CExpr -> CExpr)
-  parserFromOps ops = BinaryOp <$> (choice $ L.symbol <$> text <$> ops)
   
-  groupOps :: [Operator] -> [Parser (CExpr -> CExpr -> CExpr)]
-  groupOps x = parserFromOps <$> groupBy ((==) `on` precedence) x
+  -- This is incredibly cheesy, but works around the fact that reservedOp doesn't parse
+  -- constructs like "a!=*b" because it looks too far ahead.
+  res op = try $ do
+    L.whiteSpace
+    string op
+    notFollowedBy $ string op
+    L.whiteSpace
+    return op
+  
+  parserFromOp op = E.Infix (BinaryOp <$> (res $ text op)) E.AssocLeft
+  
+  groupOps x = (map parserFromOp) <$> groupBy ((==) `on` precedence) x
   
   binaryExpression :: Parser CExpr
-  binaryExpression = (groupOps <$> operators <$> getState) >>= foldr (flip chainl1) castExpression
+  binaryExpression = do
+    table <- (reverse <$> groupOps <$> operators <$> getState)
+    E.buildExpressionParser table castExpression
   
   ternaryExpression :: Parser CExpr
   ternaryExpression = TernaryOp <$> binaryExpression <*> (L.symbol "?" *> expression) <*> (L.symbol ":" *> binaryExpression)
@@ -51,7 +61,7 @@ module Language.C99.Expressions
   builtinVaArg = BuiltinVaArg <$> (L.reserved "__builtin_va_arg" *> L.parens expression)<*> typeName
   
   castExpression :: Parser CExpr
-  castExpression = unwrap <$> (CCast <$> (many $ L.parens typeName) <*> unaryExpression) where
+  castExpression = unwrap <$> (CCast <$> (many $ try (L.parens typeName)) <*> unaryExpression) where
     unwrap (CCast [] x) = x
     unwrap x = x
 
