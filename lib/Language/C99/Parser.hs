@@ -16,6 +16,7 @@ module Language.C99.Parser
   import Data.Generics
   import Language.C99.AST
   import Language.C99.Operators
+  import {-# SOURCE #-} Language.C99.Expressions
   import Language.Pony.Overture
   import qualified Data.ByteString as B
   import qualified Data.Map as M
@@ -24,13 +25,15 @@ module Language.C99.Parser
   import Text.Parsec.ByteString hiding (Parser, parseFromFile)
   import Text.Printf
 
+  -- type Operator = GenOperator Parser
+  
   -- | The internal data type carried along by the parser monad: a map from
   -- names to types, and an array of 'Operator's that will be decomposed into 
   -- parser actions based on the precedence specified therein.
   data Internals = Internals 
     { typedefs :: Map String CTypeName
     , operators :: [Operator]
-    } deriving (Show, Eq, Typeable, Data)
+    }
   
   instance Default Internals where def = Internals def defaultOperators
   

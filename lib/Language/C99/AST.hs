@@ -23,6 +23,7 @@ module Language.C99.AST
   , CInitializer (..)
   , CInitializerSubfield (..)
   , CParameter (..)
+  , CPrefix (..)
   , CPostfix (..)
   , CSpecifier (..)
   , CStatement(..) 
@@ -129,6 +130,13 @@ module Language.C99.AST
     | ExternDecl CDeclaration
     deriving (Eq, Show, Typeable, Data, Generic)
     
+  data CPrefix
+    = Cast2 CTypeName
+    | PreIncrement
+    | PreDecrement
+    | CUnaryOp String
+    deriving (Eq, Show, Typeable, Data, Generic)
+    
   data CPostfix 
     = Index CExpr
     | Call [CExpr]
@@ -146,14 +154,17 @@ module Language.C99.AST
     | Comma CExpr CExpr
     | Identifier { getIdent :: String }
     | CCast [CTypeName] CExpr
+    | UnaryOp String CExpr
     | PostfixOp CExpr [CPostfix]
-    | UnaryOp  String CExpr
+    | PrefixOp [CPrefix] CExpr
     | BinaryOp String CExpr CExpr
     | TernaryOp CExpr CExpr CExpr
+    | TernaryOp2 CExpr (Maybe CExpr) CExpr
     -- | Whereas sizeof(variable) parses as a function call, sizeof(type) needs its own node.
     | SizeOfType CTypeName
     | CBuiltin CBuiltinExpr
     | CParen CExpr -- parenthesized expressions
+    | CArguments [CExpr]
     deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | A string literal newtype to provide a modicum of type safety in the AST.
