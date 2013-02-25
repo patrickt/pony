@@ -108,8 +108,14 @@ where
     parens = Parenthesized <$> L.parens declarator
     ident = Single <$> L.identifier
     
+  asmString :: Parser ()
+  asmString = choice [
+                       L.reserved "__asm"
+                     , L.reserved "__asm__"
+                     ]
+
   asmName :: Parser String
-  asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
+  asmName = asmString *> L.parens (some $ noneOf ")")
   
   
   -- CDeclarator 

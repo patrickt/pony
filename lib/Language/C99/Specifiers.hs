@@ -33,6 +33,8 @@ where
     , "inline" `as` CInline
     , "__inline" `as` CInline
     , "__inline__" `as` CInline
+    , "__const" `as` CConst
+    , "__restrict" `as` CRestrict
     ] <?> "type qualifier"
     
   enumerator :: Parser CEnumerator
