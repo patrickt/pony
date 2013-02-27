@@ -104,7 +104,6 @@ module Language.C99.Lexer
   comma = T.comma lexer
   colon = T.colon lexer
   dot = T.dot lexer
-  arrow :: ParsecT ByteString u Identity ByteString
   arrow = reservedOp "->" >> return "->"
   semiSep = T.semiSep lexer
   semiSep1 = T.semiSep1 lexer

@@ -17,6 +17,7 @@ where
   import Language.C99.Parser
   import Language.C99.Syntax
   import Language.C99.Specifiers
+  import Data.Functor.Fix hiding (attribute)
   
   declaration :: Parser CSyn
   declaration = error "declaration"
@@ -117,7 +118,7 @@ where
   
   declaratorBody :: Parser CDeclaratorBody
   declaratorBody = choice
-    [ CIdentBody <$> getIdent <$> identifier
+    [ CIdentBody <$> (liftFix getString) <$> identifier
     , CParenBody <$> L.parens declarator
     , pure CEmptyBody
     ]

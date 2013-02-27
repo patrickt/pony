@@ -90,8 +90,8 @@ module Language.C99.AST
     deriving (Eq, Show)
     
   data CPostfix 
-    = Index CExpr
-    | Call [CExpr]
+    = Index2 CExpr
+    | Call2 [CExpr]
     | MemberAccess String
     | PointerAccess String
     | PostIncrement
@@ -212,7 +212,7 @@ module Language.C99.AST
   data CDeclInfo = CDeclInfo {
     contents :: CDeclarator,
     initVal :: Maybe CInitializer,
-    size :: Maybe CExpr
+    size :: Maybe CSyn
   } deriving (Show, Eq)
   
   infoName :: CDeclInfo -> Maybe String
@@ -274,14 +274,14 @@ module Language.C99.AST
   
   -- | C designators, i.e. that which can appear inside compound initialization statements.
   data CDesignator 
-    = ArrayDesignator CExpr
+    = ArrayDesignator CSyn
     | MemberDesignator String
     deriving (Show, Eq)
   
   -- | C initializers (C99 6.7.8). Initialization types can contain one 
   -- expression or a bracketed list of initializers.
   data CInitializer 
-    = CInitExpression CExpr
+    = CInitExpression CSyn
     | CInitList [CInitializerSubfield]
     deriving (Eq, Show)
   
@@ -294,6 +294,6 @@ module Language.C99.AST
   -- In the future, Apple's extension for blocks (declared with @^@) may be added.
   data CDerivedDeclarator
    = Pointer [CTypeQualifier]
-   | Array [CTypeQualifier] (Maybe CExpr)
+   | Array [CTypeQualifier] (Maybe CSyn)
    | DerivedFunction [CParameter] Bool
    deriving (Eq, Show)

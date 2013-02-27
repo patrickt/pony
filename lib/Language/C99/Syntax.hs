@@ -55,7 +55,7 @@ module Language.C99.Syntax where
     While      :: a -> a -> C99 a
   
     -- expressions
-    CStr     :: String -> C99 a
+    CStr     :: { getString :: String } -> C99 a 
     CInt     :: Integer -> C99 a
     CFloat   :: String -> C99 a
     CChar    :: Char -> C99 a
@@ -64,8 +64,9 @@ module Language.C99.Syntax where
     Binary   :: a -> a -> a -> C99 a
     Ternary  :: a -> a -> a -> C99 a
     Cast     :: [a] -> a -> C99 a
-    Brackets :: a -> a -> C99 a -- rename to Index?
-    FunCall  :: a -> [a] -> C99 a -- rename to Call?
+    Index    :: a -> a -> C99 a -- rename to Index?
+    Call     :: a -> [a] -> C99 a -- rename to Call?
+    Access   :: a -> a -> a -> C99 a
     VaArg    :: a -> a -> C99 a
     Paren    :: a -> C99 a
   
@@ -155,7 +156,7 @@ module Language.C99.Syntax where
   switch' cond blk          = Fix $ Switch cond blk
   while' cond blk           = Fix $ While cond blk
   
-  str'                    = Fix . CStr
+  cstr'                   = Fix . CStr
   cint'                   = Fix . CInt
   cfloat'                 = Fix . CFloat
   cchar'                  = Fix . CChar
@@ -163,8 +164,9 @@ module Language.C99.Syntax where
   binary' arg1 op arg2    = Fix $ Binary arg1 op arg2
   ternary' arg1 arg2 arg3 = Fix $ Ternary arg1 arg2 arg3
   cast' typ stmt          = Fix $ Cast typ stmt
-  brackets' stmt idx      = Fix $ Brackets stmt idx
-  funcall' stmt args      = Fix $ FunCall stmt args
+  index' stmt idx         = Fix $ Index stmt idx
+  call' stmt args         = Fix $ Call stmt args
+  access' a b c           = Fix $ Access a b c
   vaarg' typ value        = Fix $ VaArg typ value
   paren'                  = Fix . Paren
   

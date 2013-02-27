@@ -1,17 +1,8 @@
 module Language.C99.Expressions
-  ( expression
-  , expression'
-  , Operator (..)
-  , constantExpression
-  , identifier
-  , constant
-  , stringLiteral
-  , defaultOperators
-  , module Language.C99.Operators
-  , ident'
-  )
+
   where 
   
+  import Control.Arrow ((>>>), (<<<))
   import Data.Function (on)
   import Data.Functor.Identity (Identity)
   import Data.List (groupBy)
@@ -26,20 +17,26 @@ module Language.C99.Expressions
   import Text.Parsec.Expr (Assoc (..))
   import qualified Text.Parsec.ByteString as P
   
-  ident' = name' <$> L.identifier
+  -- TODO: move this
+  opt' :: Parser CSyn -> Parser CSyn
+  opt' p = fromMaybe <$> pure nil' <*> optional p
   
   newtype Operator = Operator { unOperator :: (GenOperator Parser) }
   
-  cautiousBinaryOp s p = Operator (Infix (try $ BinaryOp <$> L.symbol s) p AssocLeft)
+  sname' s = name' <$> L.symbol s
+  
+  fbinary' = flip binary'
+  
+  cautiousBinaryOp s p = Operator (Infix (try $ fbinary' <$> sname' s) p AssocLeft)
   
   basicBinaryOp :: String -> Int -> Operator
-  basicBinaryOp s p = Operator (Infix (BinaryOp <$> L.symbol s) p AssocLeft)
+  basicBinaryOp s p = Operator (Infix (fbinary' <$> sname' s) p AssocLeft)
   
   smartBinaryOp :: String -> String -> Int -> Operator  
-  smartBinaryOp s s2 p = Operator (Infix (BinaryOp <$> (L.symbol s <* notFollowedBy (oneOf s2))) p AssocLeft)
-
+  smartBinaryOp s s2 p = Operator (Infix (try $ fbinary' <$> (sname' s <* notFollowedBy (oneOf s2))) p AssocLeft)
+  
   rBinaryOp :: String -> Int -> Operator
-  rBinaryOp s p = Operator (Infix (try $ (BinaryOp <$> (L.symbol s <* notFollowedBy (L.symbol s)))) p AssocRight)
+  rBinaryOp s p = Operator (Infix (try $ (fbinary' <$> (sname' s <* notFollowedBy (L.symbol s)))) p AssocRight)
   
   logicalOr :: Operator
   logicalOr = basicBinaryOp "||" 1
@@ -80,17 +77,12 @@ module Language.C99.Expressions
   modulus = smartBinaryOp "%" "=" 10
   
   ternary :: Operator
-  ternary = Operator (Infix ((flip TernaryOp2) <$> (L.symbol "?" *> optional expression <* L.symbol ":")) 11 E.AssocRight)
+  ternary = Operator (Infix ((flip ternary') <$> (L.symbol "?" *> opt' expression <* L.symbol ":")) 11 E.AssocRight)
   
-  postfixes :: Operator
-  postfixes = Operator (Postfix ((flip PostfixOp) <$> some postfixOperand) 12)
-  
-  prefixes :: Operator
-  prefixes = Operator (Prefix (PrefixOp <$> some prefixOperand) 13)
   
   defaultOperators :: [Operator]
   defaultOperators = 
-    [logicalOr
+    [ logicalOr
     , logicalAnd
     , inclusiveOr
     , exclusiveOr
@@ -109,77 +101,85 @@ module Language.C99.Expressions
     , divide
     , modulus
     , ternary
-    , postfixes
-    , prefixes
     ]
+  -- 
+  -- expression :: Parser CExpr
+  -- expression = chainl1 assignmentExpression (Comma <$ L.comma) <?> "C expression"
   
-  expression :: Parser CExpr
-  expression = chainl1 assignmentExpression (Comma <$ L.comma) <?> "C expression"
+  expression = expression'
+  expression' = assignmentExpression
   
-  expression' = choice [ try float, integer, charLiteral ] <?> "literal"
-  
-  assignmentExpression :: Parser CExpr
+  assignmentExpression :: Parser CSyn
   assignmentExpression = try assign <|> constantExpression where 
-    assign = ((flip BinaryOp) <$> constantExpression <*> assignmentOperator <*> assignmentExpression)
-    assignmentOperator = choice $ L.symbol <$> ["=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "^=", "|="]
+    assign = (binary' <$> constantExpression <*> assignmentOperator <*> assignmentExpression)
+    assignmentOperator = choice $ sname' <$> ["=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "^=", "|="]
   
-  constantExpression :: Parser CExpr
+  constantExpression :: Parser CSyn
   constantExpression = do
     table <- (reverse <$> groupOps <$> operators <$> getState)
-    E.buildExpressionParser table primaryExpression
+    E.buildExpressionParser table prefixExpression
   
   
   parserFromOp (Infix p _ a) = E.Infix p a
-  parserFromOp (Prefix p _) = E.Prefix p
-  parserFromOp (Postfix p _) = E.Postfix p
   
   groupOps x = (map parserFromOp) <$> groupBy ((==) `on` precedence) x' where x' = unOperator <$> x
-        
-  unaryOperator :: Parser String
-  unaryOperator = choice $ L.symbol <$> ["&", "*", "+", "-", "~", "!", "sizeof"]
+
+  unaryOperator :: Parser CSyn
+  unaryOperator = name' <$> (choice (L.symbol <$> ["&", "*", "+", "-", "~", "!", "sizeof"]))
   
-  postfixOperand :: Parser CPostfix
-  postfixOperand = choice 
-    [ Index         <$> L.brackets expression
-    , Call          <$> (L.parens $ L.commaSep expression)
-    , MemberAccess  <$> (L.dot *> (getIdent <$> identifier))
-    , PointerAccess <$> (L.arrow *> (getIdent <$> identifier))
-    , PostIncrement <$ L.reservedOp "++"
-    , PostDecrement <$ L.reservedOp "--"
+  postfixOperator :: Parser (CSyn -> CSyn)
+  postfixOperator = choice 
+    [ (flip index') <$> L.brackets expression
+    , (flip call')  <$> (L.parens $ L.commaSep expression)
+    , access'' <$> (name' <$> L.dot) <*> identifier
+    , access'' <$> (name' <$> L.arrow) <*> identifier
+    , (flip unary') <$> name' <$> L.reservedOp' "++"
+    , (flip unary') <$> name' <$> L.reservedOp' "--"
+    ] where access'' b c a = access' a b c
+  
+  postfixExpression :: Parser CSyn
+  postfixExpression = do
+    subject <- primaryExpression
+    postfixes <- many postfixOperator
+    return $ foldl (>>>) id postfixes subject
+  
+  prefixExpression :: Parser CSyn
+  prefixExpression = do
+    prefixes <- many prefixOperator
+    subject <- postfixExpression
+    return $ foldl (<<<) id prefixes subject
+  
+  prefixOperator :: Parser (CSyn -> CSyn)
+  prefixOperator = choice
+    [ unary' <$> name' <$> L.reservedOp' "--"
+    , unary' <$> name' <$> L.reservedOp' "++"
+    -- , try $ Cast2 <$> L.parens typeName
+    , unary' <$> unaryOperator
     ]
   
-  prefixOperand :: Parser CPrefix
-  prefixOperand = choice
-    [ PreIncrement <$ L.reservedOp "++"
-    , PreDecrement <$ L.reservedOp "--"
-    , try $ Cast2 <$> L.parens typeName
-    , CUnaryOp <$> unaryOperator
-    ]
-  
-  primaryExpression :: Parser CExpr
+  primaryExpression :: Parser CSyn
   primaryExpression = choice
-    [ builtinExpression
-    , identifier
+    [ identifier
     , constant
-    , getExpr <$> stringLiteral
-    , CParen  <$> L.parens expression 
+    , stringLiteral
+    , paren' <$> L.parens expression 
     ]
   
   type COperator = E.Operator ByteString Internals Identity CExpr
   
   data Op = Op { baseOperator :: COperator, prec :: Int }
   
-  builtinExpression :: Parser CExpr
-  builtinExpression = CBuiltin <$> (BuiltinVaArg <$> (L.reserved "__builtin_va_arg" *> L.parens expression) <*> typeName)
+  -- builtinExpression :: Parser CExpr
+  -- builtinExpression = CBuiltin <$> (BuiltinVaArg <$> (L.reserved "__builtin_va_arg" *> L.parens expression) <*> typeName)
   
-  identifier :: Parser CExpr
-  identifier = Identifier <$> L.identifier <?> "identifier"
+  identifier :: Parser CSyn
+  identifier = name' <$> L.identifier <?> "identifier"
   
-  constant :: Parser CExpr
-  constant = Constant <$> choice [ try float, integer, charLiteral ] <?> "literal"
+  constant :: Parser CSyn
+  constant = choice [ try float, integer, charLiteral ] <?> "literal"
                                  
-  stringLiteral :: Parser CStringLiteral
-  stringLiteral = undefined
+  stringLiteral :: Parser CSyn
+  stringLiteral = cstr' <$> concat <$> L.stringLiteral `sepBy1` L.whiteSpace <?> "string literal"
   -- stringLiteral = CStringLiteral <$> Constant <$> CString <$> concat <$> L.stringLiteral `sepBy1` L.whiteSpace <?> "string literal"
   
   -- TODO: clean up the way we do integer/float suffixes, and perhaps carry that on to the semantic stage

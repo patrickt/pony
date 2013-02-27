@@ -31,7 +31,7 @@ module Language.C99.Statements
   labeledStmt = choice 
     [ case'          <$> (L.reserved "case" *> expression') <*> (L.colon *> statement) <?> "case statement"
     , default'       <$> (L.reserved "default" *> L.colon *> statement) <?> "default statement"
-    , try  (labeled' <$> (ident' <* L.colon) <*> statement <?> "labeled statement")
+    , try  (labeled' <$> (identifier <* L.colon) <*> statement <?> "labeled statement")
     ]
   
   jumpStmt :: Parser CSyn
