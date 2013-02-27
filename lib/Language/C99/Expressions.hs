@@ -1,5 +1,6 @@
 module Language.C99.Expressions
   ( expression
+  , expression'
   , Operator (..)
   , constantExpression
   , identifier
@@ -7,6 +8,7 @@ module Language.C99.Expressions
   , stringLiteral
   , defaultOperators
   , module Language.C99.Operators
+  , ident'
   )
   where 
   
@@ -15,6 +17,7 @@ module Language.C99.Expressions
   import Data.List (groupBy)
   import Language.C99.Parser
   import Language.C99.AST
+  import Language.C99.Syntax
   import Language.C99.Literals
   import Language.C99.Operators
   import {-# SOURCE #-} Language.C99.Declarations 
@@ -22,6 +25,8 @@ module Language.C99.Expressions
   import qualified Text.Parsec.Expr as E
   import Text.Parsec.Expr (Assoc (..))
   import qualified Text.Parsec.ByteString as P
+  
+  ident' = name' <$> L.identifier
   
   newtype Operator = Operator { unOperator :: (GenOperator Parser) }
   
@@ -111,6 +116,8 @@ module Language.C99.Expressions
   expression :: Parser CExpr
   expression = chainl1 assignmentExpression (Comma <$ L.comma) <?> "C expression"
   
+  expression' = choice [ try float, integer, charLiteral ] <?> "literal"
+  
   assignmentExpression :: Parser CExpr
   assignmentExpression = try assign <|> constantExpression where 
     assign = ((flip BinaryOp) <$> constantExpression <*> assignmentOperator <*> assignmentExpression)
@@ -172,12 +179,13 @@ module Language.C99.Expressions
   constant = Constant <$> choice [ try float, integer, charLiteral ] <?> "literal"
                                  
   stringLiteral :: Parser CStringLiteral
-  stringLiteral = CStringLiteral <$> Constant <$> CString <$> concat <$> L.stringLiteral `sepBy1` L.whiteSpace <?> "string literal"
+  stringLiteral = undefined
+  -- stringLiteral = CStringLiteral <$> Constant <$> CString <$> concat <$> L.stringLiteral `sepBy1` L.whiteSpace <?> "string literal"
   
   -- TODO: clean up the way we do integer/float suffixes, and perhaps carry that on to the semantic stage
-  integer, charLiteral, float :: Parser CLiteral
-  integer       = CInteger <$> L.natural <* many (oneOf "uUlL") <* L.whiteSpace
-  charLiteral   = CChar    <$> L.charLiteral
-  float         = CFloat   <$> L.float <* optional (oneOf "flFL") <* L.whiteSpace
+  integer, charLiteral, float :: Parser CSyn
+  integer       = cint'    <$> L.natural <* many (oneOf "uUlL") <* L.whiteSpace
+  charLiteral   = cchar'   <$> L.charLiteral
+  float         = cfloat'  <$> L.float <* optional (oneOf "flFL") <* L.whiteSpace
   
   

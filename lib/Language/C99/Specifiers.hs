@@ -20,7 +20,8 @@ where
   
   -- You can put reserved words like "const" inside __attribute__ declarations, so we try parsing an expression then give up and just read letters
   customAttribute :: Parser CExpr
-  customAttribute = try expression <|> (Constant <$> CString <$> some letter)
+  -- customAttribute = try expression <|> (Constant <$> CString <$> some letter)
+  customAttribute = undefined
   
   attribute :: Parser CAttribute
   attribute = CAttribute <$> (L.reserved "__attribute__" *> L.parens (L.parens (L.commaSep1 customAttribute)))

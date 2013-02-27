@@ -15,12 +15,16 @@ where
   import Language.C99.Expressions
   import qualified Language.C99.Lexer as L
   import Language.C99.Parser
+  import Language.C99.Syntax
   import Language.C99.Specifiers
   
-  -- | C99 6.7 - abstract and concrete declarations.
-  declaration :: Parser CDeclaration
-  declaration = declaration' >>= checkTypedefs
-    where declaration' = CDeclaration <$> some specifier <*> L.commaSep initDeclarator <* L.semi
+  declaration :: Parser CSyn
+  declaration = error "declaration"
+  
+  -- -- | C99 6.7 - abstract and concrete declarations.
+  -- declaration :: Parser CDeclaration
+  -- declaration = declaration' >>= checkTypedefs
+  --   where declaration' = CDeclaration <$> some specifier <*> L.commaSep initDeclarator <* L.semi
   
   checkTypedefs :: CDeclaration -> Parser CDeclaration
   checkTypedefs d@(CDeclaration (SSpec CTypedef : rest) infos) = do

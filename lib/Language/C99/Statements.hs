@@ -1,5 +1,4 @@
 module Language.C99.Statements 
-  ( statement, compoundStmt, asmStmt )
   where
   
   import Language.C99.Parser
@@ -8,118 +7,72 @@ module Language.C99.Statements
   import Language.C99.Declarations
   import Language.C99.Specifiers
   import qualified Language.C99.Lexer as L
+  import Language.C99.Syntax
   
-{-
-What this really should be is a chained parser akin to the one in Expressions.hs.
-
-  statement :: Parser CStatement
-  statement = buildChainedParser [ (compoundStmt, False) 
-                                 , (selectionStmt, False)
-                                 , (iterationStmt, False)
-                                 , (jumpStmt, False)
-                                 , (labeledStmt, True)
-                                 ]
-where the boolean indicates whether the use of the `try` combinator is necessary, i.e. 
-whether it can consume input before failing.
--}
+  -- TODO: move this
+  opt :: Parser CSyn -> Parser CSyn
+  opt p = fromMaybe <$> pure nil' <*> optional p
   
-  -- | A C statement. (C99 6.8.*)
-  statement :: Parser CStatement
-  statement = choice [ try labeledStmt
-                     , asmStmt
-                     , compoundStmt 
-                     , jumpStmt 
-                     , expressionStmt
-                     , selectionStmt
-                     , iterationStmt
-                     ] <?> "C statement"
+  statement :: Parser CSyn
+  statement = choice
+    [ labeledStmt
+    , compoundStmt
+    , jumpStmt
+    , expressionStmt
+    , selection
+    , iteration
+    ] <?> "C statement"
   
-  labeledStmt :: Parser CStatement
-  labeledStmt = choice [ caseStmt
-                       , defaultStmt
-                       , labelStmt
-                       ] <?> "labeled statement" where
-    caseStmt    = CaseStmt    <$> (L.reserved "case" *> expression) <*> (L.colon *> statement)
-    defaultStmt = DefaultStmt <$> (L.reserved "default" *> L.colon *> statement)
-    labelStmt   = LabeledStmt <$> (L.identifier <* L.colon) <*> many attribute <*> statement 
+  compoundStmt :: Parser CSyn
+  compoundStmt = L.braces (group' <$> many statement) <?> "compound statement"
   
-  -- | A compound statement, enclosed by braces. (C99 6.8.2)
-  compoundStmt :: Parser CStatement
-  compoundStmt = L.braces (CompoundStmt <$> many blockItem) <?> "compound statement"
+  -- TODO: dropping attributes on labels
+  labeledStmt :: Parser CSyn
+  labeledStmt = choice 
+    [ case'          <$> (L.reserved "case" *> expression') <*> (L.colon *> statement) <?> "case statement"
+    , default'       <$> (L.reserved "default" *> L.colon *> statement) <?> "default statement"
+    , try  (labeled' <$> (ident' <* L.colon) <*> statement <?> "labeled statement")
+    ]
   
-  blockItem :: Parser CBlockItem
-  blockItem  =  try (BlockDeclaration <$> declaration) 
-            <|> (BlockStatement <$> statement) 
-            <?> "declaration or C statement"
-            
-  asmStmt :: Parser CStatement
-  asmStmt =  AsmStmt 
-         <$> (L.reserved "asm" *> optional volatile)
-         <*> L.parens asmOperand where
-           volatile = L.reserved "volatile" *> pure CVolatile
-            
-  asmOperand :: Parser CAsmOperand
-  asmOperand = try simple <|> complex where
-    simple = Simple <$> (stringLiteral <* notFollowedBy L.colon)
-    complex =  GCCAsm 
-           <$> stringLiteral 
-           <*> (L.colon *> L.commaSep asmArgument)
-           <*> (L.colon *> L.commaSep asmArgument)
-           <*> (L.colon *> L.commaSep stringLiteral)
-
-  asmArgument :: Parser CAsmArgument
-  asmArgument = CAsmArgument <$> stringLiteral <*> optional (L.parens identifier)
+  jumpStmt :: Parser CSyn
+  jumpStmt = choice 
+    [ goto'     <$> (L.reserved "goto" *> expression') <?> "goto statement"
+    , continue' <$  L.reserved "continue" <?> "continue statement"
+    , break'    <$  L.reserved "break" <?> "break statement"
+    , return'   <$> (L.reserved "return" *> opt expression') <?> "return statement"
+    ] <* L.semi
   
-  expressionStmt :: Parser CStatement
-  expressionStmt = maybe EmptyStmt ExpressionStmt <$> optional expression <* L.semi
-    
-  selectionStmt :: Parser CStatement
-  selectionStmt = ifStmt <|> switch where
-    ifStmt = IfStmt <$> (L.reserved "if" *> L.parens expression)
-                    <*> statement
-                    <*> optional (L.reserved "else" *> statement) 
-                    <?> "if statement"
-    switch = SwitchStmt <$> (L.reserved "switch" *> L.parens expression) 
-                        <*> statement 
-                        <?> "switch statement"
+  expressionStmt :: Parser CSyn
+  expressionStmt = (opt expression') <* L.semi
   
-  iterationStmt :: Parser CStatement
-  iterationStmt = choice [ while
-                         , doWhile
-                         , try newFor
-                         , oldFor 
-                         ] where
-    while   = WhileStmt <$> (L.reserved "while" *> L.parens expression) 
-                        <*> statement 
-                        <?> "while statement"
-    doWhile = DoWhileStmt <$> (L.reserved "do" *> statement)
-                          <*> (L.reserved "while" *> (L.parens expression <* L.semi))
-                          <?> "do-while statement"
-    oldFor = do
-      L.reserved "for"
-      (a, b, c) <- L.parens oldForExprs
-      s <- statement
-      return $ ForStmt a b c s
-    oldForExprs = (,,) <$> (optional expression <* L.semi)
-                       <*> (optional expression <* L.semi)
-                       <*> optional expression
-    newFor = do
-      L.reserved "for"
-      (a, b, c) <- L.parens newForExprs
-      s <- statement
-      return $ ForDeclStmt a b c s
-    newForExprs = (,,) <$> declaration 
-                       <*> (optional expression <* L.semi)
-                       <*> optional expression
+  selection :: Parser CSyn
+  selection = ifStmt <|> switch where
+    ifStmt = ifthenelse' <$> (L.reserved "if" *> L.parens expression')
+                         <*> statement
+                         <*> opt (L.reserved "else" *> statement) 
+                         <?> "if statement"
+    switch = switch' <$> (L.reserved "switch" *> L.parens expression') 
+                     <*> statement
+                     <?> "switch statement"
+                     
   
-  jumpStmt :: Parser CStatement
-  jumpStmt = choice [ goto
-                    , continue
-                    , break'
-                    , return' 
-                    ] where
-    goto     = GotoStmt          <$>  (L.reserved "goto" *> expression)
-    continue = pure ContinueStmt <*   L.reserved "continue"
-    break'   = pure BreakStmt    <*   L.reserved "break"
-    return'  = ReturnStmt        <$>  (L.reserved "return" *> (optional expression <* L.semi))
-    
+  iteration :: Parser CSyn
+  iteration = choice 
+    [ while
+    , doWhile
+    , for 
+    ] where
+      while = while' <$> (L.reserved "while" *> parenExp) 
+                     <*> statement 
+                     <?> "while statement"
+      doWhile = dowhile' <$> (L.reserved "do" *> statement) 
+                         <*> (L.reserved "while" *> parenExp <* L.semi) 
+                         <?> "do-while statement"
+      -- TODO: declaration or expression at the beginning
+      for = for' <$> (L.reserved "for" *> L.symbol "(" *> expressionStmt) 
+                 <*> expressionStmt
+                 <*> (expression' <* L.symbol ")") 
+                 <*> statement 
+                 <?> "for statement"
+      parenExp = L.parens expression'
+  

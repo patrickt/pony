@@ -87,7 +87,7 @@ module Semantics.C.Pretty
     -- literals
     evalPretty _ (CInt t) = pretty t
     evalPretty _ (CStr s) = dquotes $ text s
-    evalPretty _ (CFloat s) = text $ show ((fromRational $ toRational s) :: Double) -- shenanigans to prevent trailing zeroes.
+    evalPretty _ (CFloat s) = text s
     evalPretty _ (CChar c) = text $ show c
     
     -- expressions

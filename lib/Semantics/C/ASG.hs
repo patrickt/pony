@@ -3,16 +3,9 @@
 module Semantics.C.ASG where
   
   import Control.Applicative hiding (Const)
-  import Data.Fixed
   import Data.Functor.Fix
   import GHC.Exts (IsString (..))
   import Test.QuickCheck
-  
-  µ1 :: Functor f => Fix f -> f (f (Fix f))
-  µ1 = fmap µ . µ
-  
-  µ2 :: Functor f => Mu f -> f (f (f (Fix f)))
-  µ2 = fmap µ1 . µ
   
   data Sem a where
     -- logical constructs
@@ -62,9 +55,9 @@ module Semantics.C.ASG where
     -- expressions
     CStr     :: String -> Sem a
     CInt     :: Integer -> Sem a
-    CFloat   :: Nano -> Sem a
+    CFloat   :: String -> Sem a
     CChar    :: Char -> Sem a
-    CommaSep   :: a -> a -> Sem a
+    CommaSep :: a -> a -> Sem a
     Unary    :: a -> a -> Sem a
     Binary   :: a -> a -> a -> Sem a
     Ternary  :: a -> a -> a -> Sem a

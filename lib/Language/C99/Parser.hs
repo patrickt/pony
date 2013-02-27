@@ -21,7 +21,7 @@ module Language.C99.Parser
   import qualified Data.ByteString as B
   import qualified Data.Map as M
   import System.Cmd
-  import Text.Parsec hiding (parseTest, many, optional, (<|>))
+  import Text.Parsec hiding (parseTest, many, optional, (<|>), Empty)
   import Text.Parsec.ByteString hiding (Parser, parseFromFile)
   import Text.Printf
 

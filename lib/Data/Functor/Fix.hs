@@ -3,7 +3,11 @@ module Data.Functor.Fix
   , Fix
   , tie
   , out
-  , µ ) 
+  , µ 
+  , µ1
+  , µ2
+  , liftFix 
+  ) 
   where
     
   import Data.Generics.Fixplate
@@ -12,5 +16,13 @@ module Data.Functor.Fix
   tie = Fix
   out = unFix
   µ = unFix
-    
+  
+  µ1 :: Functor f => Fix f -> f (f (Fix f))
+  µ1 = fmap µ . µ
+  
+  µ2 :: Functor f => Mu f -> f (f (f (Fix f)))
+  µ2 = fmap µ1 . µ
+  
+  liftFix :: (Functor f) => (f (Fix f) -> a) -> Fix f -> a
+  liftFix = (. unFix)
   

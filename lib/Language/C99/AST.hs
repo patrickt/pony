@@ -1,38 +1,4 @@
 module Language.C99.AST
-  ( CTranslationUnit (..)
-  , CAsmArgument (..)
-  , CAsmName 
-  , CAsmOperand (..)
-  , CAttribute (..)
-  , CBlockItem (..)
-  , CBuiltinExpr (..)
-  , CDeclaration (..)
-  , CDeclarator (..)
-  , derived
-  , declName
-  , CDeclaratorBody (..)
-  , CDeclInfo (..)
-  , infoName
-  , CDerivedDeclarator (..) 
-  , CDesignator (..)
-  , CEnumerator (..)
-  , CExpr (..)
-  , CExternal (..)
-  , CField (..)
-  , CFunction (..)
-  , CInitializer (..)
-  , CInitializerSubfield (..)
-  , CParameter (..)
-  , CPrefix (..)
-  , CPostfix (..)
-  , CSpecifier (..)
-  , CStatement(..) 
-  , CStorageSpecifier (..)
-  , CStringLiteral (..)
-  , CTypeName (..)
-  , CTypeQualifier (..)
-  , CTypeSpecifier (..)
-  )
   
   where
   
@@ -40,68 +6,54 @@ module Language.C99.AST
   import Data.Default
   import Data.Generics hiding (Generic, GT)
   import Language.C99.Literals
+  import Language.C99.Syntax
+  import Language.Pony.Overture
+  import Data.List (sort)
+  
+  builderFromSpecifier :: CSpecifier -> CSyn -> CSyn
+  builderFromSpecifier (TSpec TShort) = short'
+  builderFromSpecifier (TSpec TLong) = long'
+  builderFromSpecifier (TSpec TSigned) = signed'
+  builderFromSpecifier (TSpec TUnsigned) = unsigned'
+  builderFromSpecifier (TQual CConst) = const'
+  builderFromSpecifier (TQual CRestrict) = restrict'
+  builderFromSpecifier (TQual CVolatile) = volatile'
+  builderFromSpecifier (TQual CInline) = inline'
+  builderFromSpecifier (SSpec CAuto) = auto'
+  builderFromSpecifier (SSpec CStatic) = static'
+  builderFromSpecifier (SSpec CExtern) = extern'
+  -- builderFromSpecifier (SSpec (CAttr (CAttribute es))) = attribute' (convert <$> es)
+  builderFromSpecifier x = error $ show x
+  
+  convertType :: CTypeSpecifier -> CSyn
+  convertType TVoid           = void'
+  convertType TChar           = char'
+  convertType TShort          = short' int'
+  convertType TInt            = int'
+  convertType TLong           = long' int'
+  convertType TInt128         = verylong'
+  convertType TUInt128        = unsigned' verylong'
+  convertType TFloat          = float'
+  convertType TDouble         = double'
+  convertType TSigned         = signed' int'
+  convertType TUnsigned       = unsigned' int'
+  convertType TBool           = bool'
+  
+  makeModifiersFromSpec :: CSpecifier -> (CSyn -> CSyn) -> (CSyn -> CSyn)
+  makeModifiersFromSpec spec base = builderFromSpecifier spec . base
+  
+  typeFromSpecifiers :: [CSpecifier] -> CSyn
+  typeFromSpecifiers specs = (foldr (makeModifiersFromSpec) id (init specs')) (convertType typeSpec)
+    where 
+      specs' = sort specs
+      (TSpec typeSpec) = last specs'
   
   -- TODO: Add position information to all of the types, etc.
   -- TODO: Rename CAsmOperand and CAsmArgument to something more descriptive.
   
   -- | A translation unit is a nonempty list of external declarations (C99 9.6).
   newtype CTranslationUnit = CTranslationUnit [CExternal]
-    deriving (Show, Eq, Typeable, Data, Generic)
-  
-  -- | A block item is either a declaration or statement (C99 6.8.3).
-  -- Block items make up the bodies of compound statements ('CompoundStmt').
-  data CBlockItem
-    = BlockDeclaration CDeclaration
-    | BlockStatement CStatement
-    deriving (Show, Eq, Typeable, Data, Generic)
-  
-  -- | A statement specifies an action to be performed in sequence (C99 6.8.3).
-  -- Unless specified otherwise, the semantics of statements (e.g. that 
-  -- @break@ and @continue@ may only appear inside @for@/@while@ loops) are 
-  -- not enforced by the parser, but will fail to compile in any modern C compiler.
-  data CStatement 
-    -- | The GCC syntax for inline assembly.
-    = AsmStmt (Maybe CTypeQualifier) CAsmOperand
-    -- | The @break@ statement. Should only appear inside loop constructs.
-    | BreakStmt 
-    -- | The @case@ statement, taking the form of @case expr: statement@.
-    -- Should only appear inside the bodies of @switch@ statements.
-    | CaseStmt CExpr CStatement
-    -- | Compound statements are blocks of code (C99 6.8.2). They are composed
-    -- of either 'CDeclaration' or 'CStatement' types, wrapped by the 
-    -- 'BlockItem' type synonym.
-    | CompoundStmt [CBlockItem]
-    -- | The @continue@ statement. Should only appear inside loop constructs.
-    | ContinueStmt 
-    -- | The @default@ statement, taking the form of @default: statement@.
-    -- Should only appear inside of loop constructs.
-    | DefaultStmt CStatement
-    -- | The do-while loop, taking the form of @do statement while expr@.
-    | DoWhileStmt CStatement CExpr
-    -- | The empty statement (i.e. just a semicolon.) May disappear in the future;
-    -- if so, 'ExpressionStmt' will have a 'Maybe' 'CExpr' as its body.
-    | EmptyStmt
-    -- | A simple expression statement, i.e. that which evaluates its body
-    -- and discards the result.
-    | ExpressionStmt CExpr
-    -- | Old-style @for@ loops (C99 6.8.5.3). 
-    | ForStmt (Maybe CExpr) (Maybe CExpr) (Maybe CExpr) CStatement
-    -- | New-style @for@-loops (C99 6.8.5.3.1).
-    | ForDeclStmt CDeclaration (Maybe CExpr) (Maybe CExpr) CStatement
-    -- | The @goto@ statement.
-    | GotoStmt CExpr
-    -- | The @if@ statement, taking the form of @if (cond) statement else? statement?@.
-    | IfStmt CExpr CStatement (Maybe CStatement)
-    -- | Labeled statements. As a GNU extension, labels may have the @__attribute__((unused))@ 
-    -- attribute added to them to avoid warnings when compiling with @-Wall@.
-    | LabeledStmt String [CAttribute] CStatement
-    -- | The @return@ statement, of the form @return expr?@
-    | ReturnStmt (Maybe CExpr)
-    -- | The @switch@ statement, which should take the form of @switch (constant) compound-stmt@.
-    | SwitchStmt CExpr CStatement
-    -- | The @while@ statement, of the form @while expr statement@.
-    | WhileStmt CExpr CStatement
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Show, Eq)
   
   -- | There are two types of inline assembly: the first is the standard call to @asm()@, 
   -- which is identical to a function call in syntax (except for the fact that it can only 
@@ -110,32 +62,32 @@ module Language.C99.AST
   data CAsmOperand 
     = Simple CStringLiteral
     | GCCAsm CStringLiteral [CAsmArgument] [CAsmArgument] [CStringLiteral]
-    deriving (Show, Eq, Typeable, Data, Generic)
+    deriving (Show, Eq)
   
   -- | Represents an output or input value in GCC assembly syntax. Takes the form of 
   -- | @string (variable)?@.
   data CAsmArgument 
     = CAsmArgument CStringLiteral (Maybe CExpr)
-    deriving (Show, Eq, Typeable, Data, Generic)
+    deriving (Show, Eq)
   
   -- | A C function (C99 6.9.1).
   -- Invariant: The final 'CStatement' will always be a 'CompoundStmt', and the 
   -- provided 'CDeclarator' will always be named.
-  data CFunction = CFunction [CSpecifier] CDeclarator CStatement
-    deriving (Eq, Show, Typeable, Data, Generic)
+  data CFunction = CFunction [CSpecifier] CDeclarator CSyn
+    deriving (Eq, Show)
   
   -- | External declarations (C99 6.9). Wraps either a 'CFunction' or 'CDeclaration'.
   data CExternal 
     = FunctionDecl CFunction
     | ExternDecl CDeclaration
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
     
   data CPrefix
     = Cast2 CTypeName
     | PreIncrement
     | PreDecrement
     | CUnaryOp String
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
     
   data CPostfix 
     = Index CExpr
@@ -144,13 +96,13 @@ module Language.C99.AST
     | PointerAccess String
     | PostIncrement
     | PostDecrement
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
     
   
   -- | C expressions (C99 6.5).
   -- Please note that the comma operator is currently unimplemented.
   data CExpr
-    = Constant CLiteral
+    = Constant CSyn
     | Comma CExpr CExpr
     | Identifier { getIdent :: String }
     | CCast [CTypeName] CExpr
@@ -165,19 +117,19 @@ module Language.C99.AST
     | CBuiltin CBuiltinExpr
     | CParen CExpr -- parenthesized expressions
     | CArguments [CExpr]
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
   
   -- | A string literal newtype to provide a modicum of type safety in the AST.
   newtype CStringLiteral = CStringLiteral {
     getExpr :: CExpr
-  } deriving (Eq, Typeable, Data, Show, Generic)
+  } deriving (Eq, Show)
   
   -- TODO: Expand this to include __builtin_offsetof and __builtin_types_compatible_p
   -- | GNU/clang built-in functions that are exposed after preprocessing.
   data CBuiltinExpr
     -- | Corresponds to @__builtin_va_arg(id, type)@.
     = BuiltinVaArg CExpr CTypeName
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
   
   -- | Storage class specifiers (C99 6.7.1).
   -- As an extension, @__attribute__(())@ is considered a storage specifier.
@@ -188,10 +140,7 @@ module Language.C99.AST
     | CExtern
     | CTypedef
     | CAttr CAttribute
-    deriving (Eq, Show, Typeable, Data, Generic)
-  
-  instance Ord CStorageSpecifier where
-    compare _ _ = EQ
+    deriving (Eq, Show, Ord)
   
   -- | Type qualifiers (C99 6.7.3) and function specifiers (C99 6.7.4).
   -- Please note that the 'FInline' qualifier must only be applied to functions.
@@ -200,7 +149,7 @@ module Language.C99.AST
     | CRestrict
     | CVolatile
     | CInline
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
   
   instance Ord CTypeQualifier where
     compare _ _ = EQ
@@ -210,7 +159,7 @@ module Language.C99.AST
     = SSpec CStorageSpecifier
     | TQual CTypeQualifier
     | TSpec CTypeSpecifier
-    deriving (Eq, Show, Typeable, Ord, Data, Generic)
+    deriving (Eq, Show, Ord)
   
   -- | C type specifiers (6.7.2).
   -- As a GNU extension, @typeof(expr)@ is supported.
@@ -233,7 +182,7 @@ module Language.C99.AST
      | TEnumeration (Maybe String) [CEnumerator] [CAttribute]
      | TTypedef String CTypeName
      | TTypeOfExpr CExpr
-     deriving (Eq, Show, Typeable, Data, Generic)
+     deriving (Eq, Show)
   
   -- Signedness comes first, then modifiers, then base types
   instance Ord CTypeSpecifier where
@@ -251,18 +200,20 @@ module Language.C99.AST
   data CEnumerator 
     = EnumIdent String
     | EnumAssign String CExpr
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
   
   -- | C @__attribute__(())@ specifications. 
   data CAttribute = CAttribute [CExpr]
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
+    
+  instance Ord CAttribute
   
   -- | Record type that wraps the various fields a declaration may have.
   data CDeclInfo = CDeclInfo {
     contents :: CDeclarator,
     initVal :: Maybe CInitializer,
     size :: Maybe CExpr
-  } deriving (Show, Eq, Typeable, Data, Generic)
+  } deriving (Show, Eq)
   
   infoName :: CDeclInfo -> Maybe String
   infoName = declName . contents
@@ -275,20 +226,20 @@ module Language.C99.AST
   data CDeclaration = CDeclaration {
       declrSpecifiers :: [CSpecifier],
       declrInfos :: [CDeclInfo]
-  } deriving (Eq, Show, Typeable, Data, Generic)
+  } deriving (Eq, Show)
   
   -- | Represents C type names. The list of specifiers will not be empty.
-  data CTypeName = CTypeName [CSpecifier] CDeclarator deriving (Show, Eq, Typeable, Data, Generic)
+  data CTypeName = CTypeName [CSpecifier] CDeclarator deriving (Show, Eq)
   
   -- | Represents C parameters. There will be at least one 'Specifier', and only 
   -- one 'CDeclInfo', which will contain a possibly-named declarator
   -- and no initializer or size.
-  data CParameter = CParameter [CSpecifier] CDeclarator deriving (Show, Eq, Typeable, Data, Generic)
+  data CParameter = CParameter [CSpecifier] CDeclarator deriving (Show, Eq)
   
   -- | Represents fields of structs or unions. There will be at least one specifier,
   -- at least one 'CDeclInfo', all of which will not have an initVal (but may be 
   -- named, sized, named and sized, or unnamed and sized.)
-  newtype CField = CField { unCField :: CDeclaration } deriving (Show, Eq, Typeable, Data, Generic)
+  newtype CField = CField { unCField :: CDeclaration } deriving (Show, Eq)
   
   -- As a GNU extension, the user can specify the assembly name for a C function 
   -- or variable.
@@ -298,7 +249,7 @@ module Language.C99.AST
     = CIdentBody String
     | CParenBody CDeclarator
     | CEmptyBody
-    deriving (Show, Eq, Typeable, Data, Generic)
+    deriving (Show, Eq)
     
   declName :: CDeclarator -> Maybe String
   declName d = case (body d) of
@@ -317,7 +268,7 @@ module Language.C99.AST
      , modifiers :: [CDerivedDeclarator]
      , asmName :: CAsmName
      , declAttributes :: [CAttribute]
-   } deriving (Eq, Show, Typeable, Data, Generic)
+   } deriving (Eq, Show)
    
   instance Default CDeclarator where def = CDeclarator [] CEmptyBody [] Nothing []
   
@@ -325,18 +276,18 @@ module Language.C99.AST
   data CDesignator 
     = ArrayDesignator CExpr
     | MemberDesignator String
-    deriving (Show, Eq, Typeable, Data, Generic)
+    deriving (Show, Eq)
   
   -- | C initializers (C99 6.7.8). Initialization types can contain one 
   -- expression or a bracketed list of initializers.
   data CInitializer 
     = CInitExpression CExpr
     | CInitList [CInitializerSubfield]
-    deriving (Eq, Show, Typeable, Data, Generic)
+    deriving (Eq, Show)
   
   -- | Represents the deconstructed initializers.
   data CInitializerSubfield = CInitializerSubfield [CDesignator] CInitializer
-    deriving (Show, Eq, Typeable, Data, Generic)
+    deriving (Show, Eq)
   
   
   -- | Indirectly derived declarators used inside the 'CDeclarator' type.
@@ -345,4 +296,4 @@ module Language.C99.AST
    = Pointer [CTypeQualifier]
    | Array [CTypeQualifier] (Maybe CExpr)
    | DerivedFunction [CParameter] Bool
-   deriving (Eq, Show, Typeable, Data, Generic)
+   deriving (Eq, Show)
