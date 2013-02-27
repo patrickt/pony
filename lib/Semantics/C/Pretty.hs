@@ -87,7 +87,7 @@ module Semantics.C.Pretty
     evalPretty _ (CInt t) = pretty t
     evalPretty _ (CStr s) = dquotes $ text s
     evalPretty _ (CFloat s) = text $ show ((fromRational $ toRational s) :: Double) -- shenanigans to prevent trailing zeroes.
-    evalPretty _ (CChar c) = text $ show c
+    evalPretty _ (CChar c) = text $ if c == '\0' then "'\\0'" else show c
     
     -- expressions
     evalPretty _ (CommaSep a)    = hsep $ punctuate comma a
