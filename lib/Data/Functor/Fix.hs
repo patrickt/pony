@@ -9,8 +9,8 @@ module Data.Functor.Fix
   , liftFix 
   ) 
   where
-    
-  import Data.Generics.Fixplate
+  
+  import Data.Generics.Fixplate hiding (foldl, foldr, sequence, mapM)
   
   type Fix = Mu -- I don't know whether I like calling it Fix or Mu. We will find out.
   tie = Fix

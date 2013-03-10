@@ -2,6 +2,7 @@ module Language.Pony.Overture
   ( module X
   , ByteString
   , Map
+  , (≠)
   ) where
   
   import Control.Applicative as X hiding (Const)
@@ -11,3 +12,5 @@ module Language.Pony.Overture
   import Data.Map (Map)
   import Data.Maybe as X
   
+  (≠) :: (Eq a) => a -> a -> Bool
+  (≠) = (==)

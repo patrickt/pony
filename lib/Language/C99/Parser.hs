@@ -15,6 +15,7 @@ module Language.C99.Parser
   
   import Data.Generics
   import Language.C99.AST
+  import Language.C99.Syntax
   import Language.C99.Operators
   import {-# SOURCE #-} Language.C99.Expressions
   import Language.Pony.Overture
@@ -31,7 +32,7 @@ module Language.C99.Parser
   -- names to types, and an array of 'Operator's that will be decomposed into 
   -- parser actions based on the precedence specified therein.
   data Internals = Internals 
-    { typedefs :: Map String CTypeName
+    { typedefs :: Map String CSyn
     , operators :: [Operator]
     }
   
@@ -39,7 +40,7 @@ module Language.C99.Parser
   
   -- | Updates an 'Internals' record by adding a new (name, type) pair.
   -- tl;dr: this needs some work.
-  addTypeDef :: String -> CTypeName -> Internals -> Internals
+  addTypeDef :: String -> CSyn -> Internals -> Internals
   addTypeDef name decl record = record { typedefs = M.insert name decl (typedefs record) }
   
   -- | The instance of the GenParser monad transformer over characters and carrying 'Internals'.

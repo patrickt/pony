@@ -52,7 +52,6 @@ Library {
   other-modules:   Data.Functor.Fix
                  , Language.C99
                  , Language.C99.AST
-                 , Language.C99.ASTPretty
                  , Language.C99.Declarations
                  , Language.C99.Expressions
                  , Language.C99.Functions

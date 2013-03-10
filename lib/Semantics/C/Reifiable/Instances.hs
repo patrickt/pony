@@ -2,7 +2,7 @@ module Semantics.C.Reifiable.Instances
   where
   
   
-  import Data.Functor.Fix hiding (foldl, foldr, sequence)
+  import Data.Functor.Fix 
   import Data.List (find, foldl', partition, sort)
   import Data.Maybe
   import Language.C99 hiding (char, Empty)
@@ -13,6 +13,7 @@ module Semantics.C.Reifiable.Instances
   import Semantics.C.ASG as ASG
   import Semantics.C.Reifiable
   
+  {-
   instance Reifiable CTranslationUnit where
     convert (CTranslationUnit ts) = program' $ convert <$> ts
   
@@ -216,6 +217,7 @@ module Semantics.C.Reifiable.Instances
     
   instance Reifiable CAsmArgument where
     convert (CAsmArgument l e) = tie $ AssemblyOperand (convert l) (convert e)
+  -}
 
 
   

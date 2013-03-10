@@ -51,10 +51,6 @@ module Language.C99.AST
   -- TODO: Add position information to all of the types, etc.
   -- TODO: Rename CAsmOperand and CAsmArgument to something more descriptive.
   
-  -- | A translation unit is a nonempty list of external declarations (C99 9.6).
-  newtype CTranslationUnit = CTranslationUnit [CExternal]
-    deriving (Show, Eq)
-  
   -- | There are two types of inline assembly: the first is the standard call to @asm()@, 
   -- which is identical to a function call in syntax (except for the fact that it can only 
   -- take a string as its parameter). The second is GCC assembly syntax, which takes the form of
@@ -67,7 +63,7 @@ module Language.C99.AST
   -- | Represents an output or input value in GCC assembly syntax. Takes the form of 
   -- | @string (variable)?@.
   data CAsmArgument 
-    = CAsmArgument CStringLiteral (Maybe CExpr)
+    = CAsmArgument CStringLiteral (Maybe CSyn)
     deriving (Show, Eq)
   
   -- | A C function (C99 6.9.1).
@@ -76,69 +72,27 @@ module Language.C99.AST
   data CFunction = CFunction [CSpecifier] CDeclarator CSyn
     deriving (Eq, Show)
   
-  -- | External declarations (C99 6.9). Wraps either a 'CFunction' or 'CDeclaration'.
-  data CExternal 
-    = FunctionDecl CFunction
-    | ExternDecl CDeclaration
-    deriving (Eq, Show)
-    
-  data CPrefix
-    = Cast2 CTypeName
-    | PreIncrement
-    | PreDecrement
-    | CUnaryOp String
-    deriving (Eq, Show)
-    
-  data CPostfix 
-    = Index2 CExpr
-    | Call2 [CExpr]
-    | MemberAccess String
-    | PointerAccess String
-    | PostIncrement
-    | PostDecrement
-    deriving (Eq, Show)
-    
-  
-  -- | C expressions (C99 6.5).
-  -- Please note that the comma operator is currently unimplemented.
-  data CExpr
-    = Constant CSyn
-    | Comma CExpr CExpr
-    | Identifier { getIdent :: String }
-    | CCast [CTypeName] CExpr
-    | UnaryOp String CExpr
-    | PostfixOp CExpr [CPostfix]
-    | PrefixOp [CPrefix] CExpr
-    | BinaryOp String CExpr CExpr
-    | TernaryOp CExpr CExpr CExpr
-    | TernaryOp2 CExpr (Maybe CExpr) CExpr
-    -- | Whereas sizeof(variable) parses as a function call, sizeof(type) needs its own node.
-    | SizeOfType CTypeName
-    | CBuiltin CBuiltinExpr
-    | CParen CExpr -- parenthesized expressions
-    | CArguments [CExpr]
-    deriving (Eq, Show)
   
   -- | A string literal newtype to provide a modicum of type safety in the AST.
   newtype CStringLiteral = CStringLiteral {
-    getExpr :: CExpr
+    getExpr :: CSyn
   } deriving (Eq, Show)
   
   -- TODO: Expand this to include __builtin_offsetof and __builtin_types_compatible_p
   -- | GNU/clang built-in functions that are exposed after preprocessing.
   data CBuiltinExpr
     -- | Corresponds to @__builtin_va_arg(id, type)@.
-    = BuiltinVaArg CExpr CTypeName
+    = BuiltinVaArg CSyn CSyn
     deriving (Eq, Show)
   
   -- | Storage class specifiers (C99 6.7.1).
   -- As an extension, @__attribute__(())@ is considered a storage specifier.
   data CStorageSpecifier
-    = CAuto
+    = CTypedef
+    | CAuto
     | CRegister
     | CStatic
     | CExtern
-    | CTypedef
     | CAttr CAttribute
     deriving (Eq, Show, Ord)
   
@@ -180,8 +134,8 @@ module Language.C99.AST
      | TBuiltin String
      | TStructOrUnion (Maybe String) Bool [CField] [CAttribute]
      | TEnumeration (Maybe String) [CEnumerator] [CAttribute]
-     | TTypedef String CTypeName
-     | TTypeOfExpr CExpr
+     | TTypedef String CSyn
+     | TTypeOfExpr CSyn
      deriving (Eq, Show)
   
   -- Signedness comes first, then modifiers, then base types
@@ -199,11 +153,11 @@ module Language.C99.AST
   -- | C enumeration specifiers (C99 6.7.2.2).
   data CEnumerator 
     = EnumIdent String
-    | EnumAssign String CExpr
+    | EnumAssign String CSyn
     deriving (Eq, Show)
   
   -- | C @__attribute__(())@ specifications. 
-  data CAttribute = CAttribute [CExpr]
+  data CAttribute = CAttribute [CSyn]
     deriving (Eq, Show)
     
   instance Ord CAttribute
@@ -227,14 +181,6 @@ module Language.C99.AST
       declrSpecifiers :: [CSpecifier],
       declrInfos :: [CDeclInfo]
   } deriving (Eq, Show)
-  
-  -- | Represents C type names. The list of specifiers will not be empty.
-  data CTypeName = CTypeName [CSpecifier] CDeclarator deriving (Show, Eq)
-  
-  -- | Represents C parameters. There will be at least one 'Specifier', and only 
-  -- one 'CDeclInfo', which will contain a possibly-named declarator
-  -- and no initializer or size.
-  data CParameter = CParameter [CSpecifier] CDeclarator deriving (Show, Eq)
   
   -- | Represents fields of structs or unions. There will be at least one specifier,
   -- at least one 'CDeclInfo', all of which will not have an initVal (but may be 
@@ -294,6 +240,6 @@ module Language.C99.AST
   -- In the future, Apple's extension for blocks (declared with @^@) may be added.
   data CDerivedDeclarator
    = Pointer [CTypeQualifier]
-   | Array [CTypeQualifier] (Maybe CSyn)
-   | DerivedFunction [CParameter] Bool
+   | Array [CTypeQualifier] CSyn
+   | DerivedFunction [CSyn] Bool
    deriving (Eq, Show)

@@ -1,6 +1,7 @@
 module Language.C99.Statements 
   where
   
+  import Control.Monad.Writer
   import Language.C99.Parser
   import Language.C99.Expressions
   import Language.C99.AST
@@ -8,6 +9,9 @@ module Language.C99.Statements
   import Language.C99.Specifiers
   import qualified Language.C99.Lexer as L
   import Language.C99.Syntax
+  
+  compound :: Parser CSyn
+  compound = L.braces (group' <$> concat <$> (many (choice [ pure <$> statement, declarations])))
   
   -- TODO: move this
   opt :: Parser CSyn -> Parser CSyn
@@ -29,29 +33,29 @@ module Language.C99.Statements
   -- TODO: dropping attributes on labels
   labeledStmt :: Parser CSyn
   labeledStmt = choice 
-    [ case'          <$> (L.reserved "case" *> expression') <*> (L.colon *> statement) <?> "case statement"
+    [ case'          <$> (L.reserved "case" *> expression) <*> (L.colon *> statement) <?> "case statement"
     , default'       <$> (L.reserved "default" *> L.colon *> statement) <?> "default statement"
     , try  (labeled' <$> (identifier <* L.colon) <*> statement <?> "labeled statement")
     ]
   
   jumpStmt :: Parser CSyn
   jumpStmt = choice 
-    [ goto'     <$> (L.reserved "goto" *> expression') <?> "goto statement"
+    [ goto'     <$> (L.reserved "goto" *> expression) <?> "goto statement"
     , continue' <$  L.reserved "continue" <?> "continue statement"
     , break'    <$  L.reserved "break" <?> "break statement"
-    , return'   <$> (L.reserved "return" *> opt expression') <?> "return statement"
+    , return'   <$> (L.reserved "return" *> opt expression) <?> "return statement"
     ] <* L.semi
   
   expressionStmt :: Parser CSyn
-  expressionStmt = (opt expression') <* L.semi
+  expressionStmt = (opt expression) <* L.semi
   
   selection :: Parser CSyn
   selection = ifStmt <|> switch where
-    ifStmt = ifthenelse' <$> (L.reserved "if" *> L.parens expression')
+    ifStmt = ifthenelse' <$> (L.reserved "if" *> L.parens expression)
                          <*> statement
                          <*> opt (L.reserved "else" *> statement) 
                          <?> "if statement"
-    switch = switch' <$> (L.reserved "switch" *> L.parens expression') 
+    switch = switch' <$> (L.reserved "switch" *> L.parens expression) 
                      <*> statement
                      <?> "switch statement"
                      
@@ -71,8 +75,8 @@ module Language.C99.Statements
       -- TODO: declaration or expression at the beginning
       for = for' <$> (L.reserved "for" *> L.symbol "(" *> expressionStmt) 
                  <*> expressionStmt
-                 <*> (expression' <* L.symbol ")") 
+                 <*> (expression <* L.symbol ")") 
                  <*> statement 
                  <?> "for statement"
-      parenExp = L.parens expression'
+      parenExp = L.parens expression
   

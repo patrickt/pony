@@ -18,8 +18,8 @@ where
   
   as name qual = qual <$ L.reserved name
   
-  -- You can put reserved words like "const" inside __attribute__ declarations, so we try parsing an expression then give up and just read letters
-  customAttribute :: Parser CExpr
+  -- -- You can put reserved words like "const" inside __attribute__ declarations, so we try parsing an expression then give up and just read letters
+  customAttribute :: Parser a
   -- customAttribute = try expression <|> (Constant <$> CString <$> some letter)
   customAttribute = undefined
   

@@ -13,7 +13,6 @@ module Language.C99.TopLevel
   preprocessedC :: Parser CSyn
   preprocessedC = program' <$> (L.whiteSpace *> many extern) <* eof where
     extern = choice 
-      [ try declaration
-      , functionDefinition
+      [ functionDefinition
       ]
   

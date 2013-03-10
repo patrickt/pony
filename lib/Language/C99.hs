@@ -4,7 +4,6 @@ module Language.C99
   where
   
   import Language.C99.AST as X
-  import Language.C99.ASTPretty ()
   import Language.C99.Declarations as X
   import Language.C99.Expressions as X
   import Language.C99.Functions as X

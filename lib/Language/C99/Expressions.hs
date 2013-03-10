@@ -102,13 +102,9 @@ module Language.C99.Expressions
     , modulus
     , ternary
     ]
-  -- 
-  -- expression :: Parser CExpr
-  -- expression = chainl1 assignmentExpression (Comma <$ L.comma) <?> "C expression"
   
-  expression = expression'
-  expression' = assignmentExpression
-  
+  expression = chainl1 assignmentExpression (comma' <$ L.comma) <?> "C expression"
+    
   assignmentExpression :: Parser CSyn
   assignmentExpression = try assign <|> constantExpression where 
     assign = (binary' <$> constantExpression <*> assignmentOperator <*> assignmentExpression)
@@ -144,10 +140,7 @@ module Language.C99.Expressions
     return $ foldl (>>>) id postfixes subject
   
   prefixExpression :: Parser CSyn
-  prefixExpression = do
-    prefixes <- many prefixOperator
-    subject <- postfixExpression
-    return $ foldl (<<<) id prefixes subject
+  prefixExpression = foldl (<<<) id <$> many prefixOperator <*> postfixExpression
   
   prefixOperator :: Parser (CSyn -> CSyn)
   prefixOperator = choice
@@ -164,10 +157,6 @@ module Language.C99.Expressions
     , stringLiteral
     , paren' <$> L.parens expression 
     ]
-  
-  type COperator = E.Operator ByteString Internals Identity CExpr
-  
-  data Op = Op { baseOperator :: COperator, prec :: Int }
   
   -- builtinExpression :: Parser CExpr
   -- builtinExpression = CBuiltin <$> (BuiltinVaArg <$> (L.reserved "__builtin_va_arg" *> L.parens expression) <*> typeName)

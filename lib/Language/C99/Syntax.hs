@@ -12,7 +12,7 @@ module Language.C99.Syntax where
   
   data C99 a where
     -- logical constructs
-    Name     :: String -> C99 a -- used for binary operators as well as identifiers
+    Name     :: { getName :: String } -> C99 a -- used for binary operators as well as identifiers
     
     Signed   :: a -> C99 a
     Unsigned :: a -> C99 a
@@ -59,7 +59,7 @@ module Language.C99.Syntax where
     CInt     :: Integer -> C99 a
     CFloat   :: String -> C99 a
     CChar    :: Char -> C99 a
-    CommaSep   :: a -> a -> C99 a
+    CommaSep :: a -> a -> C99 a
     Unary    :: a -> a -> C99 a
     Binary   :: a -> a -> a -> C99 a
     Ternary  :: a -> a -> a -> C99 a
@@ -80,6 +80,8 @@ module Language.C99.Syntax where
     Static   :: a -> C99 a
     Volatile :: a -> C99 a
     
+    Initializer :: [a] -> C99 a
+    
     -- other stuff
     Enumeration :: { ename :: a, emembers :: a } -> C99 a
     Composite :: { ckind :: a, cname :: a, cfields :: a } -> C99 a
@@ -92,8 +94,11 @@ module Language.C99.Syntax where
     Arguments :: [a] -> Bool -> C99 a
     ForwardTypeDeclaration :: a -> C99 a
     Variable :: { vtype :: a, vname :: a, vvalue :: a } -> C99 a
+    MultiDeclaration :: { ccomponents :: [a] } -> C99 a
     Typedef :: { ttype :: a, tname :: a } -> C99 a
     Sized :: a -> a -> C99 a
+    
+  data Foo = Bar { baz :: Int} | Baf { baz :: Int }
   
   deriving instance (Show a) => Show (C99 a)
   deriving instance (Eq a) => Eq (C99 a)

@@ -4,10 +4,10 @@ module Language.C99.Declarations where
   import Language.C99.Syntax
   import Language.C99.Parser
   
-  declaration :: Parser CSyn
+  declarations :: Parser [CSyn]
   
   sizedDeclaration :: Parser CField
   
-  typeName :: Parser CTypeName
+  typeName :: Parser CSyn
   
   declarator :: Parser CDeclarator
