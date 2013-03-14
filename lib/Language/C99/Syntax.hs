@@ -30,7 +30,7 @@ module Language.C99.Syntax where
     Struct           :: C99 a
     Union            :: C99 a
     PointerToT       :: a -> C99 a -- Pointer :: Type -> Type
-    ArrayT           :: { array_length :: a, array_of :: a } -> C99 a
+    ArrayT           :: { len :: a, typ :: a } -> C99 a
     FunctionPointerT :: a -> a -> C99 a
     BuiltinT         :: a -> C99 a -- Builtin :: Name -> Type
     TypedefT         :: a -> C99 a
@@ -83,19 +83,19 @@ module Language.C99.Syntax where
     Initializer :: [a] -> C99 a
     
     -- other stuff
-    Enumeration :: { ename :: a, emembers :: a } -> C99 a
-    Composite :: { ckind :: a, cname :: a, cfields :: a } -> C99 a
+    Enumeration :: { name :: a, members :: a } -> C99 a
+    Composite :: { kind :: a, name :: a, fields :: a } -> C99 a
     Program :: [a] -> C99 a
     Group :: [a] -> C99 a
     List  :: [a] -> C99 a -- do we use this anywhere?
-    Assembly :: { avolatile :: Bool, atext :: a, ainregs :: a, aoutregs :: a, aclobber :: a } -> C99 a
+    Assembly :: { isVolatile :: Bool, text :: a, inRegs :: a, outRegs :: a, clobberList :: a } -> C99 a
     AssemblyOperand :: { opconstraint :: a, opvar :: a } -> C99 a
     
     Arguments :: [a] -> Bool -> C99 a
     ForwardTypeDeclaration :: a -> C99 a
-    Variable :: { vtype :: a, vname :: a, vvalue :: a } -> C99 a
-    MultiDeclaration :: { ccomponents :: [a] } -> C99 a
-    Typedef :: { ttype :: a, tname :: a } -> C99 a
+    Variable :: { typ :: a, name :: a, value :: a } -> C99 a
+    MultiDeclaration :: { components :: [a] } -> C99 a
+    Typedef :: { typ :: a, name :: a } -> C99 a
     Sized :: a -> a -> C99 a
     
   data Foo = Bar { baz :: Int} | Baf { baz :: Int }

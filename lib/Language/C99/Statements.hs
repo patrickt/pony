@@ -1,12 +1,9 @@
 module Language.C99.Statements 
   where
   
-  import Control.Monad.Writer
   import Language.C99.Parser
   import Language.C99.Expressions
-  import Language.C99.AST
   import Language.C99.Declarations
-  import Language.C99.Specifiers
   import qualified Language.C99.Lexer as L
   import Language.C99.Syntax
   
@@ -28,7 +25,8 @@ module Language.C99.Statements
     ] <?> "C statement"
   
   compoundStmt :: Parser CSyn
-  compoundStmt = L.braces (group' <$> many statement) <?> "compound statement"
+  compoundStmt = L.braces (group' <$> concat <$> many blockItem) <?> "compound statement"
+    where blockItem = try declarations <|> (pure <$> statement)
   
   -- TODO: dropping attributes on labels
   labeledStmt :: Parser CSyn

@@ -3,14 +3,10 @@ module Language.C99.Functions where
   import Language.Pony.Overture
   import Language.C99.Parser
   import Language.C99.AST
-  import Language.C99.Specifiers
   import Language.C99.Declarations
   import Language.C99.Statements
   import Language.C99.Syntax
   import Data.Functor.Fix
-  
-  import Data.List (sort, partition)
-  import Semantics.C.Reifiable
   
   functionDefinition :: Parser CSyn
   functionDefinition = do

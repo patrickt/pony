@@ -2,16 +2,16 @@ module Semantics.C.Reifiable.Instances
   where
   
   
-  import Data.Functor.Fix 
-  import Data.List (find, foldl', partition, sort)
-  import Data.Maybe
-  import Language.C99 hiding (char, Empty)
-  import qualified Language.C99 as C99
-  -- TODO: Provide a sizeOfType function hooking into MachineSizes
-  -- import Language.Pony.MachineSizes
-  import qualified Language.C99.Literals as Lit
-  import Semantics.C.ASG as ASG
-  import Semantics.C.Reifiable
+  -- import Data.Functor.Fix 
+  -- import Data.List (find, foldl', partition, sort)
+  -- import Data.Maybe
+  -- import Language.C99 hiding (char, Empty)
+  -- import qualified Language.C99 as C99
+  -- -- TODO: Provide a sizeOfType function hooking into MachineSizes
+  -- -- import Language.Pony.MachineSizes
+  -- import qualified Language.C99.Literals as Lit
+  -- import Semantics.C.ASG as ASG
+  -- import Semantics.C.Reifiable
   
   {-
   instance Reifiable CTranslationUnit where

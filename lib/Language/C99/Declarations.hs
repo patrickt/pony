@@ -19,7 +19,7 @@ where
   import Language.C99.Parser
   import Language.C99.Syntax
   import Language.C99.Specifiers
-  import Data.Functor.Fix hiding (attribute)
+  import Data.Functor.Fix
   import Data.List (sort, partition)
   
   
@@ -62,12 +62,15 @@ where
     return $ (makeModifiersFromDeclarator decl) (typeFromSpecifiers specs)
   
   parameter :: Parser CSyn
-  parameter = do
+  parameter = Fix <$> do
     specs <- sort <$> some specifier
     decl  <- declarator
     let type' = (makeModifiersFromDeclarator decl) (typeFromSpecifiers specs)
     let name = name' <$> declName decl
-    return $ if (isJust name) then Fix (Variable {vname = (fromJust name), vtype = type', vvalue = nil'}) else type'
+    return $ 
+      if (isJust name) 
+        then Variable {name = fromJust name, typ = type', value = nil'} 
+        else unFix type'
   
   -- read specifiers, sort them
   -- if there are typedefs, drop all of them, assert only names are declared, and record it in the symbol table
@@ -79,26 +82,25 @@ where
   declarations :: Parser [CSyn]
   declarations = do
     specs <- sort <$> some specifier
-    decl <- L.commaSep1 initDeclarator
+    decls <- L.commaSep1 initDeclarator <* L.semi
     
     let wrapper = if ((SSpec CTypedef) `elem` specs) then wrapTypedef else wrapDecl
-    
-    mapM (wrapper specs) decl
+    mapM (wrapper specs) decls
   
   wrapTypedef :: [CSpecifier] -> CDeclInfo -> Parser CSyn
-  wrapTypedef specs (CDeclInfo { contents, initVal, ..}) = do
+  wrapTypedef specs (CDeclInfo { contents, initVal, ..}) = Fix <$> do
     when (isJust initVal) (fail "expected uninitialized declaration in typedef")
     when (isNothing (declName contents)) (fail "expected named declaration in typedef")
     let (Just name) = name' <$> declName contents
     let typ = makeType [s | s <- specs, s ≠ (SSpec CTypedef)] contents
     updateState $ addTypeDef ((liftFix getName) name) typ
-    return $ Fix $ Typedef { tname = name, ttype = typ }
+    return $ Typedef { name = name, typ = typ }
   
   wrapDecl :: [CSpecifier] -> CDeclInfo -> Parser CSyn
-  wrapDecl specs (CDeclInfo { contents, initVal, ..}) = do
+  wrapDecl specs (CDeclInfo { contents, initVal, ..}) = Fix <$> do
     let name = name' <$> declName contents
     when (isNothing name) $ fail "expected variable name"
-    return $ Fix $ Variable { vname = fromJust name, vtype = makeType specs contents, vvalue = nil' }
+    return $ Variable { name = fromJust name, typ = makeType specs contents, value = nil' }
     
   
   -- -- | C99 6.7 - abstract and concrete declarations.
