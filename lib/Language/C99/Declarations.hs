@@ -1,6 +1,6 @@
 module Language.C99.Declarations
   ( declarations
-  , sizedDeclaration
+  , sizedDeclarations
   , typeName
   , parameter
   , declarator 
@@ -128,22 +128,24 @@ where
   -- if there was a typedef declaring one name, we return a Typedef with a List as its name record
   -- if there was no typedef and it declared one name, we return a Variable
   -- otherwise we return a MultiDeclaration
-  
-  -- declarations' :: Bool -> Parser [CSyn]
-    
-  declarations :: Parser [CSyn]
-  declarations = do
+
+  declarations = declarations' False
+  sizedDeclarations = declarations' True
+
+  declarations' :: Bool -> Parser [CSyn]
+  declarations' allowsSize = do
     specs <- sort <$> some specifier
-    
-    decls <- L.commaSep1 initDeclarator <* L.semi
+    let declParser = if allowsSize then sizedDeclarator else initDeclarator
+    decls <- L.commaSep1 declParser <* L.semi
     
     let wrapper = if ((SSpec CTypedef) `elem` specs) then wrapTypedef else wrapDecl
     mapM (wrapper specs) decls
   
   wrapTypedef :: [CSpecifier] -> CDeclInfo -> Parser CSyn
-  wrapTypedef specs (CDeclInfo { contents, initVal, ..}) = Fix <$> do
+  wrapTypedef specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
     when (isJust initVal) (fail "expected uninitialized declaration in typedef")
     when (isNothing (declName contents)) (fail "expected named declaration in typedef")
+    when (isNothing size) (fail "unexpected size in typedef")
     
     let (Just name) = name' <$> declName contents
     let typ = makeType [s | s <- specs, s ≠ (SSpec CTypedef)] contents
@@ -151,19 +153,14 @@ where
     updateState $ addTypeDef ((liftFix getName) name) typ
     
     return $ Typedef { name = name, typ = typ }
-  
+    
   wrapDecl :: [CSpecifier] -> CDeclInfo -> Parser CSyn
-  wrapDecl specs (CDeclInfo { .. }) = Fix <$> do
+  wrapDecl specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
+    let makeSizer = maybe id sized' size
     let name = name' <$> declName contents
     when (isNothing name) $ fail "expected variable name"
-    return $ Variable { name = fromJust name, typ = makeType specs contents, value = nil' }
-  
-  -- | Sized declarations can only appear in the bodies of composite types.
-  sizedDeclaration :: Parser CField
-  sizedDeclaration = CField <$> (CDeclaration <$> some specifier
-                                              <*> L.commaSep sizedDeclarator 
-                                              <*  L.semi)
-  
+    return $ Variable { name = fromJust name, typ = makeSizer $ makeType specs contents, value = nil' }
+    
   func :: Parser CDerivedDeclarator
   func = L.parens $ do
     first <- optional parameter
@@ -194,7 +191,7 @@ where
   sizedDeclarator :: Parser CDeclInfo
   sizedDeclarator = CDeclInfo <$> declarator
                               <*> pure Nothing
-                              <*> optional (L.colon *> expression)
+                              <*> optional (L.colon *> constantExpression)
                                   
   designator :: Parser CDesignator
   designator =  (ArrayDesignator  <$> L.brackets constant     <?> "array declaration")
