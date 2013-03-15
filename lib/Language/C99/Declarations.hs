@@ -5,6 +5,7 @@ module Language.C99.Declarations
   , parameter
   , declarator 
   , functionSignature
+  , builderFromSpecifier
   )
 where
   
@@ -25,6 +26,28 @@ where
   
   type SynBuilder = CSyn -> CSyn
   
+  
+  convertType :: CTypeSpecifier -> CSyn
+  convertType TVoid           = void'
+  convertType TChar           = char'
+  convertType TShort          = short' int'
+  convertType TInt            = int'
+  convertType TLong           = long' int'
+  convertType TInt128         = verylong'
+  convertType TUInt128        = unsigned' verylong'
+  convertType TFloat          = float'
+  convertType TDouble         = double'
+  convertType TSigned         = signed' int'
+  convertType TUnsigned       = unsigned' int'
+  convertType TBool           = bool'
+  
+  
+  typeFromSpecifiers :: [CSpecifier] -> CSyn
+  typeFromSpecifiers specs = foldSpecifiers (init specs') $ (convertType typeSpec)
+    where 
+      specs' = sort specs
+      (TSpec typeSpec) = last specs'
+  
   specifierBelongsToFunction :: CSpecifier -> Bool
   specifierBelongsToFunction (SSpec CStatic) = True
   specifierBelongsToFunction (SSpec CExtern) = True
@@ -39,11 +62,33 @@ where
     let functionBuilder = foldl (.) id functionModifiers
     return (functionBuilder, returnType)
     
+  builderFromSpecifier :: CSpecifier -> SynBuilder
+  builderFromSpecifier (TSpec TShort) = short'
+  builderFromSpecifier (TSpec TLong) = long'
+  builderFromSpecifier (TSpec TSigned) = signed'
+  builderFromSpecifier (TSpec TUnsigned) = unsigned'
+  builderFromSpecifier (TQual CConst) = const'
+  builderFromSpecifier (TQual CRestrict) = restrict'
+  builderFromSpecifier (TQual CVolatile) = volatile'
+  builderFromSpecifier (TQual CInline) = inline'
+  builderFromSpecifier (SSpec CAuto) = auto'
+  builderFromSpecifier (SSpec CStatic) = static'
+  builderFromSpecifier (SSpec CExtern) = extern'
+  -- builderFromSpecifier (SSpec (CAttr (CAttribute es))) = attribute' (convert <$> es)
+  builderFromSpecifier x = error $ show x
+  
+  foldDerived :: [CDerivedDeclarator] -> SynBuilder  
   foldDerived = foldr builderFromDerived id
   
+  foldSpecifiers :: [CSpecifier] -> SynBuilder
+  foldSpecifiers s = foldr (.) id (builderFromSpecifier <$> s)
+  
+  foldTypeQualifiers :: [CTypeQualifier] -> SynBuilder
+  foldTypeQualifiers qs = foldSpecifiers (TQual <$> qs)
+  
   builderFromDerived :: CDerivedDeclarator -> SynBuilder -> SynBuilder
-  builderFromDerived (Pointer qs) base   = pointer_to' >>> foldr makeModifiersFromSpec base (TQual <$> qs)
-  builderFromDerived (Array qs len) base = array' len  >>> foldr makeModifiersFromSpec base (TQual <$> qs)
+  builderFromDerived (Pointer qs) base                      = pointer_to' >>> foldTypeQualifiers qs >>> base
+  builderFromDerived (Array qs len) base                    = array' len  >>> foldTypeQualifiers qs >>> base
   builderFromDerived (DerivedFunction params variadic) base = functionpointer' (arguments' params variadic) >>> base
   
   makeModifiersFromDeclarator :: CDeclarator -> SynBuilder
@@ -59,7 +104,6 @@ where
       -- then we look left to find pointers.
       foldPointers = foldDerived $ reverse pointers
       -- then as the stack unwinds we jump out.
-      
   
   makeType :: [CSpecifier] -> CDeclarator -> CSyn
   makeType specs decl = makeModifiersFromDeclarator decl $ typeFromSpecifiers specs
@@ -84,10 +128,13 @@ where
   -- if there was a typedef declaring one name, we return a Typedef with a List as its name record
   -- if there was no typedef and it declared one name, we return a Variable
   -- otherwise we return a MultiDeclaration
+  
+  -- declarations' :: Bool -> Parser [CSyn]
     
   declarations :: Parser [CSyn]
   declarations = do
     specs <- sort <$> some specifier
+    
     decls <- L.commaSep1 initDeclarator <* L.semi
     
     let wrapper = if ((SSpec CTypedef) `elem` specs) then wrapTypedef else wrapDecl
@@ -106,7 +153,7 @@ where
     return $ Typedef { name = name, typ = typ }
   
   wrapDecl :: [CSpecifier] -> CDeclInfo -> Parser CSyn
-  wrapDecl specs (CDeclInfo { contents, initVal, ..}) = Fix <$> do
+  wrapDecl specs (CDeclInfo { .. }) = Fix <$> do
     let name = name' <$> declName contents
     when (isNothing name) $ fail "expected variable name"
     return $ Variable { name = fromJust name, typ = makeType specs contents, value = nil' }

@@ -50,7 +50,7 @@ module Language.C99.Syntax where
     IfThenElse :: a -> a -> a -> C99 a
     Labeled    :: a -> a -> C99 a
     Return     :: a -> C99 a
-    Switch     :: a -> a -> C99 a -- Buggy: should have a Group as its second parameter
+    Switch     :: a -> a -> C99 a
     While      :: a -> a -> C99 a
   
     -- expressions

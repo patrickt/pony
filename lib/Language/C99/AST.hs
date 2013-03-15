@@ -10,44 +10,6 @@ module Language.C99.AST
   import Language.Pony.Overture
   import Data.List (sort)
   
-  builderFromSpecifier :: CSpecifier -> CSyn -> CSyn
-  builderFromSpecifier (TSpec TShort) = short'
-  builderFromSpecifier (TSpec TLong) = long'
-  builderFromSpecifier (TSpec TSigned) = signed'
-  builderFromSpecifier (TSpec TUnsigned) = unsigned'
-  builderFromSpecifier (TQual CConst) = const'
-  builderFromSpecifier (TQual CRestrict) = restrict'
-  builderFromSpecifier (TQual CVolatile) = volatile'
-  builderFromSpecifier (TQual CInline) = inline'
-  builderFromSpecifier (SSpec CAuto) = auto'
-  builderFromSpecifier (SSpec CStatic) = static'
-  builderFromSpecifier (SSpec CExtern) = extern'
-  -- builderFromSpecifier (SSpec (CAttr (CAttribute es))) = attribute' (convert <$> es)
-  builderFromSpecifier x = error $ show x
-  
-  convertType :: CTypeSpecifier -> CSyn
-  convertType TVoid           = void'
-  convertType TChar           = char'
-  convertType TShort          = short' int'
-  convertType TInt            = int'
-  convertType TLong           = long' int'
-  convertType TInt128         = verylong'
-  convertType TUInt128        = unsigned' verylong'
-  convertType TFloat          = float'
-  convertType TDouble         = double'
-  convertType TSigned         = signed' int'
-  convertType TUnsigned       = unsigned' int'
-  convertType TBool           = bool'
-  
-  makeModifiersFromSpec :: CSpecifier -> (CSyn -> CSyn) -> (CSyn -> CSyn)
-  makeModifiersFromSpec spec base = builderFromSpecifier spec . base
-  
-  typeFromSpecifiers :: [CSpecifier] -> CSyn
-  typeFromSpecifiers specs = (foldr makeModifiersFromSpec id (init specs')) (convertType typeSpec)
-    where 
-      specs' = sort specs
-      (TSpec typeSpec) = last specs'
-  
   -- TODO: Add position information to all of the types, etc.
   -- TODO: Rename CAsmOperand and CAsmArgument to something more descriptive.
   
