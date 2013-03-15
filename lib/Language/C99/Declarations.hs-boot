@@ -6,7 +6,7 @@ module Language.C99.Declarations where
   
   declarations :: Parser [CSyn]
   
-  sizedDeclaration :: Parser CField
+  sizedDeclarations :: Parser [CSyn]
   
   typeName :: Parser CSyn
   
