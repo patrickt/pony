@@ -23,6 +23,7 @@ where
   import Language.C99.Specifiers
   import Data.Functor.Fix
   import Data.List (sort, partition)
+  import Data.Monoid
   
   type SynBuilder = CSyn -> CSyn
   
@@ -79,9 +80,10 @@ where
   
   foldDerived :: [CDerivedDeclarator] -> SynBuilder  
   foldDerived = foldr builderFromDerived id
-  
+    
   foldSpecifiers :: [CSpecifier] -> SynBuilder
-  foldSpecifiers s = foldr (.) id (builderFromSpecifier <$> s)
+  foldSpecifiers s = concatEndo (builderFromSpecifier <$> s)
+    where concatEndo m = appEndo $ mconcat (Endo <$> m)
   
   foldTypeQualifiers :: [CTypeQualifier] -> SynBuilder
   foldTypeQualifiers qs = foldSpecifiers (TQual <$> qs)
