@@ -38,6 +38,8 @@ where
     let functionModifiers = builderFromSpecifier <$> funcSpecs
     let functionBuilder = foldl (.) id functionModifiers
     return (functionBuilder, returnType)
+    
+  foldDerived = foldr builderFromDerived id
   
   builderFromDerived :: CDerivedDeclarator -> SynBuilder -> SynBuilder
   builderFromDerived (Pointer qs) base   = pointer_to' >>> foldr makeModifiersFromSpec base (TQual <$> qs)
@@ -48,15 +50,16 @@ where
   makeModifiersFromDeclarator (CDeclarator pointers body modifiers asmName declAttributes) 
     = foldBody . foldModifiers . foldPointers where
       -- this is the right-left rule. 
-      -- first we find the identifier, going as deep into parenthesized declarations as possible.
-      foldBody (CParenBody d) = makeModifiersFromDeclarator d
-      foldBody _ = id
-      -- then we look right to find ()s (function pointers) or [] (arrays)
+      -- first we recurse as deeply as we can into parenthesized subdeclarations.
+      foldBody = case body of
+        (CParenBody d) -> makeModifiersFromDeclarator d
+        _ -> id
+      -- then we look right to find array and function pointer modifiers.
       foldModifiers = foldDerived modifiers
-      -- then we look left (with the reverse) to find any pointers
+      -- then we look left to find pointers.
       foldPointers = foldDerived $ reverse pointers
-      -- then we jump outward as needed as the stack unwinds.
-      foldDerived = foldr builderFromDerived id
+      -- then as the stack unwinds we jump out.
+      
   
   makeType :: [CSpecifier] -> CDeclarator -> CSyn
   makeType specs decl = makeModifiersFromDeclarator decl $ typeFromSpecifiers specs

@@ -146,7 +146,7 @@ module Language.C99.Expressions
   prefixOperator = choice
     [ unary' <$> name' <$> L.reservedOp' "--"
     , unary' <$> name' <$> L.reservedOp' "++"
-    -- , try $ Cast2 <$> L.parens typeName
+    , cast' <$> (L.parens typeName)
     , unary' <$> unaryOperator
     ]
   

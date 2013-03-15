@@ -62,7 +62,7 @@ module Language.C99.Syntax where
     Unary    :: a -> a -> C99 a
     Binary   :: a -> a -> a -> C99 a
     Ternary  :: a -> a -> a -> C99 a
-    Cast     :: [a] -> a -> C99 a
+    Cast     :: a -> a -> C99 a
     Index    :: a -> a -> C99 a -- rename to Index?
     Call     :: a -> [a] -> C99 a -- rename to Call?
     Access   :: a -> a -> a -> C99 a
