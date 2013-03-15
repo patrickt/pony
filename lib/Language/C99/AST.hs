@@ -43,7 +43,7 @@ module Language.C99.AST
   makeModifiersFromSpec spec base = builderFromSpecifier spec . base
   
   typeFromSpecifiers :: [CSpecifier] -> CSyn
-  typeFromSpecifiers specs = (foldr (makeModifiersFromSpec) id (init specs')) (convertType typeSpec)
+  typeFromSpecifiers specs = (foldr makeModifiersFromSpec id (init specs')) (convertType typeSpec)
     where 
       specs' = sort specs
       (TSpec typeSpec) = last specs'
@@ -198,7 +198,7 @@ module Language.C99.AST
     deriving (Show, Eq)
     
   declName :: CDeclarator -> Maybe String
-  declName d = case (body d) of
+  declName d = case (declBody d) of
     (CIdentBody s) -> Just s
     (CParenBody d) -> declName d
     CEmptyBody -> Nothing
@@ -210,7 +210,7 @@ module Language.C99.AST
   data CDeclarator 
    = CDeclarator 
      { pointers :: [CDerivedDeclarator]
-     , body :: CDeclaratorBody
+     , declBody :: CDeclaratorBody
      , modifiers :: [CDerivedDeclarator]
      , asmName :: CAsmName
      , declAttributes :: [CAttribute]

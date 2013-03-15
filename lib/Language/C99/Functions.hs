@@ -25,7 +25,7 @@ module Language.C99.Functions where
     body <- compoundStmt <?> "function body"
     
     -- build the function 
-    let func = Fix $ Function { fname = name, ftype = returnType, fargs = nil', fbody = body }
+    let func = Fix $ Function { name = name, typ = returnType, args = nil', body = body }
     
     -- restore the state
     putState oldState

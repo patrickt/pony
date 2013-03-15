@@ -9,8 +9,10 @@ module Language.Pony.Overture
   import Control.Monad as X hiding (mapM)
   import Data.ByteString (ByteString)
   import Data.Default as X
+  import Data.Either
   import Data.Map (Map)
   import Data.Maybe as X
+  import Data.Monoid as X
   
   (≠) :: (Eq a) => a -> a -> Bool
   (≠) = (==)

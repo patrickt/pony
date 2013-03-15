@@ -31,13 +31,12 @@ module Language.C99.Syntax where
     Union            :: C99 a
     PointerToT       :: a -> C99 a -- Pointer :: Type -> Type
     ArrayT           :: { len :: a, typ :: a } -> C99 a
-    FunctionPointerT :: a -> a -> C99 a
     BuiltinT         :: a -> C99 a -- Builtin :: Name -> Type
     TypedefT         :: a -> C99 a
     BoolT            :: C99 a
     TypeOfT          :: a -> C99 a
     
-    Function :: { ftype :: a, fname :: a, fargs :: a, fbody :: a } -> C99 a
+    Function :: { typ :: a, name :: a, args :: a, body :: a } -> C99 a
     
     -- statements
     Break      :: C99 a
@@ -126,7 +125,7 @@ module Language.C99.Syntax where
   short' = Fix . ShortM
   long'  = Fix . LongM
   
-  function' nam typ args body = Fix $ Function nam typ args body
+  function' nam typ args body = Fix $ Function { name = nam, typ = typ, args = args, body = body}
   
   arguments' l v = Fix $ Arguments l v
   
@@ -144,7 +143,7 @@ module Language.C99.Syntax where
   typeof'        = Fix . TypeOfT
   attribute' as t = Fix $ Attributed as t
   
-  functionpointer' params returning = Fix $ FunctionPointerT params returning
+  functionpointer' params returning = Fix $ Function { name = nil', typ = returning, args = params, body = nil' }
   
   break'                    = Fix Break
   case' cond blk            = Fix $ Case cond blk -- this is specious, as are other case statements
