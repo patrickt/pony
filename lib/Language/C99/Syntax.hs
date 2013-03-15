@@ -95,7 +95,7 @@ module Language.C99.Syntax where
     Variable :: { typ :: a, name :: a, value :: a } -> C99 a
     MultiDeclaration :: { components :: [a] } -> C99 a
     Typedef :: { typ :: a, name :: a } -> C99 a
-    Sized :: a -> a -> C99 a
+    Sized :: {size :: a, typ :: a} -> C99 a
     
   data Foo = Bar { baz :: Int} | Baf { baz :: Int }
   
