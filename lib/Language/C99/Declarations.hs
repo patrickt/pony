@@ -4,6 +4,7 @@ module Language.C99.Declarations
   , typeName
   , parameter
   , declarator 
+  , designator
   , functionSignature
   , builderFromSpecifier
   )
@@ -11,11 +12,9 @@ where
   
   -- Lasciate ogne speranza, voi ch'intrate.
   
-  import Control.Monad
   import Control.Arrow
-  import Data.Either
   import Language.Pony.Overture
-  import Language.C99.AST hiding (asmName)
+  import Language.C99.AST 
   import Language.C99.Expressions
   import qualified Language.C99.Lexer as L
   import Language.C99.Parser
@@ -24,7 +23,93 @@ where
   import qualified Data.Foldable as F
   import Data.Functor.Fix
   import Data.List (sort, partition)
-  import Data.Monoid
+  
+  -- | Parses the four relevant parts of a function signature:
+  -- |  a) the attributes that apply to the function (@extern@, @static@, @inline@ and their permutations)
+  -- |  b) the return type of the function
+  -- |  c) the name
+  -- |  d) the arguments
+  functionSignature :: Parser (SynBuilder, CSyn, CSyn, CSyn)
+  functionSignature = do
+    (funcSpecs, returnTypeSpecs) <- partition specifierBelongsToFunction <$> sort <$> some specifier
+    
+    let baseType = typeFromSpecifiers returnTypeSpecs
+    let functionBuilder = appEndo $ F.foldMap (Endo . builderFromSpecifier) funcSpecs
+    
+    decl <- declarator 
+    name <- maybe (fail "expected function name") (pure . name') (declName decl)
+    
+    args <- case (modifiers decl) of
+      [DerivedFunction args variadic] -> pure $ arguments' args variadic
+      _ -> fail $ "unexpected declarator body" ++ show decl
+    
+    let returnType = builderFromDeclarator decl $ baseType
+    
+    return (functionBuilder, returnType, name, args)
+  
+  -- | Parses a type name. Used in builtin expressions and in casts.
+  typeName :: Parser CSyn
+  typeName = makeType <$> (sort <$> some specifier) <*> declarator
+  
+  -- | Parses a parameter in function declarations. If the parameter is unnamed a 
+  -- | type node will be returned, otherwise a Variable will be returned.
+  parameter :: Parser CSyn
+  parameter = Fix <$> do
+    specs <- sort <$> some specifier
+    decl  <- declarator
+    let type' = makeType specs decl
+    let name = name' <$> declName decl
+    return $ 
+      if (isJust name) 
+        then Variable {name = fromJust name, typ = type', value = nil'} 
+        else unFix type'
+  
+  
+  -- Record type that wraps the various fields a declaration may have.
+  data CDeclInfo = CDeclInfo {
+    contents :: CDeclarator,
+    initVal :: Maybe CSyn,
+    size :: Maybe CSyn
+  } deriving (Show, Eq)
+  
+  data CDeclaration = CDeclaration {
+      declrSpecifiers :: [CSpecifier],
+      declrInfos :: [CDeclInfo]
+  } deriving (Eq, Show)
+  
+  -- As a GNU extension, the user can specify the assembly name for a C function 
+  -- or variable.
+  type CAsmName = Maybe String
+  
+  data CDeclaratorBody 
+    = CIdentBody String
+    | CParenBody CDeclarator
+    | CEmptyBody
+    deriving (Show, Eq)
+    
+  declName :: CDeclarator -> Maybe String
+  declName d = case (declBody d) of
+    (CIdentBody s) -> Just s
+    (CParenBody d) -> declName d
+    CEmptyBody -> Nothing
+  
+  -- | C declarators, both abstract and concrete (C99 6.7.5 and 6.7.6).
+  data CDeclarator 
+   = CDeclarator 
+     { pointers :: [CDerivedDeclarator]
+     , declBody :: CDeclaratorBody
+     , modifiers :: [CDerivedDeclarator]
+     , asmName :: CAsmName
+     , declAttributes :: [CAttribute]
+   } deriving (Eq, Show)
+  
+  -- | Indirectly derived declarators used inside the 'CDeclarator' type.
+  -- In the future, Apple's extension for blocks (declared with @^@) may be added.
+  data CDerivedDeclarator
+   = Pointer [CTypeQualifier]
+   | Array [CTypeQualifier] CSyn
+   | DerivedFunction [CSyn] Bool
+   deriving (Eq, Show)
   
   type SynBuilder = CSyn -> CSyn
   
@@ -55,24 +140,6 @@ where
   specifierBelongsToFunction (SSpec CExtern) = True
   specifierBelongsToFunction (TQual CInline) = True
   specifierBelongsToFunction _ = False
-  
-  functionSignature :: Parser (SynBuilder, CSyn, CSyn, CSyn)
-  functionSignature = do
-    (funcSpecs, returnTypeSpecs) <- partition specifierBelongsToFunction <$> sort <$> some specifier
-    
-    let baseType = typeFromSpecifiers returnTypeSpecs
-    let functionBuilder = appEndo $ F.foldMap (Endo . builderFromSpecifier) funcSpecs
-    
-    decl <- declarator 
-    name <- maybe (fail "expected function name") (pure . name') (declName decl)
-    
-    args <- case (modifiers decl) of
-      [DerivedFunction args variadic] -> pure $ arguments' args variadic
-      _ -> fail $ "unexpected declarator body" ++ show decl
-    
-    let returnType = makeModifiersFromDeclarator decl $ baseType
-    
-    return (functionBuilder, returnType, name, args)
     
     
   builderFromSpecifier :: CSpecifier -> SynBuilder
@@ -102,13 +169,13 @@ where
   builderFromDerived (Array qs len) base                    = array' len  >>> foldTypeQualifiers qs >>> base
   builderFromDerived (DerivedFunction params variadic) base = functionpointer' (arguments' params variadic) >>> base
   
-  makeModifiersFromDeclarator :: CDeclarator -> SynBuilder
-  makeModifiersFromDeclarator (CDeclarator pointers body modifiers asmName declAttributes) 
+  builderFromDeclarator :: CDeclarator -> SynBuilder
+  builderFromDeclarator (CDeclarator pointers body modifiers asmName declAttributes) 
     = foldBody . foldModifiers . foldPointers where
       -- this is the right-left rule. 
       -- first we recurse as deeply as we can into parenthesized subdeclarations.
       foldBody = case body of
-        (CParenBody d) -> makeModifiersFromDeclarator d
+        (CParenBody d) -> builderFromDeclarator d
         _ -> id
       -- then we look right to find array and function pointer modifiers.
       foldModifiers = foldDerived $ reverse modifiers
@@ -118,29 +185,8 @@ where
       foldDerived = foldr builderFromDerived id
   
   makeType :: [CSpecifier] -> CDeclarator -> CSyn
-  makeType specs decl = makeModifiersFromDeclarator decl $ typeFromSpecifiers specs
+  makeType specs decl = builderFromDeclarator decl $ typeFromSpecifiers specs
   
-  typeName :: Parser CSyn
-  typeName = makeType <$> (sort <$> some specifier) <*> declarator
-  
-  parameter :: Parser CSyn
-  parameter = Fix <$> do
-    specs <- sort <$> some specifier
-    decl  <- declarator
-    let type' = (makeModifiersFromDeclarator decl) (typeFromSpecifiers specs)
-    let name = name' <$> declName decl
-    return $ 
-      if (isJust name) 
-        then Variable {name = fromJust name, typ = type', value = nil'} 
-        else unFix type'
-  
-  -- read specifiers, sort them
-  -- if there are typedefs, drop all of them, assert only names are declared, and record it in the symbol table
-  -- if there was a typedef declaring one name, we return a Typedef
-  -- if there was a typedef declaring one name, we return a Typedef with a List as its name record
-  -- if there was no typedef and it declared one name, we return a Variable
-  -- otherwise we return a MultiDeclaration
-
   declarations = declarations' False
   sizedDeclarations = declarations' True
 
@@ -171,7 +217,7 @@ where
     let makeSizer = maybe id sized' size
     let name = name' <$> declName contents
     when (isNothing name) $ fail "expected variable name"
-    return $ Variable { name = fromJust name, typ = makeSizer $ makeType specs contents, value = nil' }
+    return $ Variable { name = fromJust name, typ = makeSizer $ makeType specs contents, value = fromMaybe nil' initVal }
     
   func :: Parser CDerivedDeclarator
   func = L.parens $ do
@@ -205,36 +251,45 @@ where
                               <*> pure Nothing
                               <*> optional (L.colon *> constantExpression)
                                   
-  designator :: Parser CDesignator
-  designator =  (ArrayDesignator  <$> L.brackets constant     <?> "array declaration")
-            <|> (MemberDesignator <$> (L.dot *> L.identifier) <?> "dotted declaration")
+  designator :: Parser CSyn
+  designator = choice 
+    [ dotAccess
+    , indexAccess
+    ]
+    
+  dotAccess :: Parser CSyn
+  dotAccess = do
+    let access'' b c a = access' a b c
+    dots <- some $ access'' <$> (name' <$> L.dot) <*> identifier
+    let folded = appEndo $ F.foldMap Endo $ reverse dots
+    return $ folded nil'
+    
+  indexAccess :: Parser CSyn
+  indexAccess = do 
+    idxs <- some $ (flip index' <$> L.brackets constantExpression)
+    let folded = appEndo $ F.foldMap Endo $ reverse idxs
+    return $ folded nil'
+    
   
-  initList :: Parser [CInitializerSubfield]
-  initList = L.braces (L.commaSep1 initSubfield)
+  initList :: Parser CSyn
+  initList = Fix <$> CommaGroup <$> L.braces (L.commaSep1 initSubfield)
   
-  initSubfield :: Parser CInitializerSubfield
+  initSubfield :: Parser CSyn
   initSubfield = do 
     -- first we look for the designators: .x for membership. don't think an array designator could get in here.
-    desigs <- many designator
+    desigs <- optional (designator <* L.reservedOp "=")
     -- if there are designators, e.g. .x, we require an explicit = statement to make an assignment.
-    when (desigs /= []) (L.reservedOp "=")
-    CInitializerSubfield <$> pure desigs <*> initializer
+    exp <- initializer
+    return $ 
+      if (isJust desigs)
+        then binary' (fromJust desigs) "=" exp
+        else exp
   
-  initializer :: Parser CInitializer
-  initializer = (CInitExpression <$> expression) <|> (CInitList <$> initList) 
+  initializer :: Parser CSyn
+  initializer = expression <|> initList
 
-  -- hack hack hack
-  data DirectDeclarator 
-    = Parenthesized CDeclarator
-    | Single String 
-  
-  direct :: Parser DirectDeclarator
-  direct = parens <|> ident where
-    parens = Parenthesized <$> L.parens declarator
-    ident = Single <$> L.identifier
-    
-  asmName :: Parser String
-  asmName = L.reserved "__asm" *> L.parens (some $ noneOf ")")
+  asm :: Parser String
+  asm = L.reserved "__asm" *> L.parens (some $ noneOf ")")
   
   declaratorBody :: Parser CDeclaratorBody
   declaratorBody = choice
@@ -243,13 +298,11 @@ where
     , pure CEmptyBody
     ]
   
-  -- CDeclarator 
-  
   -- Declarators (C99 6.7.5). May be named or unnamed.
   declarator :: Parser CDeclarator
   declarator = CDeclarator
     <$> many pointer
     <*> declaratorBody
     <*> many (try array <|> try func)
-    <*> optional (try asmName)
+    <*> optional (try asm)
     <*> many attribute

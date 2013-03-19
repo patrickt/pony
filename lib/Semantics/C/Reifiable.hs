@@ -1,11 +1,11 @@
 module Semantics.C.Reifiable
- ( Reifiable (..) )
+ -- ( Reifiable (..) )
  where
   
   import Semantics.C.ASG
   import Data.Functor.Fix
   
-  -- coalgebra?
-  class Reifiable abstract where
-    convert :: abstract -> Mu Sem
-  
+  -- -- coalgebra?
+  -- class Reifiable abstract where
+  --   convert :: abstract -> Mu Sem
+  -- 

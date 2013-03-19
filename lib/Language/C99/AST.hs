@@ -28,12 +28,6 @@ module Language.C99.AST
     = CAsmArgument CStringLiteral (Maybe CSyn)
     deriving (Show, Eq)
   
-  -- | A C function (C99 6.9.1).
-  -- Invariant: The final 'CStatement' will always be a 'CompoundStmt', and the 
-  -- provided 'CDeclarator' will always be named.
-  data CFunction = CFunction [CSpecifier] CDeclarator CSyn
-    deriving (Eq, Show)
-  
   
   -- | A string literal newtype to provide a modicum of type safety in the AST.
   newtype CStringLiteral = CStringLiteral {
@@ -94,7 +88,7 @@ module Language.C99.AST
      | TBool
      -- | Corresponds to the @__builtin_va_arg@ type.
      | TBuiltin String
-     | TStructOrUnion (Maybe String) Bool [CField] [CAttribute]
+     | TStructOrUnion (Maybe String) Bool [Int] [CAttribute]
      | TEnumeration (Maybe String) [CEnumerator] [CAttribute]
      | TTypedef String CSyn
      | TTypeOfExpr CSyn
@@ -124,84 +118,4 @@ module Language.C99.AST
     
   instance Ord CAttribute
   
-  -- | Record type that wraps the various fields a declaration may have.
-  data CDeclInfo = CDeclInfo {
-    contents :: CDeclarator,
-    initVal :: Maybe CInitializer,
-    size :: Maybe CSyn
-  } deriving (Show, Eq)
   
-  infoName :: CDeclInfo -> Maybe String
-  infoName = declName . contents
-  
-  -- TODO: these Default things are stupid
-  instance Default CDeclInfo where def = CDeclInfo def Nothing Nothing
-  
-  -- | C declarations (C99 6.7).
-  -- This method of structuring declarations was innovated by Benedikt Huber.
-  data CDeclaration = CDeclaration {
-      declrSpecifiers :: [CSpecifier],
-      declrInfos :: [CDeclInfo]
-  } deriving (Eq, Show)
-  
-  -- | Represents fields of structs or unions. There will be at least one specifier,
-  -- at least one 'CDeclInfo', all of which will not have an initVal (but may be 
-  -- named, sized, named and sized, or unnamed and sized.)
-  newtype CField = CField { unCField :: CDeclaration } deriving (Show, Eq)
-  
-  -- As a GNU extension, the user can specify the assembly name for a C function 
-  -- or variable.
-  type CAsmName = Maybe String
-  
-  data CDeclaratorBody 
-    = CIdentBody String
-    | CParenBody CDeclarator
-    | CEmptyBody
-    deriving (Show, Eq)
-    
-  declName :: CDeclarator -> Maybe String
-  declName d = case (declBody d) of
-    (CIdentBody s) -> Just s
-    (CParenBody d) -> declName d
-    CEmptyBody -> Nothing
-    
-  derived :: CDeclarator -> [CDerivedDeclarator]
-  derived (CDeclarator {pointers, modifiers, ..}) = pointers ++ modifiers
-  
-  -- | C declarators, both abstract and concrete (C99 6.7.5 and 6.7.6).
-  data CDeclarator 
-   = CDeclarator 
-     { pointers :: [CDerivedDeclarator]
-     , declBody :: CDeclaratorBody
-     , modifiers :: [CDerivedDeclarator]
-     , asmName :: CAsmName
-     , declAttributes :: [CAttribute]
-   } deriving (Eq, Show)
-   
-  instance Default CDeclarator where def = CDeclarator [] CEmptyBody [] Nothing []
-  
-  -- | C designators, i.e. that which can appear inside compound initialization statements.
-  data CDesignator 
-    = ArrayDesignator CSyn
-    | MemberDesignator String
-    deriving (Show, Eq)
-  
-  -- | C initializers (C99 6.7.8). Initialization types can contain one 
-  -- expression or a bracketed list of initializers.
-  data CInitializer 
-    = CInitExpression CSyn
-    | CInitList [CInitializerSubfield]
-    deriving (Eq, Show)
-  
-  -- | Represents the deconstructed initializers.
-  data CInitializerSubfield = CInitializerSubfield [CDesignator] CInitializer
-    deriving (Show, Eq)
-  
-  
-  -- | Indirectly derived declarators used inside the 'CDeclarator' type.
-  -- In the future, Apple's extension for blocks (declared with @^@) may be added.
-  data CDerivedDeclarator
-   = Pointer [CTypeQualifier]
-   | Array [CTypeQualifier] CSyn
-   | DerivedFunction [CSyn] Bool
-   deriving (Eq, Show)

@@ -86,7 +86,8 @@ module Language.C99.Syntax where
     Composite :: { kind :: a, name :: a, fields :: a } -> C99 a
     Program :: [a] -> C99 a
     Group :: [a] -> C99 a
-    List  :: [a] -> C99 a -- do we use this anywhere?
+    List  :: [a] -> C99 a
+    CommaGroup :: [a] -> C99 a
     Assembly :: { isVolatile :: Bool, text :: a, inRegs :: a, outRegs :: a, clobberList :: a } -> C99 a
     AssemblyOperand :: { opconstraint :: a, opvar :: a } -> C99 a
     

@@ -9,5 +9,3 @@ module Language.C99.Declarations where
   sizedDeclarations :: Parser [CSyn]
   
   typeName :: Parser CSyn
-  
-  declarator :: Parser CDeclarator
