@@ -13,19 +13,13 @@ module Language.C99.Functions where
     -- save the old typedefs, since you can declare new typedefs within a function that go out of scope
     oldState <- getState
     
-    (functionWrapper, returnType) <- functionSignature
-    
-    signature <- declarator
-    
-    -- compute its name
-    -- TODO: skipping arguments here
-    name <- maybe (fail "expected function name") (pure . name') (declName signature)
+    (functionWrapper, returnType, fname, args) <- functionSignature
     
     -- get the body
     body <- compoundStmt <?> "function body"
     
     -- build the function 
-    let func = Fix $ Function { name = name, typ = returnType, args = nil', body = body }
+    let func = Fix $ Function { name = fname, typ = returnType, args = args, body = body }
     
     -- restore the state
     putState oldState

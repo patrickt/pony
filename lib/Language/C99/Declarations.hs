@@ -21,6 +21,7 @@ where
   import Language.C99.Parser
   import Language.C99.Syntax
   import Language.C99.Specifiers
+  import qualified Data.Foldable as F
   import Data.Functor.Fix
   import Data.List (sort, partition)
   import Data.Monoid
@@ -55,13 +56,24 @@ where
   specifierBelongsToFunction (TQual CInline) = True
   specifierBelongsToFunction _ = False
   
-  functionSignature :: Parser (SynBuilder, CSyn)
+  functionSignature :: Parser (SynBuilder, CSyn, CSyn, CSyn)
   functionSignature = do
     (funcSpecs, returnTypeSpecs) <- partition specifierBelongsToFunction <$> sort <$> some specifier
-    let returnType = typeFromSpecifiers returnTypeSpecs
-    let functionModifiers = builderFromSpecifier <$> funcSpecs
-    let functionBuilder = foldl (.) id functionModifiers
-    return (functionBuilder, returnType)
+    
+    let baseType = typeFromSpecifiers returnTypeSpecs
+    let functionBuilder = appEndo $ F.foldMap (Endo . builderFromSpecifier) funcSpecs
+    
+    decl <- declarator 
+    name <- maybe (fail "expected function name") (pure . name') (declName decl)
+    
+    args <- case (modifiers decl) of
+      [DerivedFunction args variadic] -> pure $ arguments' args variadic
+      _ -> fail $ "unexpected declarator body" ++ show decl
+    
+    let returnType = makeModifiersFromDeclarator decl $ baseType
+    
+    return (functionBuilder, returnType, name, args)
+    
     
   builderFromSpecifier :: CSpecifier -> SynBuilder
   builderFromSpecifier (TSpec TShort) = short'
@@ -77,9 +89,6 @@ where
   builderFromSpecifier (SSpec CExtern) = extern'
   -- builderFromSpecifier (SSpec (CAttr (CAttribute es))) = attribute' (convert <$> es)
   builderFromSpecifier x = error $ show x
-  
-  foldDerived :: [CDerivedDeclarator] -> SynBuilder  
-  foldDerived = foldr builderFromDerived id
     
   foldSpecifiers :: [CSpecifier] -> SynBuilder
   foldSpecifiers s = concatEndo (builderFromSpecifier <$> s)
@@ -102,10 +111,11 @@ where
         (CParenBody d) -> makeModifiersFromDeclarator d
         _ -> id
       -- then we look right to find array and function pointer modifiers.
-      foldModifiers = foldDerived modifiers
+      foldModifiers = foldDerived $ reverse modifiers
       -- then we look left to find pointers.
-      foldPointers = foldDerived $ reverse pointers
+      foldPointers = foldDerived pointers
       -- then as the stack unwinds we jump out.
+      foldDerived = foldr builderFromDerived id
   
   makeType :: [CSpecifier] -> CDeclarator -> CSyn
   makeType specs decl = makeModifiersFromDeclarator decl $ typeFromSpecifiers specs
