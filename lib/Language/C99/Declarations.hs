@@ -132,6 +132,7 @@ where
   convertType TBool     = bool'
   convertType (TEnumeration n members attrs) = enumeration' n (Fix (CommaGroup members))
   convertType (TStructOrUnion n kind members attrs) = composite' kind n (group' members)
+  convertType (TTypedef ident typ) = typedef' (name' ident) typ
   
   
   typeFromSpecifiers :: [CSpecifier] -> CSyn
@@ -194,16 +195,16 @@ where
   
   wrapTypedef :: [CSpecifier] -> CDeclInfo -> Parser CSyn
   wrapTypedef specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
-    when (isNil initVal) (fail "expected uninitialized declaration in typedef")
+    unless (isNil initVal) (fail "expected uninitialized declaration in typedef")
     when (isNothing (declName contents)) (fail "expected named declaration in typedef")
-    when (isNil size) (fail "unexpected size in typedef")
+    unless (isNil size) (fail "unexpected size in typedef")
     
     let (Just name) = name' <$> declName contents
-    let typ = makeType [s | s <- specs, s ≠ (SSpec CTypedef)] contents
+    let typ = makeType [s | s <- specs, s /= (SSpec CTypedef)] contents
     
     updateState $ addTypeDef ((liftFix getName) name) typ
     
-    return $ Typedef { name = name, typ = typ }
+    return $ ForwardDeclaration $ Fix $ Typedef { name = name, typ = typ }
     
   wrapDecl :: [CSpecifier] -> CDeclInfo -> Parser CSyn
   wrapDecl specs (CDeclInfo { contents, initVal, size}) = Fix <$> do

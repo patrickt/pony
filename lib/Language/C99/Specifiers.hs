@@ -57,7 +57,7 @@ where
     , composite "struct" struct'
     , composite "union" union'
     -- , try builtin
-    -- , try lookupTypedef
+    , try lookupTypedef
     ] <?> "type specifier"
     where
       -- builtin = TBuiltin <$> L.symbol "__builtin_va_list"
@@ -70,12 +70,12 @@ where
                                      <*> pure t
                                      <*> option [] (L.braces (concat <$> (some sizedDeclarations)))
                                      <*> many attribute
-      -- lookupTypedef = do
-      --   defs <- getState
-      --   ident <- identifier
-      --   case M.lookup ident (typedefs defs) of
-      --     (Just specs) -> return (TTypedef ident specs)
-      --     Nothing -> fail "could not find typedef"
+      lookupTypedef = do
+        defs <- getState
+        ident <- L.identifier
+        case M.lookup ident (typedefs defs) of
+          (Just specs) -> return (TTypedef ident specs)
+          Nothing -> fail "could not find typedef"
   enumerator :: Parser CSyn
   enumerator = do
     i <- identifier

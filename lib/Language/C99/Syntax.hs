@@ -32,7 +32,7 @@ module Language.C99.Syntax where
     PointerToT       :: a -> C99 a -- Pointer :: Type -> Type
     ArrayT           :: { len :: a, typ :: a } -> C99 a
     BuiltinT         :: a -> C99 a -- Builtin :: Name -> Type
-    TypedefT         :: a -> C99 a
+    Typedef          :: { typ :: a, name :: a } -> C99 a
     BoolT            :: C99 a
     TypeOfT          :: a -> C99 a
     
@@ -94,7 +94,6 @@ module Language.C99.Syntax where
     Arguments :: [a] -> Bool -> C99 a
     ForwardDeclaration :: a -> C99 a
     Variable :: { typ :: a, name :: a, value :: a } -> C99 a
-    Typedef :: { typ :: a, name :: a } -> C99 a
     Sized :: {size :: a, typ :: a} -> C99 a
     
   data Foo = Bar { baz :: Int} | Baf { baz :: Int }
@@ -141,7 +140,6 @@ module Language.C99.Syntax where
   pointer_to'    = Fix . PointerToT
   builtin'       = Fix . BuiltinT
   array' len typ = Fix $ ArrayT len typ
-  typedef_t'     = Fix . TypedefT
   bool'          = Fix BoolT 
   typeof'        = Fix . TypeOfT
   attribute' as t = Fix $ Attributed as t
