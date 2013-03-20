@@ -1,6 +1,6 @@
 module Language.C99.Operators where
   
-  import Language.C99.AST
+  import Language.C99.Internal
   import Language.C99.Syntax
   import Text.Parsec.ByteString
   import Text.Parsec.Expr (Assoc)

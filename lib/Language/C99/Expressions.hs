@@ -7,7 +7,7 @@ module Language.C99.Expressions
   import Data.Functor.Identity (Identity)
   import Data.List (groupBy)
   import Language.C99.Parser
-  import Language.C99.AST
+  import Language.C99.Internal
   import Language.C99.Syntax
   import Language.C99.Literals
   import Language.C99.Operators

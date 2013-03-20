@@ -1,7 +1,7 @@
 module Language.C99.Miscellany where
   
   
-  import Language.C99.AST
+  import Language.C99.Internal
   import Control.Applicative
   import Data.Monoid
   import Data.Generics.Uniplate.Data

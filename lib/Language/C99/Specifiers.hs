@@ -12,7 +12,7 @@ where
   import Language.C99.Expressions
   import Language.C99.Parser
   import qualified Language.C99.Lexer as L
-  import Language.C99.AST
+  import Language.C99.Internal
   import Language.C99.Syntax
   import Language.C99.Literals
   import {-# SOURCE #-} Language.C99.Declarations

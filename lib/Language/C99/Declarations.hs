@@ -14,7 +14,7 @@ where
   
   import Control.Arrow
   import Language.Pony.Overture
-  import Language.C99.AST 
+  import Language.C99.Internal 
   import Language.C99.Expressions
   import qualified Language.C99.Lexer as L
   import Language.C99.Parser

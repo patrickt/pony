@@ -1,4 +1,4 @@
-module Language.C99.AST
+module Language.C99.Internal
   
   where
   
@@ -9,30 +9,6 @@ module Language.C99.AST
   import Language.C99.Syntax
   import Language.Pony.Overture
   import Data.List (sort)
-  
-  -- TODO: Add position information to all of the types, etc.
-  -- TODO: Rename CAsmOperand and CAsmArgument to something more descriptive.
-  
-  -- | There are two types of inline assembly: the first is the standard call to @asm()@, 
-  -- which is identical to a function call in syntax (except for the fact that it can only 
-  -- take a string as its parameter). The second is GCC assembly syntax, which takes the form of
-  -- @asm( instructions : output-operands* : input-operands : clobbered-registers* );@
-  data CAsmOperand 
-    = Simple CStringLiteral
-    | GCCAsm CStringLiteral [CAsmArgument] [CAsmArgument] [CStringLiteral]
-    deriving (Show, Eq)
-  
-  -- | Represents an output or input value in GCC assembly syntax. Takes the form of 
-  -- | @string (variable)?@.
-  data CAsmArgument 
-    = CAsmArgument CStringLiteral (Maybe CSyn)
-    deriving (Show, Eq)
-  
-  
-  -- | A string literal newtype to provide a modicum of type safety in the AST.
-  newtype CStringLiteral = CStringLiteral {
-    getExpr :: CSyn
-  } deriving (Eq, Show)
   
   -- TODO: Expand this to include __builtin_offsetof and __builtin_types_compatible_p
   -- | GNU/clang built-in functions that are exposed after preprocessing.

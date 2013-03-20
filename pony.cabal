@@ -51,10 +51,10 @@ Library {
   exposed-modules: Language.Pony
   other-modules:   Data.Functor.Fix
                  , Language.C99
-                 , Language.C99.AST
                  , Language.C99.Declarations
                  , Language.C99.Expressions
                  , Language.C99.Functions
+                 , Language.C99.Internal
                  , Language.C99.Lexer
                  , Language.C99.Literals
                  , Language.C99.Miscellany
@@ -62,6 +62,7 @@ Library {
                  , Language.C99.Parser
                  , Language.C99.Specifiers
                  , Language.C99.Statements
+                 , Language.C99.Syntax
                  , Language.C99.TopLevel
                  , Language.Pony.Overture
                  , Language.Pony.Transformations.Sanitizers

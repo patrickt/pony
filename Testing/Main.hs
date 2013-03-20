@@ -1,14 +1,14 @@
 module Main where
   import Test.Framework
-  import Testing.HUnit.TypeNames
-  import Testing.HUnit.DeclarationPrinting
+  -- import Testing.HUnit.TypeNames
+  -- import Testing.HUnit.DeclarationPrinting
   -- import qualified Testing.HUnit.Assembly as A
-  import Testing.QuickCheck.Constants
+  -- import Testing.QuickCheck.Constants
   -- import qualified Testing.HUnit.DeclarationPrinting as DP
   -- import qualified Testing.HUnit.SpaceFreeParsing as SFP
   -- import qualified Testing.HUnit.PostfixExpressions as PE
   -- import qualified Testing.HUnit.SignalDeclaration as SD
-  import Testing.HUnit.Syntax
+  -- import Testing.HUnit.Syntax
   -- import qualified Testing.HUnit.UtilityFunctions as UF
   
   -- -- TODO there's some template haskell that can help us with this
@@ -26,8 +26,4 @@ module Main where
   --         ]
   
   main :: IO ()
-  main = defaultMain [ typenameTestGroup 
-                     , syntaxTestGroup
-                     , declarationTestGroup
-                     , constantTestGroup
-                     ]
+  main = defaultMain []

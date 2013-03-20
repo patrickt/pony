@@ -2,7 +2,7 @@ module Language.C99.Functions where
   
   import Language.Pony.Overture
   import Language.C99.Parser
-  import Language.C99.AST
+  import Language.C99.Internal
   import Language.C99.Declarations
   import Language.C99.Statements
   import Language.C99.Syntax
