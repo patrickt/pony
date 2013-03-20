@@ -86,11 +86,6 @@ where
     size :: CSyn
   } deriving (Show, Eq)
   
-  data CDeclaration = CDeclaration {
-      declrSpecifiers :: [CSpecifier],
-      declrInfos :: [CDeclInfo]
-  } deriving (Eq, Show)
-  
   -- As a GNU extension, the user can specify the assembly name for a C function 
   -- or variable.
   type CAsmName = Maybe String
@@ -123,18 +118,20 @@ where
   
   
   convertType :: CTypeSpecifier -> CSyn
-  convertType TVoid           = void'
-  convertType TChar           = char'
-  convertType TShort          = short' int'
-  convertType TInt            = int'
-  convertType TLong           = long' int'
-  convertType TInt128         = verylong'
-  convertType TUInt128        = unsigned' verylong'
-  convertType TFloat          = float'
-  convertType TDouble         = double'
-  convertType TSigned         = signed' int'
-  convertType TUnsigned       = unsigned' int'
-  convertType TBool           = bool'
+  convertType TVoid     = void'
+  convertType TChar     = char'
+  convertType TShort    = short' int'
+  convertType TInt      = int'
+  convertType TLong     = long' int'
+  convertType TInt128   = verylong'
+  convertType TUInt128  = unsigned' verylong'
+  convertType TFloat    = float'
+  convertType TDouble   = double'
+  convertType TSigned   = signed' int'
+  convertType TUnsigned = unsigned' int'
+  convertType TBool     = bool'
+  convertType (TEnumeration n members attrs) = enumeration' n (Fix (CommaGroup members))
+  convertType (TStructOrUnion n kind members attrs) = composite' kind n (group' members)
   
   
   typeFromSpecifiers :: [CSpecifier] -> CSyn
@@ -210,10 +207,16 @@ where
     
   wrapDecl :: [CSpecifier] -> CDeclInfo -> Parser CSyn
   wrapDecl specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
-    let makeSizer = if isNil size then id else sized' size
+    let sizeWrapper = if isNil size then id else sized' size
     let name = name' <$> declName contents
-    when (isNothing name) $ fail "expected variable name"
-    return $ Variable { name = fromJust name, typ = makeSizer $ makeType specs contents, value = initVal }
+    let typ = makeType specs contents
+    if isJust name
+      then return $ Variable { name = fromJust name, typ = sizeWrapper typ, value = initVal }
+      else case unFix typ of
+        (Enumeration _ _) -> return $ ForwardDeclaration typ
+        (Composite _ _ _) -> return $ ForwardDeclaration typ
+        _ -> fail ("unexpected unnamed variable of type " ++ show typ)
+        
     
   func :: Parser CDerivedDeclarator
   func = L.parens $ do

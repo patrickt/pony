@@ -88,8 +88,8 @@ module Language.C99.AST
      | TBool
      -- | Corresponds to the @__builtin_va_arg@ type.
      | TBuiltin String
-     | TStructOrUnion (Maybe String) Bool [Int] [CAttribute]
-     | TEnumeration (Maybe String) [CEnumerator] [CAttribute]
+     | TStructOrUnion CSyn CSyn [CSyn] [CAttribute]
+     | TEnumeration CSyn [CSyn] [CAttribute]
      | TTypedef String CSyn
      | TTypeOfExpr CSyn
      deriving (Eq, Show)

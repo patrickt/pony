@@ -9,9 +9,11 @@ module Language.C99.Specifiers
 where
   
   import qualified Data.Map as M
+  import Language.C99.Expressions
   import Language.C99.Parser
-  import Language.C99.Lexer as L
+  import qualified Language.C99.Lexer as L
   import Language.C99.AST
+  import Language.C99.Syntax
   import Language.C99.Literals
   import {-# SOURCE #-} Language.C99.Declarations
   import Language.C99.Expressions (expression, constantExpression)
@@ -35,12 +37,6 @@ where
     , "__inline" `as` CInline
     , "__inline__" `as` CInline
     ] <?> "type qualifier"
-    
-  -- enumerator :: Parser CEnumerator
-  -- enumerator = do
-  --   ident <- L.identifier
-  --   value <- optional (L.reservedOp "=" *> constantExpression)
-  --   return $ maybe (EnumIdent ident) (EnumAssign ident) value
   
   typeSpecifier :: Parser CTypeSpecifier
   typeSpecifier = choice 
@@ -57,9 +53,9 @@ where
     , "unsigned" `as` TUnsigned
     , "_Bool" `as` TBool
     -- , typeof
-    -- , enum
-    -- , struct
-    -- , union
+    , enum
+    , composite "struct" struct'
+    , composite "union" union'
     -- , try builtin
     -- , try lookupTypedef
     ] <?> "type specifier"
@@ -67,23 +63,24 @@ where
       -- builtin = TBuiltin <$> L.symbol "__builtin_va_list"
       -- typeof = TTypeOfExpr <$> ((L.reserved "typeof" <|> L.reserved "__typeof__") *> expression)
       -- -- TODO: if name is Nothing and idents is empty, fail
-      -- enum = TEnumeration <$> (L.reserved "enum" *> optional identifier)
-      --                     <*> option [] (L.braces (enumerator `sepEndBy1` L.symbol ","))
-      --                     <*> many attribute
-      -- struct = TStructOrUnion <$> (L.reserved "struct" *> optional identifier)
-      --                         <*> pure True
-      --                         <*> option [] (L.braces (some sizedDeclaration))
-      --                         <*> many attribute
-      -- union = TStructOrUnion <$> (L.reserved "union" *> optional identifier)
-      --                        <*> pure False
-      --                        <*> option [] (L.braces (some sizedDeclaration))
-      --                        <*> many attribute
+      enum = TEnumeration <$> (L.reserved "enum" *> opt' identifier)
+                          <*> option [] (L.braces (enumerator `sepEndBy1` L.symbol ","))
+                          <*> many attribute
+      composite s t = TStructOrUnion <$> (L.reserved s *> opt' identifier)
+                                     <*> pure t
+                                     <*> option [] (L.braces (concat <$> (some sizedDeclarations)))
+                                     <*> many attribute
       -- lookupTypedef = do
       --   defs <- getState
       --   ident <- identifier
       --   case M.lookup ident (typedefs defs) of
       --     (Just specs) -> return (TTypedef ident specs)
       --     Nothing -> fail "could not find typedef"
+  enumerator :: Parser CSyn
+  enumerator = do
+    i <- identifier
+    val <- optional (L.reservedOp "=" *> constantExpression)
+    return $ maybe i (binary' i (name' "=")) val
 
   storageSpecifier :: Parser CStorageSpecifier
   storageSpecifier = choice

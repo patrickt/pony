@@ -92,9 +92,8 @@ module Language.C99.Syntax where
     AssemblyOperand :: { opconstraint :: a, opvar :: a } -> C99 a
     
     Arguments :: [a] -> Bool -> C99 a
-    ForwardTypeDeclaration :: a -> C99 a
+    ForwardDeclaration :: a -> C99 a
     Variable :: { typ :: a, name :: a, value :: a } -> C99 a
-    MultiDeclaration :: { components :: [a] } -> C99 a
     Typedef :: { typ :: a, name :: a } -> C99 a
     Sized :: {size :: a, typ :: a} -> C99 a
     
