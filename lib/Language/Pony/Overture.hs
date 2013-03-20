@@ -3,6 +3,7 @@ module Language.Pony.Overture
   , ByteString
   , Map
   , (≠)
+  , (<$$>)
   ) where
   
   import Control.Applicative as X hiding (Const)
@@ -16,3 +17,5 @@ module Language.Pony.Overture
   
   (≠) :: (Eq a) => a -> a -> Bool
   (≠) = (==)
+
+  a <$$> b = (flip a) <$> b

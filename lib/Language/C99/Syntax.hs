@@ -113,6 +113,9 @@ module Language.C99.Syntax where
   
   deriving instance (IsString (f (Fix f))) => IsString (Fix f)
   
+  isNil :: CSyn -> Bool
+  isNil = (== nil')
+  
   -- 'nil'' isn't consistent with our naming conventions unfortunately, but I like it
   nil' = Fix Empty
   

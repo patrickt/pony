@@ -125,12 +125,12 @@ module Language.C99.Expressions
   
   postfixOperator :: Parser (CSyn -> CSyn)
   postfixOperator = choice 
-    [ (flip index') <$> L.brackets expression
-    , (flip call')  <$> (L.parens $ L.commaSep expression)
+    [ index' <$$> L.brackets expression
+    , call' <$$> (L.parens $ L.commaSep expression)
     , access'' <$> (name' <$> L.dot) <*> identifier
     , access'' <$> (name' <$> L.arrow) <*> identifier
-    , (flip unary') <$> name' <$> L.reservedOp' "++"
-    , (flip unary') <$> name' <$> L.reservedOp' "--"
+    , unary' <$$> name' <$> L.reservedOp' "++"
+    , unary' <$$> name' <$> L.reservedOp' "--"
     ] where access'' b c a = access' a b c
   
   postfixExpression :: Parser CSyn

@@ -32,10 +32,6 @@ where
   functionSignature :: Parser (SynBuilder, CSyn, CSyn, CSyn)
   functionSignature = do
     (funcSpecs, returnTypeSpecs) <- partition specifierBelongsToFunction <$> sort <$> some specifier
-    
-    let baseType = typeFromSpecifiers returnTypeSpecs
-    let functionBuilder = appEndo $ F.foldMap (Endo . builderFromSpecifier) funcSpecs
-    
     decl <- declarator 
     name <- maybe (fail "expected function name") (pure . name') (declName decl)
     
@@ -43,7 +39,8 @@ where
       [DerivedFunction args variadic] -> pure $ arguments' args variadic
       _ -> fail $ "unexpected declarator body" ++ show decl
     
-    let returnType = builderFromDeclarator decl $ baseType
+    let functionBuilder = foldSpecifiers funcSpecs
+    let returnType = makeType funcSpecs decl
     
     return (functionBuilder, returnType, name, args)
   
@@ -64,12 +61,29 @@ where
         then Variable {name = fromJust name, typ = type', value = nil'} 
         else unFix type'
   
+  -- | Parses a semicolon-terminated series of declarations.
+  declarations :: Parser [CSyn]
+  declarations = declarations' False
+  
+  -- | Parses a semicolon-terminated series of possibly-sized declarations
+  sizedDeclarations :: Parser [CSyn]
+  sizedDeclarations = declarations' True
+
+  declarations' :: Bool -> Parser [CSyn]
+  declarations' allowsSize = do
+    specs <- sort <$> some specifier
+    let declParser = if allowsSize then sizedDeclarator else initDeclarator
+    decls <- L.commaSep1 declParser <* L.semi
+    
+    let wrapper = if ((SSpec CTypedef) `elem` specs) then wrapTypedef else wrapDecl
+    mapM (wrapper specs) decls
+  
   
   -- Record type that wraps the various fields a declaration may have.
   data CDeclInfo = CDeclInfo {
     contents :: CDeclarator,
-    initVal :: Maybe CSyn,
-    size :: Maybe CSyn
+    initVal :: CSyn,
+    size :: CSyn
   } deriving (Show, Eq)
   
   data CDeclaration = CDeclaration {
@@ -80,12 +94,6 @@ where
   -- As a GNU extension, the user can specify the assembly name for a C function 
   -- or variable.
   type CAsmName = Maybe String
-  
-  data CDeclaratorBody 
-    = CIdentBody String
-    | CParenBody CDeclarator
-    | CEmptyBody
-    deriving (Show, Eq)
     
   declName :: CDeclarator -> Maybe String
   declName d = case (declBody d) of
@@ -187,23 +195,11 @@ where
   makeType :: [CSpecifier] -> CDeclarator -> CSyn
   makeType specs decl = builderFromDeclarator decl $ typeFromSpecifiers specs
   
-  declarations = declarations' False
-  sizedDeclarations = declarations' True
-
-  declarations' :: Bool -> Parser [CSyn]
-  declarations' allowsSize = do
-    specs <- sort <$> some specifier
-    let declParser = if allowsSize then sizedDeclarator else initDeclarator
-    decls <- L.commaSep1 declParser <* L.semi
-    
-    let wrapper = if ((SSpec CTypedef) `elem` specs) then wrapTypedef else wrapDecl
-    mapM (wrapper specs) decls
-  
   wrapTypedef :: [CSpecifier] -> CDeclInfo -> Parser CSyn
   wrapTypedef specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
-    when (isJust initVal) (fail "expected uninitialized declaration in typedef")
+    when (isNil initVal) (fail "expected uninitialized declaration in typedef")
     when (isNothing (declName contents)) (fail "expected named declaration in typedef")
-    when (isNothing size) (fail "unexpected size in typedef")
+    when (isNil size) (fail "unexpected size in typedef")
     
     let (Just name) = name' <$> declName contents
     let typ = makeType [s | s <- specs, s ≠ (SSpec CTypedef)] contents
@@ -214,10 +210,10 @@ where
     
   wrapDecl :: [CSpecifier] -> CDeclInfo -> Parser CSyn
   wrapDecl specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
-    let makeSizer = maybe id sized' size
+    let makeSizer = if isNil size then id else sized' size
     let name = name' <$> declName contents
     when (isNothing name) $ fail "expected variable name"
-    return $ Variable { name = fromJust name, typ = makeSizer $ makeType specs contents, value = fromMaybe nil' initVal }
+    return $ Variable { name = fromJust name, typ = makeSizer $ makeType specs contents, value = initVal }
     
   func :: Parser CDerivedDeclarator
   func = L.parens $ do
@@ -242,14 +238,14 @@ where
 
   initDeclarator :: Parser CDeclInfo
   initDeclarator = CDeclInfo <$> declarator 
-                             <*> optional assignment 
-                             <*> pure Nothing
+                             <*> opt' assignment 
+                             <*> pure nil'
     where assignment = L.reservedOp "=" >> initializer
     
   sizedDeclarator :: Parser CDeclInfo
   sizedDeclarator = CDeclInfo <$> declarator
-                              <*> pure Nothing
-                              <*> optional (L.colon *> constantExpression)
+                              <*> pure nil'
+                              <*> opt'(L.colon *> constantExpression)
                                   
   designator :: Parser CSyn
   designator = choice 
@@ -266,11 +262,10 @@ where
     
   indexAccess :: Parser CSyn
   indexAccess = do 
-    idxs <- some $ (flip index' <$> L.brackets constantExpression)
+    idxs <- some $ (index' <$$> L.brackets constantExpression)
     let folded = appEndo $ F.foldMap Endo $ reverse idxs
     return $ folded nil'
     
-  
   initList :: Parser CSyn
   initList = Fix <$> CommaGroup <$> L.braces (L.commaSep1 initSubfield)
   
@@ -290,6 +285,12 @@ where
 
   asm :: Parser String
   asm = L.reserved "__asm" *> L.parens (some $ noneOf ")")
+  
+  data CDeclaratorBody 
+    = CIdentBody String
+    | CParenBody CDeclarator
+    | CEmptyBody
+    deriving (Show, Eq)
   
   declaratorBody :: Parser CDeclaratorBody
   declaratorBody = choice
