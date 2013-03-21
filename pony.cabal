@@ -57,7 +57,6 @@ Library {
                  , Language.C99.Internal
                  , Language.C99.Lexer
                  , Language.C99.Literals
-                 , Language.C99.Miscellany
                  , Language.C99.Operators
                  , Language.C99.Parser
                  , Language.C99.Specifiers

@@ -3,6 +3,7 @@ module Language.C99.Specifiers
   , typeSpecifier
   , storageSpecifier
   , specifier
+  , specifiers
   , attribute
   )
 
@@ -17,6 +18,7 @@ where
   import Language.C99.Literals
   import {-# SOURCE #-} Language.C99.Declarations
   import Language.C99.Expressions (expression, constantExpression)
+  import Data.List (sort)
   
   as name qual = qual <$ L.reserved name
   
@@ -98,4 +100,7 @@ where
     , TSpec <$> typeSpecifier
     , SSpec <$> storageSpecifier
     ]
+  
+  specifiers :: Parser [CSpecifier]
+  specifiers = sort <$> some specifier
   

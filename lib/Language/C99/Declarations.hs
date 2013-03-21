@@ -31,13 +31,13 @@ where
   -- |  d) the arguments
   functionSignature :: Parser (SynBuilder, CSyn, CSyn, CSyn)
   functionSignature = do
-    (funcSpecs, returnTypeSpecs) <- partition specifierBelongsToFunction <$> sort <$> some specifier
+    (funcSpecs, returnTypeSpecs) <- partition specifierBelongsToFunction <$> specifiers
     decl <- declarator 
     name <- maybe (fail "expected function name") (pure . name') (declName decl)
     
-    args <- case (modifiers decl) of
+    args <- case modifiers decl of
       [DerivedFunction args variadic] -> pure $ arguments' args variadic
-      _ -> fail $ "unexpected declarator body" ++ show decl
+      _ -> unexpected $ "declarator body" ++ show decl
     
     let functionBuilder = foldSpecifiers funcSpecs
     let returnType = makeType funcSpecs decl
@@ -46,20 +46,17 @@ where
   
   -- | Parses a type name. Used in builtin expressions and in casts.
   typeName :: Parser CSyn
-  typeName = makeType <$> (sort <$> some specifier) <*> declarator
+  typeName = makeType <$> specifiers <*> declarator
   
   -- | Parses a parameter in function declarations. If the parameter is unnamed a 
   -- | type node will be returned, otherwise a Variable will be returned.
   parameter :: Parser CSyn
   parameter = Fix <$> do
-    specs <- sort <$> some specifier
+    specs <- specifiers
     decl  <- declarator
-    let type' = makeType specs decl
+    let typ = makeType specs decl
     let name = name' <$> declName decl
-    return $ 
-      if (isJust name) 
-        then Variable {name = fromJust name, typ = type', value = nil'} 
-        else unFix type'
+    return $ maybe (unFix typ) (\x -> Variable { name = x, typ = typ, value = nil'}) name
   
   -- | Parses a semicolon-terminated series of declarations.
   declarations :: Parser [CSyn]
@@ -71,11 +68,12 @@ where
 
   declarations' :: Bool -> Parser [CSyn]
   declarations' allowsSize = do
-    specs <- sort <$> some specifier
-    let declParser = if allowsSize then sizedDeclarator else initDeclarator
-    decls <- L.commaSep1 declParser <* L.semi
+    specs <- specifiers
     
-    let wrapper = if ((SSpec CTypedef) `elem` specs) then wrapTypedef else wrapDecl
+    let declParser = if allowsSize then sizedDeclarator else initDeclarator
+    let wrapper = if (SSpec CTypedef) `elem` specs then wrapTypedef else wrapDecl
+    
+    decls <- L.commaSep1 declParser <* L.semi
     mapM (wrapper specs) decls
   
   
@@ -91,7 +89,7 @@ where
   type CAsmName = Maybe String
     
   declName :: CDeclarator -> Maybe String
-  declName d = case (declBody d) of
+  declName d = case declBody d of
     (CIdentBody s) -> Just s
     (CParenBody d) -> declName d
     CEmptyBody -> Nothing
@@ -118,28 +116,27 @@ where
   
   
   convertType :: CTypeSpecifier -> CSyn
-  convertType TVoid     = void'
-  convertType TChar     = char'
-  convertType TShort    = short' int'
-  convertType TInt      = int'
-  convertType TLong     = long' int'
-  convertType TInt128   = verylong'
-  convertType TUInt128  = unsigned' verylong'
-  convertType TFloat    = float'
-  convertType TDouble   = double'
-  convertType TSigned   = signed' int'
-  convertType TUnsigned = unsigned' int'
-  convertType TBool     = bool'
-  convertType (TEnumeration n members attrs) = enumeration' n (Fix (CommaGroup members))
+  convertType TVoid                                 = void'
+  convertType TChar                                 = char'
+  convertType TShort                                = short' int'
+  convertType TInt                                  = int'
+  convertType TLong                                 = long' int'
+  convertType TInt128                               = verylong'
+  convertType TUInt128                              = unsigned' verylong'
+  convertType TFloat                                = float'
+  convertType TDouble                               = double'
+  convertType TSigned                               = signed' int'
+  convertType TUnsigned                             = unsigned' int'
+  convertType TBool                                 = bool'
+  convertType (TEnumeration n members attrs)        = enumeration' n (Fix (CommaGroup members))
   convertType (TStructOrUnion n kind members attrs) = composite' kind n (group' members)
-  convertType (TTypedef ident typ) = typedef' (name' ident) typ
+  convertType (TTypedef ident typ)                  = typedef' (name' ident) typ
   
   
   typeFromSpecifiers :: [CSpecifier] -> CSyn
-  typeFromSpecifiers specs = foldSpecifiers (init specs') $ (convertType typeSpec)
-    where 
-      specs' = sort specs
-      (TSpec typeSpec) = last specs'
+  typeFromSpecifiers specs = foldSpecifiers (init specs') (convertType typeSpec) where 
+    specs' = sort specs
+    (TSpec typeSpec) = last specs'
   
   specifierBelongsToFunction :: CSpecifier -> Bool
   specifierBelongsToFunction (SSpec CStatic) = True
@@ -147,21 +144,20 @@ where
   specifierBelongsToFunction (TQual CInline) = True
   specifierBelongsToFunction _ = False
     
-    
   builderFromSpecifier :: CSpecifier -> SynBuilder
-  builderFromSpecifier (TSpec TShort) = short'
-  builderFromSpecifier (TSpec TLong) = long'
-  builderFromSpecifier (TSpec TSigned) = signed'
+  builderFromSpecifier (TSpec TShort)    = short'
+  builderFromSpecifier (TSpec TLong)     = long'
+  builderFromSpecifier (TSpec TSigned)   = signed'
   builderFromSpecifier (TSpec TUnsigned) = unsigned'
-  builderFromSpecifier (TQual CConst) = const'
+  builderFromSpecifier (TQual CConst)    = const'
   builderFromSpecifier (TQual CRestrict) = restrict'
   builderFromSpecifier (TQual CVolatile) = volatile'
-  builderFromSpecifier (TQual CInline) = inline'
-  builderFromSpecifier (SSpec CAuto) = auto'
-  builderFromSpecifier (SSpec CStatic) = static'
-  builderFromSpecifier (SSpec CExtern) = extern'
+  builderFromSpecifier (TQual CInline)   = inline'
+  builderFromSpecifier (SSpec CAuto)     = auto'
+  builderFromSpecifier (SSpec CStatic)   = static'
+  builderFromSpecifier (SSpec CExtern)   = extern'
+  
   -- builderFromSpecifier (SSpec (CAttr (CAttribute es))) = attribute' (convert <$> es)
-  builderFromSpecifier x = error $ show x
     
   foldSpecifiers :: [CSpecifier] -> SynBuilder
   foldSpecifiers s = concatEndo (builderFromSpecifier <$> s)
@@ -195,16 +191,16 @@ where
   
   wrapTypedef :: [CSpecifier] -> CDeclInfo -> Parser CSyn
   wrapTypedef specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
-    unless (isNil initVal) (fail "expected uninitialized declaration in typedef")
-    when (isNothing (declName contents)) (fail "expected named declaration in typedef")
-    unless (isNil size) (fail "unexpected size in typedef")
+    unless (isNil initVal) (unexpected "uninitialized declaration in typedef")
+    when (isNothing (declName contents)) (unexpected "unnamed declaration in typedef")
+    unless (isNil size) (unexpected "size in typedef")
     
     let (Just name) = name' <$> declName contents
-    let typ = makeType [s | s <- specs, s /= (SSpec CTypedef)] contents
+    let typ = makeType [s | s <- specs, s ≠ SSpec CTypedef] contents
     
-    updateState $ addTypeDef ((liftFix getName) name) typ
+    updateState $ addTypeDef (getName `liftFix` name) typ
     
-    return $ ForwardDeclaration $ Fix $ Typedef { name = name, typ = typ }
+    return $ ForwardDeclaration $ Fix Typedef { name = name, typ = typ }
     
   wrapDecl :: [CSpecifier] -> CDeclInfo -> Parser CSyn
   wrapDecl specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
@@ -212,10 +208,10 @@ where
     let name = name' <$> declName contents
     let typ = makeType specs contents
     if isJust name
-      then return $ Variable { name = fromJust name, typ = sizeWrapper typ, value = initVal }
+      then return Variable { name = fromJust name, typ = sizeWrapper typ, value = initVal }
       else case unFix typ of
-        (Enumeration _ _) -> return $ ForwardDeclaration typ
-        (Composite _ _ _) -> return $ ForwardDeclaration typ
+        (Enumeration {}) -> return $ ForwardDeclaration typ
+        (Composite {}) -> return $ ForwardDeclaration typ
         _ -> fail ("unexpected unnamed variable of type " ++ show typ)
         
     
@@ -266,7 +262,7 @@ where
     
   indexAccess :: Parser CSyn
   indexAccess = do 
-    idxs <- some $ (index' <$$> L.brackets constantExpression)
+    idxs <- some $ index' <$$> L.brackets constantExpression
     let folded = appEndo $ F.foldMap Endo $ reverse idxs
     return $ folded nil'
     
@@ -280,7 +276,7 @@ where
     -- if there are designators, e.g. .x, we require an explicit = statement to make an assignment.
     exp <- initializer
     return $ 
-      if (isJust desigs)
+      if isJust desigs
         then binary' (fromJust desigs) "=" exp
         else exp
   
@@ -298,7 +294,7 @@ where
   
   declaratorBody :: Parser CDeclaratorBody
   declaratorBody = choice
-    [ CIdentBody <$> (liftFix getName) <$> identifier
+    [ CIdentBody <$> liftFix getName <$> identifier
     , CParenBody <$> L.parens declarator
     , pure CEmptyBody
     ]
