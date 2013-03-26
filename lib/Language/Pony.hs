@@ -25,12 +25,13 @@ module Language.Pony
     { topDown :: [Fix Sem -> Fix Sem]
     , anamorphisms :: [Fix Sem -> Sem (Fix Sem)]
     , bitwiseOperators :: [String]
+    , arbitraryIO :: [Fix Sem -> IO ()]
     }
   
-  instance Default PonyOptions where def = PonyOptions [] [] []
+  instance Default PonyOptions where def = PonyOptions [] [] [] []
   
   run :: PonyOptions -> IO ()
-  run (PonyOptions top anas bwo) = do
+  run (PonyOptions top anas bwo arb) = do
     args <- getArgs
     when (length args == 0) $ do
       putStrLn "Error: filename not provided"
@@ -43,6 +44,10 @@ module Language.Pony
         let anamorphed = foldl (flip ana) asg anas
         let topdowned = foldl apply anamorphed top where apply = flip ($)
         let prettied = prettyPrint topdowned
+        let doAllIO x (a:as) = a x >> doAllIO x as
+            doAllIO _ [] = return ()
+        let arbitraried = doAllIO anamorphed arb
+        arbitraried
         print prettied
   
 

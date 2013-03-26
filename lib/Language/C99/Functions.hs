@@ -1,5 +1,4 @@
 module Language.C99.Functions where
-  
   import Language.C99.Parser
   import Language.C99.AST
   import Language.C99.Specifiers

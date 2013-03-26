@@ -104,6 +104,7 @@ module Language.C99.AST
   data CAsmOperand 
     = Simple CStringLiteral
     | GCCAsm CStringLiteral [CAsmArgument] [CAsmArgument] [CStringLiteral]
+
     deriving (Show, Eq, Typeable, Data, Generic)
   
   -- | Represents an output or input value in GCC assembly syntax. Takes the form of 
@@ -122,6 +123,7 @@ module Language.C99.AST
   data CExternal 
     = FunctionDecl CFunction
     | ExternDecl CDeclaration
+    | ExternFunCall CExpr
     deriving (Eq, Show, Typeable, Data, Generic)
   
   -- | C expressions (C99 6.5).

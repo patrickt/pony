@@ -7,6 +7,8 @@ module Language.C99.Declarations
 where
   
   -- Lasciate ogne speranza, voi ch'intrate.
+  -- Oh, that's comforting. -Andrew
+  
   
   import Control.Monad
   import Data.Either
