@@ -32,6 +32,7 @@ module Semantics.C.Reifiable.Instances
           && declarationIsUnnamed d        = convert (AsForwardComposite d)
       | declarationIsFunctionPrototype d   = convert (AsPrototype d) -- function prototype
       | otherwise                          = convert (AsVariable d)  -- variable' declaration
+    convert (ExternFunCall e)              = convert e
       
   -- CBlockItem -> Variable | Expression
   -- Because in open recursion style we can mix statements and declarations freely, the BlockItem class is not useful.

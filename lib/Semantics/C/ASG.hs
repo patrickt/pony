@@ -75,6 +75,7 @@ module Semantics.C.ASG where
     FunCall  :: a -> [a] -> Sem a -- rename to Call?
     VaArg    :: a -> a -> Sem a
     Paren    :: a -> Sem a
+    Include  :: String -> Sem a
   
     -- attributes
     Auto     :: Sem a
@@ -177,6 +178,7 @@ module Semantics.C.ASG where
   funcall' stmt args      = Fix $ FunCall stmt args
   vaarg' typ value        = Fix $ VaArg typ value
   paren' stmt             = Fix . Paren
+  include' str            = Fix $ Include str
   
   auto' = Fix Auto
   const' = Fix Const

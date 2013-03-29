@@ -99,6 +99,7 @@ module Semantics.C.Pretty
     evalPretty _ (Paren a)       = parens a
     evalPretty _ (FunCall a bs)  = a <> parens (sep $ punctuate comma bs)
     evalPretty _ (Brackets a b)  = a <> brackets b
+    evalPretty _ (Include str)   = "#include " <> (text str)
     
     evalPretty (out -> (Attributed _ (out -> PointerToT _))) (Attributed as t) = t <+> hsep as
     evalPretty _ (Attributed as t) = hsep as <+> t
