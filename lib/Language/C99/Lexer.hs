@@ -51,7 +51,7 @@ module Language.C99.Lexer
                         "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", 
                         "static", "struct", "switch", "typedef", "union", "unsigned", "void", 
                         "volatile", "while", "...", "__asm", "__attribute__", "__inline", "__inline__",
-                        "__typeof__", "__builtin_va_arg", "__int128_t", "__uint128_t"]
+                        "__typeof__", "__builtin_va_arg", "__int128_t", "__uint128_t", "__volatile__"]
     , T.identStart = letter <|> char '_'
     , T.identLetter = alphaNum <|> oneOf "_'"
     , T.commentStart = "/*"

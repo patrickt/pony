@@ -112,6 +112,8 @@ where
   asmString = choice [
                        L.reserved "__asm"
                      , L.reserved "__asm__"
+                     , L.reserved "__asm"
+                     , L.reserved "__asm__"
                      ]
 
   asmName :: Parser String
@@ -136,3 +138,4 @@ where
       Nothing -> do
         guard $ not $ null derived
         return $ CDeclarator Nothing derived asm attrs
+        

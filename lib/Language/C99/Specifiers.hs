@@ -30,6 +30,7 @@ where
     [ "const" `as` CConst
     , "restrict" `as` CRestrict
     , "volatile" `as` CVolatile 
+    , "__volatile__" `as` CVolatile
     , "inline" `as` CInline
     , "__inline" `as` CInline
     , "__inline__" `as` CInline
@@ -57,6 +58,8 @@ where
     , "signed" `as` TSigned
     , "unsigned" `as` TUnsigned
     , "_Bool" `as` TBool
+    , "u32_t" `as` TInt
+    , "u16_t" `as` TInt
     , typeof
     , enum
     , struct

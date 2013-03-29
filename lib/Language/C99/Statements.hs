@@ -54,21 +54,23 @@ whether it can consume input before failing.
             
   asmStmt :: Parser CStatement
   asmStmt =  AsmStmt 
-         <$> (L.reserved "asm" *> optional volatile)
+         <$> ((L.reserved "asm" *> optional volatile)
+              <|> (L.reserved "__asm__" *> optional volatile))
          <*> L.parens asmOperand where
-           volatile = L.reserved "volatile" *> pure CVolatile
+           volatile = (L.reserved "volatile" *> pure CVolatile)
+                      <|> (L.reserved "__volatile__" *> pure CVolatile)
             
   asmOperand :: Parser CAsmOperand
   asmOperand = try simple <|> complex where
     simple = Simple <$> (stringLiteral <* notFollowedBy L.colon)
     complex =  GCCAsm 
            <$> stringLiteral 
-           <*> (L.colon *> L.commaSep asmArgument)
-           <*> (L.colon *> L.commaSep asmArgument)
-           <*> (L.colon *> L.commaSep stringLiteral)
+           <*> optional (L.colon *> L.commaSep asmArgument)
+           <*> optional (L.colon *> L.commaSep asmArgument)
+           <*> optional (L.colon *> L.commaSep stringLiteral)
 
   asmArgument :: Parser CAsmArgument
-  asmArgument = CAsmArgument <$> stringLiteral <*> optional (L.parens identifier)
+  asmArgument = CAsmArgument <$> stringLiteral <*> optional (L.parens expression)
   
   expressionStmt :: Parser CStatement
   expressionStmt = maybe EmptyStmt ExpressionStmt <$> optional expression <* L.semi

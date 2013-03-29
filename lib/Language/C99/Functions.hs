@@ -5,11 +5,13 @@ module Language.C99.Functions where
   import Language.C99.Specifiers
   import Language.C99.Declarations
   import Language.C99.Statements
+  import Language.C99.Lexer as L
   
   -- | C function definition (C99 6.9.1).
   functionDefinition :: Parser CFunction
   functionDefinition = do 
     oldState <- getState
     func <- CFunction <$> some specifier <*> declarator <*> compoundStmt
+    optional (L.semi)
     putState oldState
     return func
