@@ -52,7 +52,7 @@ module Language.C99.Parser
   -- an error or the parsed type in question.
   preprocessAndParse :: Parser a -> FilePath -> Internals -> IO (Either ParseError a)
   preprocessAndParse p loc i = system preprocess >> parseFromFileCustom p "./ponytmp" i
-    where preprocess = printf "/usr/bin/gcc -U __BLOCKS__ -E %s > ./ponytmp" loc
+    where preprocess = printf "cat %s | /usr/bin/gcc -U __BLOCKS__ -E - > ./ponytmp" loc
   
   -- | Given a parser action and a string, parses the string and dumps the 
   -- result to stdout. Useful for debugging.

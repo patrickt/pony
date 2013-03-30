@@ -65,9 +65,9 @@ whether it can consume input before failing.
     simple = Simple <$> (stringLiteral <* notFollowedBy L.colon)
     complex =  GCCAsm 
            <$> stringLiteral 
-           <*> optional (L.colon *> L.commaSep asmArgument)
-           <*> optional (L.colon *> L.commaSep asmArgument)
-           <*> optional (L.colon *> L.commaSep stringLiteral)
+           <*> (L.colon *> L.commaSep asmArgument)
+           <*> (L.colon *> L.commaSep asmArgument)
+           <*> (L.colon *> L.commaSep stringLiteral)
 
   asmArgument :: Parser CAsmArgument
   asmArgument = CAsmArgument <$> stringLiteral <*> optional (L.parens expression)
