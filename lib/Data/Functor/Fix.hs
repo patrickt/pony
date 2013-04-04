@@ -1,3 +1,5 @@
+{-# LANGUAGE UnicodeSyntax #-}
+
 module Data.Functor.Fix 
   ( module Data.Generics.Fixplate
   , Fix

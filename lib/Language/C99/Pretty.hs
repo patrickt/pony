@@ -1,15 +1,15 @@
-module Semantics.C.Pretty 
+module Language.C99.Pretty 
   where
-  {-
-  import Control.Applicative hiding (Const)
-  import Data.Fixed
-  import Data.Functor.Fix
-  import Language.Pony.MachineSizes
-  import Semantics.C.ASG
-  import Text.PrettyPrint.Free
   
-  prettyTest :: Parser (Mu f) -> String -> IO ()
-  prettyTest p s = print $ prettyPrint $ parseUnsafe p s 
+  import Data.Functor.Fix
+  import Language.C99.Syntax
+  import Language.Pony.Overture
+  import Language.C99.Parser
+  import Text.PrettyPrint.Free hiding ((<>))
+  
+  prettyTest :: (PrettyAlg f) => Parser (Mu f) -> ByteString -> IO ()
+  prettyTest p s = print $ prettyPrint $ parseUnsafe p s
+  
   
   prettyPrint :: (PrettyAlg f) => Mu f -> Doc e
   prettyPrint = para' evalPretty
@@ -17,11 +17,11 @@ module Semantics.C.Pretty
   class (Functor f) => PrettyAlg f where
     evalPretty :: Mu f -> f (Doc e) -> Doc e
   
-  printInit :: Fix Sem -> Doc e
+  printInit :: Fix C99 -> Doc e
   printInit (Fix Empty) = empty
   printInit a = " " <> equals <+> prettyPrint a
   
-  instance PrettyAlg Sem where
+  instance PrettyAlg C99 where
     evalPretty _ (Name n)  = text n
     
     evalPretty (µ1 -> Unsigned VeryLongT) _ = "__uint128_t"
@@ -43,7 +43,7 @@ module Semantics.C.Pretty
     evalPretty _ Union        = "union"
     evalPretty _ BoolT        = "_Bool"
     evalPretty _ (BuiltinT t) = t
-    evalPretty _ (TypedefT t) = t
+    evalPretty _ (Typedef {typ})  = typ
 
     evalPretty (µ1 -> Const (PointerToT _)) (Const t)       = t <+> "const"
     evalPretty (µ1 -> Volatile (PointerToT _)) (Volatile t) = t <+> "volatile"
@@ -59,29 +59,28 @@ module Semantics.C.Pretty
     evalPretty _ (Register t)   = "register" <+> t
     evalPretty _ (Static t)     = "static" <+> t
 
-    evalPretty _ (Function {ftype, fname, fargs, fbody}) = ftype <+> fname <> fargs <+> fbody
+    evalPretty _ (Function {typ, name, args, body}) = typ <+> name <> args <+> body
     
     -- To pretty-print arrays, we break them down into a form that looks like this:
     -- baseTypeAndName[optlen] = initializer;
     -- We recursively print baseTypeAndName (which may itself be an array), then append the brackets and initializer.
-    evalPretty (µ -> v@(Variable (µ -> ArrayT { array_of, array_length }) vname vvalue)) _ = 
-      baseDeclaration <> brackets len <> initializer where
-        baseDeclaration = prettyPrint $ tie $ v { vtype = array_of, vvalue = nil' }
-        len = prettyPrint array_length
-        initializer = printInit vvalue
+    evalPretty (µ -> v@(Variable (µ -> ArrayT { typ, len }) name value)) _ = 
+      baseDeclaration <> brackets l <> initializer where
+        baseDeclaration = prettyPrint $ tie $ v { typ = typ, value = nil' }
+        l = prettyPrint len
+        initializer = printInit value
       
-    evalPretty (µ1 -> Variable {vtype = Function {ftype, fargs}}) (Variable {vname}) = prettyPrint ftype <+> vname <> prettyPrint fargs
-    evalPretty (µ -> Variable {vvalue}) (Variable t n _) = t <+> n <> printInit vvalue
+    evalPretty (µ1 -> Variable {typ = Function {typ, args}}) (Variable {name}) = prettyPrint typ <+> name <> prettyPrint args
+    evalPretty (µ -> Variable {value}) (Variable t n _) = t <+> n <> printInit value
     
     evalPretty _ Break                = "break"
-    evalPretty _ (Case a b)           = "case" <+> a <> colon </> hsep b
+    evalPretty _ (Case a b)           = "case" <+> a <> colon <+> b
     evalPretty _ Continue             = "continue"
     evalPretty _ (Default sts)        = "default:" <+> sts
     evalPretty _ (DoWhile a b)        = "do" <+> a <+> "while" <+> parens b
     evalPretty _ Empty                = empty
     evalPretty _ (For a b c block)    = "for" <> (parens $ cat $ semi `punctuate` [a,b,c]) <+> block
     evalPretty _ (Goto s)             = "goto" <+> s
-    evalPretty _ (IfThen c s)         = "if" <> parens c <> s
     evalPretty _ (IfThenElse c s alt) = "if" <+> parens c <+> s <+> "else" <+> parens s <+> alt
     evalPretty _ (Labeled l e)        = l <> colon <+> e
     evalPretty _ (Return a)           = "return" <+> a
@@ -94,19 +93,19 @@ module Semantics.C.Pretty
     evalPretty _ (CChar c) = text $ show c
     
     -- expressions
-    evalPretty _ (Cast t v)      = (sep $ (parens <$> t)) <> v
+    evalPretty _ (Cast t v)      = parens t <> v
     evalPretty _ (CommaSep a b)  = a <> comma <+> b
     evalPretty _ (Unary op a)    = op <> a
     evalPretty _ (Binary a op b) = a <+> op <+> b
     evalPretty _ (Ternary a b c) = a <> "?" <> b <> colon <> c
     evalPretty _ (Paren a)       = parens a
-    evalPretty _ (FunCall a bs)  = a <> tupled bs
-    evalPretty _ (Brackets a b)  = a <> brackets b
+    evalPretty _ (Call a bs)  = a <> tupled bs
+    evalPretty _ (Index a b)  = a <> brackets b
     
     evalPretty _ (Attributed as t) = hsep as <+> t
 
     evalPretty _ (Enumeration a b) = "enum" <+> a <+> b
-    evalPretty _ (Composite {ckind, cname, cfields}) = ckind <+> cname <+> cfields
+    evalPretty _ (Composite {kind, name, fields}) = kind <+> name <+> fields
     evalPretty _ (Program p) = vcat [ s <> semi | s <- p  ]
     evalPretty _ (Group ts) = semiBraces ts
     evalPretty _ (List ts) = cat $ comma `punctuate` ts
@@ -114,19 +113,20 @@ module Semantics.C.Pretty
     evalPretty _ (Arguments ts False) = tupled ts
     evalPretty _ (Arguments ts True) = tupled $ ts ++ ["..."]
     
-    evalPretty _ (ForwardTypeDeclaration t) = t
+    evalPretty _ (ForwardDeclaration t) = t
     evalPretty _ (Sized s t) = t <+> colon <+> s
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t
     evalPretty _ (Typedef name typ) = "typedef" <+> name <+> typ 
     
     evalPretty x _ = error $ show x
   
-  foldArrays :: Mu Sem -> Doc e
-  foldArrays (Fix (ArrayT {array_of = a@(Fix (ArrayT _ _)), array_length})) = foldArrays a <> brackets (prettyPrint array_length)
-  foldArrays (Fix (ArrayT {array_length})) = brackets $ prettyPrint array_length
+  foldArrays :: Mu C99 -> Doc e
+  foldArrays (Fix (ArrayT {typ = a@(Fix (ArrayT _ _)), len})) = foldArrays a <> brackets (prettyPrint len)
+  foldArrays (Fix (ArrayT {len})) = brackets $ prettyPrint len
   foldArrays t = error "foldArrays called improper type"
   
-  foundationType :: Mu Sem -> Doc e
-  foundationType (Fix (ArrayT { array_of })) = foundationType array_of
+  foundationType :: Mu C99 -> Doc e
+  foundationType (Fix (ArrayT { typ })) = foundationType typ
   foundationType x = prettyPrint x
-  -}
+
+  

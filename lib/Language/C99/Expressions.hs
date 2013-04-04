@@ -4,18 +4,14 @@ module Language.C99.Expressions
   
   import Control.Arrow ((>>>), (<<<))
   import Data.Function (on)
-  import Data.Functor.Identity (Identity)
   import Data.List (groupBy)
   import Language.C99.Parser
-  import Language.C99.Internal
   import Language.C99.Syntax
-  import Language.C99.Literals
   import Language.C99.Operators
   import {-# SOURCE #-} Language.C99.Declarations 
   import qualified Language.C99.Lexer as L
   import qualified Text.Parsec.Expr as E
   import Text.Parsec.Expr (Assoc (..))
-  import qualified Text.Parsec.ByteString as P
   
   -- TODO: move this
   opt' :: Parser CSyn -> Parser CSyn

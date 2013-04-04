@@ -59,6 +59,7 @@ Library {
                  , Language.C99.Literals
                  , Language.C99.Operators
                  , Language.C99.Parser
+                 , Language.C99.Pretty
                  , Language.C99.Specifiers
                  , Language.C99.Statements
                  , Language.C99.Syntax

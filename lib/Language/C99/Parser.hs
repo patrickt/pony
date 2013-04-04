@@ -16,7 +16,6 @@ module Language.C99.Parser
   import Data.Generics
   import Language.C99.Internal
   import Language.C99.Syntax
-  import Language.C99.Operators
   import {-# SOURCE #-} Language.C99.Expressions
   import Language.Pony.Overture
   import qualified Data.ByteString as B

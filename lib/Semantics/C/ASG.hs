@@ -104,98 +104,98 @@ module Semantics.C.ASG where
   instance OrdF Sem where compareF = compare
   
   deriving instance (IsString (f (Fix f))) => IsString (Fix f)
-  
-  -- 'nil'' isn't consistent with our naming conventions unfortunately, but I like it
-  nil' = Fix Empty
-  
-  name' = Fix . Name
-  -- TODO: investigate signed', unsigned', and int' - is this the most idiomatic way to express
-  signed'   = Fix . Signed
-  struct'   = Fix Struct
-  union'    = Fix Union
-  unsigned' = Fix . Unsigned
-  
-  short' = Fix . ShortM
-  long'  = Fix . LongM
-  
-  function' nam typ args body = Fix $ Function nam typ args body
-  
-  arguments' l v = Fix $ Arguments l v
-  
-  void'          = Fix VoidT
-  int'           = Fix IntT
-  float'         = Fix FloatT
-  double'        = Fix DoubleT
-  char'          = Fix CharT
-  verylong'      = Fix VeryLongT
-  pointer_to'    = Fix . PointerToT
-  builtin'       = Fix . BuiltinT
-  array' len typ = Fix $ ArrayT len typ
-  typedef_t'     = Fix . TypedefT
-  bool'          = Fix BoolT 
-  typeof'        = Fix . TypeOfT
-  attribute' as t = Fix $ Attributed as t
-  
-  functionpointer' params returning = Fix $ FunctionPointerT params returning
-  
-  break'                    = Fix Break
-  case' cond blk            = Fix $ Case cond blk -- this is specious, as are other case statements
-  comma' a b                = Fix $ CommaSep a b
-  continue'                 = Fix Continue
-  default'                  = Fix . Default
-  dowhile' cond blk         = Fix $ DoWhile cond blk
-  for' var cond inc blk     = Fix $ For var cond inc blk
-  goto'                     = Fix . Goto
-  ifthen' cond blk          = Fix $ IfThen cond blk
-  ifthenelse' cond blk blk2 = Fix $ IfThenElse cond blk blk2
-  labeled' label stmt       = Fix $ Labeled label stmt
-  return'                   = Fix . Return
-  switch' cond blk          = Fix $ Switch cond blk
-  while' cond blk           = Fix $ While cond blk
-  
-  str'                    = Fix . CStr
-  cint'                   = Fix . CInt
-  cfloat                  = Fix . CFloat
-  cchar'                  = Fix . CChar
-  unary' op arg           = Fix $ Unary op arg
-  binary' arg1 op arg2    = Fix $ Binary arg1 op arg2
-  ternary' arg1 arg2 arg3 = Fix $ Ternary arg1 arg2 arg3
-  cast' typ stmt          = Fix $ Cast typ stmt
-  brackets' stmt idx      = Fix $ Brackets stmt idx
-  funcall' stmt args      = Fix $ FunCall stmt args
-  vaarg' typ value        = Fix $ VaArg typ value
-  paren'                  = Fix . Paren
-  
-  auto' = Fix . Auto
-  const' = Fix . Const
-  extern' = Fix . Extern
-  inline' = Fix . Inline
-  register' = Fix . Register
-  restrict' = Fix . Restrict
-  static' = Fix . Static
-  volatile' = Fix . Volatile
-  
-  composite' kind nam fields = Fix $ Composite kind nam fields
-  enumeration' nam vars = Fix $ Enumeration nam vars
-  -- TODO fix these nomenclatures
-  program' = Fix . Program
-  group' = Fix . Group
-  list' = Fix . List
-  sized' t s = Fix $ Sized t s
-  
-  variable' a b c = tie $ Variable a b c -- TODO fix this nomenclature
-  typedef' typ nam = tie $ Typedef typ nam
-  
-  type CSem = forall a. Sem a
-  type FSem = Fix Sem
-
-  instance Arbitrary FSem where
-    arbitrary = undefined
-
-
-
-  isGroup :: CSem -> Bool
-  isGroup (Group _) = True
-  isGroup _ = False
-  
+  -- 
+  -- -- 'nil'' isn't consistent with our naming conventions unfortunately, but I like it
+  -- nil' = Fix Empty
+  -- 
+  -- name' = Fix . Name
+  -- -- TODO: investigate signed', unsigned', and int' - is this the most idiomatic way to express
+  -- signed'   = Fix . Signed
+  -- struct'   = Fix Struct
+  -- union'    = Fix Union
+  -- unsigned' = Fix . Unsigned
+  -- 
+  -- short' = Fix . ShortM
+  -- long'  = Fix . LongM
+  -- 
+  -- function' nam typ args body = Fix $ Function nam typ args body
+  -- 
+  -- arguments' l v = Fix $ Arguments l v
+  -- 
+  -- void'          = Fix VoidT
+  -- int'           = Fix IntT
+  -- float'         = Fix FloatT
+  -- double'        = Fix DoubleT
+  -- char'          = Fix CharT
+  -- verylong'      = Fix VeryLongT
+  -- pointer_to'    = Fix . PointerToT
+  -- builtin'       = Fix . BuiltinT
+  -- array' len typ = Fix $ ArrayT len typ
+  -- typedef_t'     = Fix . TypedefT
+  -- bool'          = Fix BoolT 
+  -- typeof'        = Fix . TypeOfT
+  -- attribute' as t = Fix $ Attributed as t
+  -- 
+  -- functionpointer' params returning = Fix $ FunctionPointerT params returning
+  -- 
+  -- break'                    = Fix Break
+  -- case' cond blk            = Fix $ Case cond blk -- this is specious, as are other case statements
+  -- comma' a b                = Fix $ CommaSep a b
+  -- continue'                 = Fix Continue
+  -- default'                  = Fix . Default
+  -- dowhile' cond blk         = Fix $ DoWhile cond blk
+  -- for' var cond inc blk     = Fix $ For var cond inc blk
+  -- goto'                     = Fix . Goto
+  -- ifthen' cond blk          = Fix $ IfThen cond blk
+  -- ifthenelse' cond blk blk2 = Fix $ IfThenElse cond blk blk2
+  -- labeled' label stmt       = Fix $ Labeled label stmt
+  -- return'                   = Fix . Return
+  -- switch' cond blk          = Fix $ Switch cond blk
+  -- while' cond blk           = Fix $ While cond blk
+  -- 
+  -- str'                    = Fix . CStr
+  -- cint'                   = Fix . CInt
+  -- cfloat                  = Fix . CFloat
+  -- cchar'                  = Fix . CChar
+  -- unary' op arg           = Fix $ Unary op arg
+  -- binary' arg1 op arg2    = Fix $ Binary arg1 op arg2
+  -- ternary' arg1 arg2 arg3 = Fix $ Ternary arg1 arg2 arg3
+  -- cast' typ stmt          = Fix $ Cast typ stmt
+  -- brackets' stmt idx      = Fix $ Brackets stmt idx
+  -- funcall' stmt args      = Fix $ FunCall stmt args
+  -- vaarg' typ value        = Fix $ VaArg typ value
+  -- paren'                  = Fix . Paren
+  -- 
+  -- auto' = Fix . Auto
+  -- const' = Fix . Const
+  -- extern' = Fix . Extern
+  -- inline' = Fix . Inline
+  -- register' = Fix . Register
+  -- restrict' = Fix . Restrict
+  -- static' = Fix . Static
+  -- volatile' = Fix . Volatile
+  -- 
+  -- composite' kind nam fields = Fix $ Composite kind nam fields
+  -- enumeration' nam vars = Fix $ Enumeration nam vars
+  -- -- TODO fix these nomenclatures
+  -- program' = Fix . Program
+  -- group' = Fix . Group
+  -- list' = Fix . List
+  -- sized' t s = Fix $ Sized t s
+  -- 
+  -- variable' a b c = tie $ Variable a b c -- TODO fix this nomenclature
+  -- typedef' typ nam = tie $ Typedef typ nam
+  -- 
+  -- type CSem = forall a. Sem a
+  -- type FSem = Fix Sem
+  -- 
+  -- instance Arbitrary FSem where
+  --   arbitrary = undefined
+  -- 
+  -- 
+  -- 
+  -- isGroup :: CSem -> Bool
+  -- isGroup (Group _) = True
+  -- isGroup _ = False
+  -- 
   

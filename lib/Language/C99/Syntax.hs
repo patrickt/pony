@@ -2,11 +2,8 @@
 
 module Language.C99.Syntax where
   
-  import Control.Applicative hiding (Const)
-  import Data.Fixed
   import Data.Functor.Fix
   import GHC.Exts (IsString (..))
-  import Test.QuickCheck
   
   type CSyn = Mu C99
   
@@ -88,7 +85,7 @@ module Language.C99.Syntax where
     Group :: [a] -> C99 a
     List  :: [a] -> C99 a
     CommaGroup :: [a] -> C99 a
-    Assembly :: { isVolatile :: Bool, text :: a, inRegs :: a, outRegs :: a, clobberList :: a } -> C99 a
+    Assembly :: { isVolatile :: Bool, asmText :: a, inRegs :: a, outRegs :: a, clobberList :: a } -> C99 a
     AssemblyOperand :: { opconstraint :: a, opvar :: a } -> C99 a
     
     Arguments :: [a] -> Bool -> C99 a

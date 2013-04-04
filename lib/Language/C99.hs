@@ -11,8 +11,10 @@ module Language.C99
   import Language.C99.Literals as X
   import Language.C99.Operators as X
   import Language.C99.Parser as X
+  import Language.C99.Pretty as X
   import Language.C99.Specifiers as X
   import Language.C99.Statements as X
+  import Language.C99.Syntax as X
   import Language.C99.TopLevel as X
     
     

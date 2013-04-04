@@ -2,13 +2,7 @@ module Language.C99.Internal
   
   where
   
-  import GHC.Generics
-  import Data.Default
-  import Data.Generics hiding (Generic, GT)
-  import Language.C99.Literals
   import Language.C99.Syntax
-  import Language.Pony.Overture
-  import Data.List (sort)
   
   -- TODO: Expand this to include __builtin_offsetof and __builtin_types_compatible_p
   -- | GNU/clang built-in functions that are exposed after preprocessing.
