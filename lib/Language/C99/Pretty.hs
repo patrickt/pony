@@ -2,6 +2,8 @@ module Language.C99.Pretty
   where
   
   import Data.Functor.Fix
+  import Data.Generics.Fixplate.Zipper
+  import Debug.Trace
   import Language.C99.Syntax
   import Language.Pony.Overture
   import Language.C99.Parser
@@ -20,6 +22,66 @@ module Language.C99.Pretty
   printInit :: Fix C99 -> Doc e
   printInit (Fix Empty) = empty
   printInit a = " " <> equals <+> prettyPrint a
+  
+  isCompoundType :: CSyn -> Bool
+  isCompoundType (µ2 -> (Function {})) = True
+  isCompoundType (µ2 -> (ArrayT {})) = True
+  isCompoundType (µ2 -> (PointerToT (ArrayT {}))) = True
+  isCompoundType (µ2 -> (PointerToT (Function {}))) = True
+  isCompoundType _ = False
+  
+  moveToBottomLeft :: Loc C99 -> Loc C99
+  moveToBottomLeft x = x `fromMaybe` (moveToBottomLeft <$> moveDownL x)
+  
+  pruneDerivedType :: Loc C99 -> Maybe (Loc C99)
+  pruneDerivedType l 
+    | isCompoundType (focus l) = moveDownL l
+    | otherwise = moveUp l >>= pruneDerivedType
+  
+  printAndReadyBase :: Loc C99 -> (Doc e, CSyn)
+  printAndReadyBase l = (prettyPrint $ focus l, defocus $ replace nil' l)
+  
+  isPointer :: CSyn -> Bool
+  isPointer (µ -> PointerToT _) = True
+  isPointer _ = False
+  
+  printDecl :: CSyn -> Doc e -> Doc e
+  printDecl p name = case (pruneDerivedType $ moveToBottomLeft $ root p) of
+    Nothing -> prettyPrint p
+    (Just z) -> a <+> folded
+      where 
+        (a, b) = printAndReadyBase z
+        (Just folded) = foldComplex name (root b)
+  
+  traceIt x = traceShow x x
+  
+  foldComplex :: Doc e -> Loc C99 -> Maybe (Doc e)
+  foldComplex b z = 
+    let
+      recur x = moveDownL z >>= foldComplex x
+      childOfPointer = maybe False isPointer (focus <$> moveUp z)
+      base = if childOfPointer then parens b else b
+    in
+      case (focus z) of
+        (Fix Empty) -> Just base
+        (µ -> PointerToT _) -> recur ("*" <> base)
+        (µ -> (Function typ _ args _)) -> recur (base <> prettyPrint args)
+        (µ -> (ArrayT typ len)) -> recur (base <> (brackets (prettyPrint len)))
+        (Fix x) -> recur base
+
+  
+  -- p :: Doc e -> Loc C99 -> Doc e
+  -- p d z@(focus -> (Fix (PointerToT _))) = p (star <> d) (unsafeMoveDown z)
+  -- p d z@(focus -> (Fix (Function typ _ args _))) = p (base <> prettyPrint args) (unsafeLeftMost typ) where
+  --   base = ifParentPointer z then parens d else d
+  -- p d z@(focus -> (Fix (Array typ len))) = p (base <> (brackets (prettyPrint len))) (unsafeLeftMost typ) where
+  --   base = ifParentPointer z then parens d else d
+  -- p d z@(focus -> other) = prettyPrint other <+> d
+          
+  
+  instance PrettyAlg Maybe where
+    evalPretty _ (Just a) = a
+    evalPretty _ _ = mempty
   
   instance PrettyAlg C99 where
     evalPretty _ (Name n)  = text n
@@ -58,33 +120,36 @@ module Language.C99.Pretty
     evalPretty _ (Extern t)     = "extern" <+> t
     evalPretty _ (Register t)   = "register" <+> t
     evalPretty _ (Static t)     = "static" <+> t
-
+    
+    evalPretty _ (ArrayT { typ }) = typ
+    evalPretty (µ2 -> (Function { body = Empty })) _ = ""
     evalPretty _ (Function {typ, name, args, body}) = typ <+> name <> args <+> body
     
     -- To pretty-print arrays, we break them down into a form that looks like this:
     -- baseTypeAndName[optlen] = initializer;
     -- We recursively print baseTypeAndName (which may itself be an array), then append the brackets and initializer.
-    evalPretty (µ -> v@(Variable (µ -> ArrayT { typ, len }) name value)) _ = 
-      baseDeclaration <> brackets l <> initializer where
-        baseDeclaration = prettyPrint $ tie $ v { typ = typ, value = nil' }
-        l = prettyPrint len
-        initializer = printInit value
+    evalPretty (µ -> v1@(Variable {typ })) v2@(Variable { name }) = printDecl (Fix v1) name
+      -- baseDeclaration <> brackets l <> initializer where
+      --   baseDeclaration = prettyPrint $ tie $ v { typ = typ, value = nil' }
+      --   l = prettyPrint len
+      --   initializer = printInit value
       
-    evalPretty (µ1 -> Variable {typ = Function {typ, args}}) (Variable {name}) = prettyPrint typ <+> name <> prettyPrint args
-    evalPretty (µ -> Variable {value}) (Variable t n _) = t <+> n <> printInit value
+    -- evalPretty (µ1 -> Variable {typ = Function {typ, args}}) (Variable {name}) = prettyPrint typ <+> name <> prettyPrint args
+    -- evalPretty (µ -> Variable {value}) (Variable t n _) = t <+> n <> printInit value
     
-    evalPretty _ Break                = "break"
-    evalPretty _ (Case a b)           = "case" <+> a <> colon <+> b
-    evalPretty _ Continue             = "continue"
-    evalPretty _ (Default sts)        = "default:" <+> sts
-    evalPretty _ (DoWhile a b)        = "do" <+> a <+> "while" <+> parens b
-    evalPretty _ Empty                = empty
-    evalPretty _ (For a b c block)    = "for" <> (parens $ cat $ semi `punctuate` [a,b,c]) <+> block
-    evalPretty _ (Goto s)             = "goto" <+> s
-    evalPretty _ (IfThenElse c s alt) = "if" <+> parens c <+> s <+> "else" <+> parens s <+> alt
-    evalPretty _ (Labeled l e)        = l <> colon <+> e
-    evalPretty _ (Return a)           = "return" <+> a
-    evalPretty _ (While c a)          = "while" <+> parens c <+> a
+    evalPretty _ Break                     = "break"
+    evalPretty _ (Case a b)                = "case" <+> a <> colon <+> b
+    evalPretty _ Continue                  = "continue"
+    evalPretty _ (Default sts)             = "default:" <+> sts
+    evalPretty _ (DoWhile a b)             = "do" <+> a <+> "while" <+> parens b
+    evalPretty _ Empty                     = empty
+    evalPretty _ (For a b c block)         = "for" <> (parens $ cat $ semi `punctuate` [a,b,c]) <+> block
+    evalPretty _ (Goto s)                  = "goto" <+> s
+    evalPretty _ (IfThenElse c s (Just e)) = "if" <+> parens c <+> s <+> "else" <+> e
+    evalPretty _ (IfThenElse c s _)        = "if" <+> parens c <+> s <+> "else"
+    evalPretty _ (Labeled l e)             = l <> colon <+> e
+    evalPretty _ (Return a)                = "return" <+> a
+    evalPretty _ (While c a)               = "while" <+> parens c <+> a
     
     -- literals
     evalPretty _ (CInt t) = pretty t
@@ -118,7 +183,7 @@ module Language.C99.Pretty
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t
     evalPretty _ (Typedef name typ) = "typedef" <+> name <+> typ 
     
-    evalPretty x _ = error $ show x
+    evalPretty x _ = error $ "died in evalPretty " ++ show x
   
   foldArrays :: Mu C99 -> Doc e
   foldArrays (Fix (ArrayT {typ = a@(Fix (ArrayT _ _)), len})) = foldArrays a <> brackets (prettyPrint len)

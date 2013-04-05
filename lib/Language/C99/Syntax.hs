@@ -27,7 +27,7 @@ module Language.C99.Syntax where
     Struct           :: C99 a
     Union            :: C99 a
     PointerToT       :: a -> C99 a -- Pointer :: Type -> Type
-    ArrayT           :: { len :: a, typ :: a } -> C99 a
+    ArrayT           :: { typ :: a, len :: a } -> C99 a
     BuiltinT         :: a -> C99 a -- Builtin :: Name -> Type
     Typedef          :: { typ :: a, name :: a } -> C99 a
     BoolT            :: C99 a
@@ -44,7 +44,7 @@ module Language.C99.Syntax where
     Empty      :: C99 a
     For        :: a -> a -> a -> a -> C99 a
     Goto       :: a -> C99 a
-    IfThenElse :: a -> a -> a -> C99 a
+    IfThenElse :: a -> a -> Maybe a -> C99 a
     Labeled    :: a -> a -> C99 a
     Return     :: a -> C99 a
     Switch     :: a -> a -> C99 a
@@ -90,7 +90,7 @@ module Language.C99.Syntax where
     
     Arguments :: [a] -> Bool -> C99 a
     ForwardDeclaration :: a -> C99 a
-    Variable :: { typ :: a, name :: a, value :: a } -> C99 a
+    Variable :: { typ :: a, name :: a, value :: Maybe a } -> C99 a
     Sized :: {size :: a, typ :: a} -> C99 a
     
   data Foo = Bar { baz :: Int} | Baf { baz :: Int }
@@ -136,7 +136,7 @@ module Language.C99.Syntax where
   verylong'      = Fix VeryLongT
   pointer_to'    = Fix . PointerToT
   builtin'       = Fix . BuiltinT
-  array' len typ = Fix $ ArrayT len typ
+  array' len typ = Fix $ ArrayT typ len -- note the parameters are out of order
   bool'          = Fix BoolT 
   typeof'        = Fix . TypeOfT
   attribute' as t = Fix $ Attributed as t

@@ -51,7 +51,7 @@ module Language.C99.Statements
   selection = ifStmt <|> switch where
     ifStmt = ifthenelse' <$> (L.reserved "if" *> L.parens expression)
                          <*> statement
-                         <*> opt (L.reserved "else" *> statement) 
+                         <*> optional (L.reserved "else" *> statement) 
                          <?> "if statement"
     switch = switch' <$> (L.reserved "switch" *> L.parens expression) 
                      <*> statement

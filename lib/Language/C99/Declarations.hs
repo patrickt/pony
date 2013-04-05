@@ -56,7 +56,7 @@ where
     decl  <- declarator
     let typ = makeType specs decl
     let name = name' <$> declName decl
-    return $ maybe (unFix typ) (\x -> Variable { name = x, typ = typ, value = nil'}) name
+    return $ maybe (unFix typ) (\x -> Variable { name = x, typ = typ, value = Nothing}) name
   
   -- | Parses a semicolon-terminated series of declarations.
   declarations :: Parser [CSyn]
@@ -80,7 +80,7 @@ where
   -- Record type that wraps the various fields a declaration may have.
   data CDeclInfo = CDeclInfo {
     contents :: CDeclarator,
-    initVal :: CSyn,
+    initVal :: Maybe CSyn,
     size :: CSyn
   } deriving (Show, Eq)
   
@@ -191,7 +191,7 @@ where
   
   wrapTypedef :: [CSpecifier] -> CDeclInfo -> Parser CSyn
   wrapTypedef specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
-    unless (isNil initVal) (unexpected "uninitialized declaration in typedef")
+    unless (isNothing initVal) (unexpected "uninitialized declaration in typedef")
     when (isNothing (declName contents)) (unexpected "unnamed declaration in typedef")
     unless (isNil size) (unexpected "size in typedef")
     
@@ -238,13 +238,13 @@ where
 
   initDeclarator :: Parser CDeclInfo
   initDeclarator = CDeclInfo <$> declarator 
-                             <*> opt' assignment 
+                             <*> optional assignment 
                              <*> pure nil'
     where assignment = L.reservedOp "=" >> initializer
     
   sizedDeclarator :: Parser CDeclInfo
   sizedDeclarator = CDeclInfo <$> declarator
-                              <*> pure nil'
+                              <*> pure Nothing
                               <*> opt'(L.colon *> constantExpression)
                                   
   designator :: Parser CSyn
