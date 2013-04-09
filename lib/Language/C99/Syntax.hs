@@ -85,7 +85,7 @@ module Language.C99.Syntax where
     Group :: [a] -> C99 a
     List  :: [a] -> C99 a
     CommaGroup :: [a] -> C99 a
-    Assembly :: { isVolatile :: Bool, asmText :: a, inRegs :: a, outRegs :: a, clobberList :: a } -> C99 a
+    Assembly :: { isVolatile :: Bool, asmText :: a, inRegs :: [a], outRegs :: [a], clobberList :: [a] } -> C99 a
     AssemblyOperand :: { opconstraint :: a, opvar :: a } -> C99 a
     
     Arguments :: [a] -> Bool -> C99 a
@@ -171,6 +171,8 @@ module Language.C99.Syntax where
   access' a b c           = Fix $ Access a b c
   vaarg' typ value        = Fix $ VaArg typ value
   paren'                  = Fix . Paren
+  asm' vol t as bs cs     = Fix $ Assembly vol t as bs cs
+  asmop' a b              = Fix $ AssemblyOperand a b
   
   auto' = Fix . Auto
   const' = Fix . Const

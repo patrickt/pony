@@ -20,7 +20,7 @@ module Language.C99.Functions where
     -- get the body
     body <- compoundStmt <?> "function body"
     
-    attrs <- many
+    attrs <- many attribute
     let names = concat $ nub [ n | (CAttribute n) <- attrs ]
     let builder = if null names then id else Fix <$> Attributed names
     

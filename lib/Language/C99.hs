@@ -8,7 +8,6 @@ module Language.C99
   import Language.C99.Expressions as X
   import Language.C99.Functions as X
   -- import Language.C99.Lexer as X
-  import Language.C99.Literals as X
   import Language.C99.Operators as X
   import Language.C99.Parser as X
   import Language.C99.Pretty as X

@@ -6,7 +6,6 @@ module Semantics.C.QuasiQuote
   where
   
   import Language.C99
-  import Semantics.C.Reifiable
   import Language.Haskell.TH
   import Language.Haskell.TH.Quote
   import Language.Haskell.TH.Syntax

@@ -48,7 +48,7 @@ Library {
                    , uniplate >= 1.6.7
                    , wl-pprint-extras >= 3.0
                    
-  exposed-modules: Language.Pony
+  exposed-modules: Language.Pony, Semantics.C.QuasiQuote
   other-modules:   Data.Functor.Fix
                  , Language.C99
                  , Language.C99.Declarations
@@ -56,7 +56,6 @@ Library {
                  , Language.C99.Functions
                  , Language.C99.Internal
                  , Language.C99.Lexer
-                 , Language.C99.Literals
                  , Language.C99.Operators
                  , Language.C99.Parser
                  , Language.C99.Pretty
@@ -66,9 +65,9 @@ Library {
                  , Language.C99.TopLevel
                  , Language.Pony.Overture
                  , Language.Pony.Transformations.Sanitizers
+                 , Semantics.C
                  , Semantics.C.ASG
-                 , Semantics.C.Pretty
-                 , Semantics.C.QuasiQuote
+                 -- , Semantics.C.QuasiQuote
                  , Semantics.C.Reifiable.Instances
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Default-extensions:      DeriveDataTypeable
@@ -112,17 +111,17 @@ Library {
 --   Hs-source-dirs: examples/concat
 -- }
 
-Executable hello {
-  Build-depends: pony, haskell2010
-  Default-language: Haskell2010
-  Main-is:  Main.hs
-  Hs-source-dirs: examples/hello
-  if flag(examples) {
-    Buildable: True
-  } else {
-    Buildable: False
-  }
-}
+-- Executable hello {
+--   Build-depends: pony, haskell2010
+--   Default-language: Haskell2010
+--   Main-is:  Main.hs
+--   Hs-source-dirs: examples/hello
+--   if flag(examples) {
+--     Buildable: True
+--   } else {
+--     Buildable: False
+--   }
+-- }
 -- 
 -- Executable logical-shift {
 --   Main-is:  Main.hs

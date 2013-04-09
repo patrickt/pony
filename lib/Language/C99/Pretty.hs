@@ -27,6 +27,8 @@ module Language.C99.Pretty
   isPointer (µ -> PointerToT _) = True
   isPointer _ = False
   
+  commaSep ts = cat $ punctuate ", " ts
+  
   -- could make this prettier
   printParens :: Doc e -> Loc C99 -> Doc e -> Maybe (Doc e)
   printParens d t post = do
@@ -130,7 +132,7 @@ module Language.C99.Pretty
     evalPretty _ (Composite {kind, name, fields}) = kind <+> name <+> fields
     evalPretty _ (Program p) = vcat [ s <> semi | s <- p  ]
     evalPretty _ (Group ts) = semiBraces ts
-    evalPretty _ (List ts) = cat $ comma `punctuate` ts
+    evalPretty _ (List ts) = commaSep ts 
     
     evalPretty _ (Arguments ts False) = tupled ts
     evalPretty _ (Arguments ts True) = tupled $ ts ++ ["..."]
@@ -139,5 +141,12 @@ module Language.C99.Pretty
     evalPretty _ (Sized s t) = t <+> colon <+> s
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t
     evalPretty _ (Typedef name typ) = "typedef" <+> name <+> typ 
+    
+    evalPretty _ (Assembly { isVolatile, asmText, inRegs = [], outRegs = [] }) =
+      "asm" <> volatility <> parens asmText where volatility = if isVolatile then " volatile " else " "
+    evalPretty _ (Assembly { isVolatile, asmText, inRegs, outRegs, clobberList }) =
+      "asm" <> volatility <> parens (asmText <:> commaSep inRegs <:> commaSep outRegs <:> commaSep clobberList)  where 
+        x <:> y = x <> ":" <> y
+        volatility = if isVolatile then " volatile " else " "
     
     evalPretty x _ = error $ "died in evalPretty " ++ show x

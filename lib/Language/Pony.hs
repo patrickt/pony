@@ -4,6 +4,7 @@ module Language.Pony
   ( module Data.Functor.Fix
   , module Language.Pony.Overture
   , module Language.C99
+  , module Semantics.C
   , run
   , PonyOptions (..)
   ) 

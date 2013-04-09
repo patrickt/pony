@@ -17,7 +17,6 @@ where
   import qualified Language.C99.Lexer as L
   import Language.C99.Internal
   import Language.C99.Syntax
-  import Language.C99.Literals
   import {-# SOURCE #-} Language.C99.Declarations
   import Language.C99.Expressions (expression, constantExpression)
   import Data.List (sort)

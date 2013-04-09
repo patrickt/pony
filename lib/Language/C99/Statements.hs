@@ -19,10 +19,26 @@ module Language.C99.Statements
     [ labeledStmt
     , compoundStmt
     , jumpStmt
+    , try asmStmt
     , expressionStmt
     , selection
     , iteration
     ] <?> "C statement"
+    
+  asmStmt :: Parser CSyn
+  asmStmt = do
+    L.reserved "asm"
+    volatile <- optional $ L.reserved "volatile"
+    L.reservedOp "("
+    text    <- stringLiteral
+    inRegs  <- option [] (L.symbol ":" *> L.commaSep operand) <?> "input registers"
+    outRegs <- option [] (L.symbol ":" *> L.commaSep operand) <?> "output registers"
+    clobber <- option [] (L.symbol ":" *> L.commaSep operand) <?> "clobber list"
+    L.reservedOp ")"
+    return $ asm' (isJust volatile) text inRegs outRegs clobber
+  
+  operand :: Parser CSyn
+  operand = asmop' <$> stringLiteral <*> expression
   
   compoundStmt :: Parser CSyn
   compoundStmt = L.braces (group' <$> concat <$> many blockItem) <?> "compound statement"
