@@ -1,4 +1,4 @@
-module Semantics.C.QuasiQuote 
+module Language.C99.QuasiQuote 
   ( c99
   , expr
   , csplice

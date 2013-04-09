@@ -6,11 +6,11 @@ module Testing.HUnit.Syntax
   
   import qualified Data.ByteString.Char8 as B
   import Language.Pony
+  import Language.C99.QuasiQuote
   import Test.Framework
   import Test.Framework.Providers.HUnit
   import Test.Framework.TH
   import Test.HUnit hiding (Test)
-  import Semantics.C.QuasiQuote
   import Testing.HUnit.Asserts
   import Language.Haskell.TH
   import Language.Haskell.TH.Quote

@@ -4,7 +4,6 @@ module Language.Pony
   ( module Data.Functor.Fix
   , module Language.Pony.Overture
   , module Language.C99
-  , module Semantics.C
   , run
   , PonyOptions (..)
   ) 
@@ -16,7 +15,6 @@ module Language.Pony
   import Language.C99
   import Language.Pony.Overture
   import Language.Pony.Transformations.Sanitizers
-  import Semantics.C
   import System.Environment
   import System.Exit
 

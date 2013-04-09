@@ -48,9 +48,8 @@ Library {
                    , uniplate >= 1.6.7
                    , wl-pprint-extras >= 3.0
                    
-  exposed-modules: Language.Pony, Semantics.C.QuasiQuote
+  exposed-modules: Language.Pony, Language.C99, Language.C99.QuasiQuote
   other-modules:   Data.Functor.Fix
-                 , Language.C99
                  , Language.C99.Declarations
                  , Language.C99.Expressions
                  , Language.C99.Functions
@@ -65,10 +64,6 @@ Library {
                  , Language.C99.TopLevel
                  , Language.Pony.Overture
                  , Language.Pony.Transformations.Sanitizers
-                 , Semantics.C
-                 , Semantics.C.ASG
-                 -- , Semantics.C.QuasiQuote
-                 , Semantics.C.Reifiable.Instances
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
   Default-extensions:      DeriveDataTypeable
                          , DeriveFoldable
