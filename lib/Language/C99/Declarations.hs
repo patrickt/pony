@@ -13,6 +13,7 @@ where
   -- Lasciate ogne speranza, voi ch'intrate.
   
   import Control.Arrow
+  import Data.List
   import Language.Pony.Overture
   import Language.C99.Internal 
   import Language.C99.Expressions
@@ -40,7 +41,8 @@ where
       _ -> unexpected $ "declarator body" ++ show decl
     
     let functionBuilder = foldSpecifiers funcSpecs
-    let returnType = makeType funcSpecs decl
+    
+    let returnType = makeType returnTypeSpecs decl
     
     return (functionBuilder, returnType, name, args)
   

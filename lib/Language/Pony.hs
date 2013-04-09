@@ -1,8 +1,7 @@
 {-# LANGUAGE OverlappingInstances #-}
 
 module Language.Pony 
-  ( module Semantics.C
-  , module Data.Functor.Fix
+  ( module Data.Functor.Fix
   , module Language.Pony.Overture
   , module Language.C99
   , run
@@ -22,8 +21,8 @@ module Language.Pony
 
   
   data PonyOptions = PonyOptions
-    { topDown :: [Fix Sem -> Fix Sem]
-    , anamorphisms :: [Fix Sem -> Sem (Fix Sem)]
+    { topDown :: [CSyn -> CSyn]
+    , anamorphisms :: [CSyn -> C99 CSyn]
     , binaryOperators :: [Operator]
     }
   
