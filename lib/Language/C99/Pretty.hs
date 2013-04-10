@@ -91,7 +91,7 @@ module Language.C99.Pretty
     
     evalPretty _ (ArrayT { typ, len }) = typ <> brackets len
     evalPretty (µ2 -> (Function { body = Empty })) _ = ""
-    evalPretty _ (Function {typ, name, args, body}) = typ <+> name <> args <+> body
+    evalPretty (µ -> Function {typ=t}) (Function {typ, name, args, body}) = traceShow t typ <+> name <> args <+> body
     
     evalPretty (µ -> Variable { typ }) (Variable { name, value = Just val }) = (fromJust $ printDecl name (root typ)) <+> "=" <+> val
     evalPretty (µ -> Variable { typ }) (Variable { name }) = fromJust $ printDecl name (root typ)
@@ -131,11 +131,13 @@ module Language.C99.Pretty
     evalPretty _ (Enumeration a b) = "enum" <+> a <+> b
     evalPretty _ (Composite {kind, name, fields}) = kind <+> name <+> fields
     evalPretty _ (Program p) = vcat [ s <> semi | s <- p  ]
-    evalPretty _ (Group ts) = braces $ vcat [ s <> semi | s <- ts  ]
+    evalPretty _ (Group ts) = lbrace `above` indent 2 (vcat [ s <> semi | s <- ts  ]) `above` rbrace
+      
+      
     evalPretty _ (List ts) = commaSep ts 
     
-    evalPretty _ (Arguments ts False) = tupled ts
-    evalPretty _ (Arguments ts True) = tupled $ ts ++ ["..."]
+    evalPretty _ (Arguments ts False) = parens $ hcat $ punctuate ", " ts
+    evalPretty _ (Arguments ts True) = parens $ hcat $ punctuate ", " (ts ++ ["..."])
     
     evalPretty _ (ForwardDeclaration t) = t
     evalPretty _ (Sized s t) = t <+> colon <+> s

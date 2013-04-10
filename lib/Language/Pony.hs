@@ -17,6 +17,7 @@ module Language.Pony
   import Language.Pony.Transformations.Sanitizers
   import System.Environment
   import System.Exit
+  import Text.PrettyPrint.Free
 
   
   data PonyOptions = PonyOptions
@@ -28,21 +29,16 @@ module Language.Pony
   instance Default PonyOptions where def = PonyOptions [] [] []
   
   run :: PonyOptions -> IO ()
-  run = undefined
-  -- run (PonyOptions top anas bwo) = do
-  --   args <- getArgs
-  --   when (length args == 0) $ do
-  --     putStrLn "Error: filename not provided"
-  --     exitFailure
-  --   parsed <- preprocessAndParse preprocessedC (args !! 0) (def { operators = bwo })
-  --   case parsed of 
-  --     (Left a) -> putStrLn "ERROR" >> print a >> exitFailure
-  --     (Right ast) -> do
-  --       let asg = runReplacer ast
-  --       let anamorphed = foldl (flip ana) asg anas
-  --       let topdowned = foldl apply anamorphed top where apply = flip ($)
-  --       let prettied = prettyPrint topdowned
-  --       print prettied
+  run (PonyOptions top anas bwo) = do
+    args <- getArgs
+    when (length args == 0) $ do
+      putStrLn "Error: filename not provided"
+      exitFailure
+    parsed <- preprocessAndParse preprocessedC (args !! 0) (def { operators = bwo })
+    case parsed of 
+      (Left a) -> putStrLn "ERROR" >> print a >> exitFailure
+      (Right ast) -> do
+        putDoc $ prettyPrint ast
   
 
   

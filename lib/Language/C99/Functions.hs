@@ -15,7 +15,7 @@ module Language.C99.Functions where
     -- save the old typedefs, since you can declare new typedefs within a function that go out of scope
     oldState <- getState
     
-    (functionWrapper, returnType, fname, args) <- functionSignature
+    (functionWrapper, returnType, fname, fargs) <- functionSignature
     
     -- get the body
     body <- compoundStmt <?> "function body"
@@ -25,7 +25,7 @@ module Language.C99.Functions where
     let builder = if null names then id else Fix <$> Attributed names
     
     -- build the function 
-    let func = builder $ Fix $ Function { name = fname, typ = returnType, args = args, body = body }
+    let func = builder $ Fix $ Function { name = fname, typ = typ $ unFix returnType, args = fargs, body = body }
     
     -- restore the state
     putState oldState
