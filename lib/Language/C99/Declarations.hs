@@ -58,7 +58,9 @@ where
     decl  <- declarator
     let typ = makeType specs decl
     let name = name' <$> declName decl
-    return $ maybe (unFix typ) (\x -> Variable { name = x, typ = typ, value = Nothing}) name
+    let n = nil' `fromMaybe` name
+    -- TODO: we should maybe include a Parameter node?
+    return $ Variable { name = n, typ = typ, value = Nothing}
   
   -- | Parses a semicolon-terminated series of declarations.
   declarations :: Parser [CSyn]
@@ -133,6 +135,7 @@ where
   convertType (TEnumeration n members attrs)        = enumeration' n (Fix (CommaGroup members))
   convertType (TStructOrUnion n kind members attrs) = composite' kind n (group' members)
   convertType (TTypedef ident typ)                  = typedef' (name' ident) typ
+  convertType (TBuiltin n)                          = builtin' $ name' n
   
   
   typeFromSpecifiers :: [CSpecifier] -> CSyn
@@ -158,6 +161,7 @@ where
   builderFromSpecifier (SSpec CAuto)     = auto'
   builderFromSpecifier (SSpec CStatic)   = static'
   builderFromSpecifier (SSpec CExtern)   = extern'
+  builderFromSpecifier x = error $ show x
   
   -- builderFromSpecifier (SSpec (CAttr (CAttribute es))) = attribute' (convert <$> es)
     
@@ -198,7 +202,7 @@ where
     unless (isNil size) (unexpected "size in typedef")
     
     let (Just name) = name' <$> declName contents
-    let typ = makeType [s | s <- specs, s ≠ SSpec CTypedef] contents
+    let typ = makeType [  s | s <- specs, s ≠ SSpec CTypedef] contents
     
     updateState $ addTypeDef (getName `liftFix` name) typ
     

@@ -32,7 +32,6 @@ module Language.C99.Syntax where
     Typedef          :: { typ :: a, name :: a } -> C99 a
     BoolT            :: C99 a
     TypeOfT          :: a -> C99 a
-    
     Function :: { typ :: a, name :: a, args :: a, body :: a } -> C99 a
     
     -- statements
@@ -173,6 +172,7 @@ module Language.C99.Syntax where
   paren'                  = Fix . Paren
   asm' vol t as bs cs     = Fix $ Assembly vol t as bs cs
   asmop' a b              = Fix $ AssemblyOperand a b
+  builtint'               = Fix . BuiltinT
   
   auto' = Fix . Auto
   const' = Fix . Const

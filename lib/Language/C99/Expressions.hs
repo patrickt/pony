@@ -154,8 +154,8 @@ module Language.C99.Expressions
     , paren' <$> L.parens expression 
     ]
   
-  -- builtinExpression :: Parser CExpr
-  -- builtinExpression = CBuiltin <$> (BuiltinVaArg <$> (L.reserved "__builtin_va_arg" *> L.parens expression) <*> typeName)
+  builtinExpression :: Parser CSyn
+  builtinExpression = call' <$> (sname' "__builtin_va_args") <*> (pure <$> typeName)
   
   identifier :: Parser CSyn
   identifier = name' <$> L.identifier <?> "identifier"

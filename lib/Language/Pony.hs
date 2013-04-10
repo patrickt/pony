@@ -11,6 +11,7 @@ module Language.Pony
   where
     -- 
   
+  import qualified Data.ByteString.Char8 as B
   import Data.Functor.Fix
   import Language.C99
   import Language.Pony.Overture
@@ -18,7 +19,15 @@ module Language.Pony
   import System.Environment
   import System.Exit
   import Text.PrettyPrint.Free
-
+  import Language.C99.QuasiQuote
+  
+  t = parseUnsafe preprocessedC $ B.pack [here|
+    char *funopen(const void *,
+                     int (*)(void *, char *, int),
+                     int (*)(void *, const char *, int),
+                     float (*)(void *, float, int),
+                     int (*)(void *));
+  |]
   
   data PonyOptions = PonyOptions
     { topDown :: [CSyn -> CSyn]
@@ -26,7 +35,7 @@ module Language.Pony
     , binaryOperators :: [Operator]
     }
   
-  instance Default PonyOptions where def = PonyOptions [] [] []
+  instance Default PonyOptions where def = PonyOptions [] [] defaultOperators
   
   run :: PonyOptions -> IO ()
   run (PonyOptions top anas bwo) = do
@@ -37,8 +46,11 @@ module Language.Pony
     parsed <- preprocessAndParse preprocessedC (args !! 0) (def { operators = bwo })
     case parsed of 
       (Left a) -> putStrLn "ERROR" >> print a >> exitFailure
-      (Right ast) -> do
-        putDoc $ prettyPrint ast
+      (Right asg) -> do
+        let anamorphed = foldl (flip ana) asg anas
+        let topdowned = foldl apply anamorphed top where apply = flip ($)
+        let prettied = prettyPrint topdowned
+        putDoc prettied
   
 
   

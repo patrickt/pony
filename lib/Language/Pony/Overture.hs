@@ -16,6 +16,6 @@ module Language.Pony.Overture
   import Data.Monoid as X
   
   (≠) :: (Eq a) => a -> a -> Bool
-  (≠) = (==)
+  (≠) = (/=)
 
   a <$$> b = (flip a) <$> b
