@@ -42,7 +42,7 @@ module Language.C99.Syntax where
     Default    :: a -> C99 a
     DoWhile    :: a -> a -> C99 a
     Empty      :: C99 a
-    For        :: a -> a -> a -> a -> C99 a
+    For        :: [a] -> a -> a -> a -> C99 a
     Goto       :: a -> C99 a
     IfThenElse :: a -> a -> Maybe a -> C99 a
     Labeled    :: a -> a -> C99 a

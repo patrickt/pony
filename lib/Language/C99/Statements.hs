@@ -86,10 +86,11 @@ module Language.C99.Statements
       doWhile = dowhile' <$> (L.reserved "do" *> statement) 
                          <*> (L.reserved "while" *> parenExp <* L.semi) 
                          <?> "do-while statement"
+      firstStatement = declarations <|> (pure <$> expressionStmt)
       -- TODO: declaration or expression at the beginning
-      for = for' <$> (L.reserved "for" *> L.symbol "(" *> expressionStmt) 
+      for = for' <$> (L.reserved "for" *> L.symbol "(" *> firstStatement)
                  <*> expressionStmt
-                 <*> (expression <* L.symbol ")") 
+                 <*> (opt' expression <* L.symbol ")") 
                  <*> statement 
                  <?> "for statement"
       parenExp = L.parens expression

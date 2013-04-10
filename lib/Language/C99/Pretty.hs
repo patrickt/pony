@@ -102,7 +102,7 @@ module Language.C99.Pretty
     evalPretty _ (Default sts)             = "default:" <+> sts
     evalPretty _ (DoWhile a b)             = "do" <+> a <+> "while" <+> parens b
     evalPretty _ Empty                     = empty
-    evalPretty _ (For a b c block)         = "for" <> (parens $ cat $ semi `punctuate` [a,b,c]) <+> block
+    evalPretty _ (For a b c block)         = "for" <> (parens $ cat $ semi `punctuate` [commaSep a,b,c]) <+> block
     evalPretty _ (Goto s)                  = "goto" <+> s
     evalPretty _ (IfThenElse c s (Just e)) = "if" <+> parens c <+> s <+> "else" <+> e
     evalPretty _ (IfThenElse c s _)        = "if" <+> parens c <+> s <+> "else"
@@ -131,7 +131,7 @@ module Language.C99.Pretty
     evalPretty _ (Enumeration a b) = "enum" <+> a <+> b
     evalPretty _ (Composite {kind, name, fields}) = kind <+> name <+> fields
     evalPretty _ (Program p) = vcat [ s <> semi | s <- p  ]
-    evalPretty _ (Group ts) = semiBraces ts
+    evalPretty _ (Group ts) = braces $ vcat [ s <> semi | s <- ts  ]
     evalPretty _ (List ts) = commaSep ts 
     
     evalPretty _ (Arguments ts False) = tupled ts
