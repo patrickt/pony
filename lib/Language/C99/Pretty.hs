@@ -89,7 +89,7 @@ module Language.C99.Pretty
     evalPretty _ (Register t)   = "register" <+> t
     evalPretty _ (Static t)     = "static" <+> t
     
-    evalPretty _ (ArrayT { typ }) = typ
+    evalPretty _ (ArrayT { typ, len }) = typ <> brackets len
     evalPretty (µ2 -> (Function { body = Empty })) _ = ""
     evalPretty _ (Function {typ, name, args, body}) = typ <+> name <> args <+> body
     
@@ -141,7 +141,7 @@ module Language.C99.Pretty
     evalPretty _ (Sized s t) = t <+> colon <+> s
     evalPretty _ (List t) = braces $ hsep $ punctuate comma t
     evalPretty _ (Typedef name typ) = "typedef" <+> name <+> typ 
-    
+    evalPretty _ (CommaGroup cs) = braces $ commaSep cs
     evalPretty _ (Assembly { isVolatile, asmText, inRegs = [], outRegs = [] }) =
       "asm" <> volatility <> parens asmText where volatility = if isVolatile then " volatile " else " "
     evalPretty _ (Assembly { isVolatile, asmText, inRegs, outRegs, clobberList }) =

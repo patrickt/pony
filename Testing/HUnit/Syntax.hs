@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
 
 module Testing.HUnit.Syntax 
-  ( syntaxTests
+  ( tests
   ) where
   
   import qualified Data.ByteString.Char8 as B
@@ -54,5 +54,5 @@ module Testing.HUnit.Syntax
     practice = parseUnsafe expression "*a!=b"
     theory = binary' (unary' "*" "a") "!=" "b"
   
-  syntaxTests :: [Test]
-  syntaxTests = [$(testGroupGenerator)]
+  tests :: [Test]
+  tests = [$(testGroupGenerator)]

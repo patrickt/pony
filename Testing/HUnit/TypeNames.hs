@@ -1,5 +1,5 @@
 module Testing.HUnit.TypeNames 
-  ( typenameTestGroup
+  ( tests
   ) where
   
   import Data.Either
@@ -7,6 +7,7 @@ module Testing.HUnit.TypeNames
   import Language.Haskell.TH
   import Language.Haskell.TH.Quote
   import Language.Pony
+  import Language.C99.QuasiQuote
   import qualified Data.ByteString.Char8 as B
   import Test.Framework
   import Test.Framework.Providers.HUnit
@@ -16,7 +17,7 @@ module Testing.HUnit.TypeNames
   import Text.PrettyPrint.Free
   
   emit :: String -> Doc a
-  emit x = para' evalPretty $ convert $ parseUnsafe typeName (B.pack x)
+  emit x = para' evalPretty $ parseUnsafe typeName (B.pack x)
   
   instance Eq (Doc a) where
     a == b = (show a) == (show b)
@@ -64,5 +65,5 @@ module Testing.HUnit.TypeNames
   case_typedefscopegood        = assertParsingSucceeds innerScopeGood
   case_typedefscopebad         = assertParsingFails innerScopeBad
   
-  typenameTestGroup :: Test
-  typenameTestGroup = $(testGroupGenerator)
+  tests :: [Test]
+  tests = [$(testGroupGenerator)]
