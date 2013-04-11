@@ -69,7 +69,7 @@ module Language.C99.Expressions
   
   multiply, divide, modulus :: Operator
   multiply = smartBinaryOp "*" "=" 10
-  divide = smartBinaryOp "-" "=" 10
+  divide = smartBinaryOp "/" "=" 10
   modulus = smartBinaryOp "%" "=" 10
   
   ternary :: Operator

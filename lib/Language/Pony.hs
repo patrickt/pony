@@ -20,6 +20,7 @@ module Language.Pony
   import System.Exit
   import Text.PrettyPrint.Free
   import Language.C99.QuasiQuote
+  import System.Random
   
   t = parseUnsafe preprocessedC $ B.pack [here|
     char *funopen(const void *,
@@ -40,10 +41,11 @@ module Language.Pony
   run :: PonyOptions -> IO ()
   run (PonyOptions top anas bwo) = do
     args <- getArgs
+    rand <- getStdGen
     when (length args == 0) $ do
       putStrLn "Error: filename not provided"
       exitFailure
-    parsed <- preprocessAndParse preprocessedC (args !! 0) (def { operators = bwo })
+    parsed <- preprocessAndParse preprocessedC (args !! 0) (def { operators = bwo, seed = Just rand })
     case parsed of 
       (Left a) -> putStrLn "ERROR" >> print a >> exitFailure
       (Right asg) -> do

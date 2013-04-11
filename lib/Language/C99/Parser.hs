@@ -10,6 +10,7 @@ module Language.C99.Parser
   , parseFromFile
   , parseFromFileCustom
   , preprocessAndParse
+  , parserRandom
   )
   where
   
@@ -21,6 +22,7 @@ module Language.C99.Parser
   import qualified Data.ByteString as B
   import qualified Data.Map as M
   import System.Cmd
+  import System.Random
   import Text.Parsec hiding (parseTest, many, optional, (<|>), Empty)
   import Text.Parsec.ByteString hiding (Parser, parseFromFile)
   import Text.Printf
@@ -33,9 +35,19 @@ module Language.C99.Parser
   data Internals = Internals 
     { typedefs :: Map String CSyn
     , operators :: [Operator]
+    , seed :: Maybe StdGen
     }
   
-  instance Default Internals where def = Internals def defaultOperators
+  instance Default Internals where def = Internals def defaultOperators Nothing
+  
+  parserRandom :: (Random g) => (g, g) -> Parser g
+  parserRandom range = do
+    x <- seed <$> getState
+    when (isNothing x) $ fail "not ready to generate a random numbeer"
+    let (Just x') = x
+    let (val, newSeed) = randomR range x'
+    updateState (\s -> s { seed = Just newSeed })
+    return val
   
   -- | Updates an 'Internals' record by adding a new (name, type) pair.
   -- tl;dr: this needs some work.

@@ -195,4 +195,17 @@ module Language.C99.Syntax where
   typedef' typ nam = tie $ Typedef typ nam
   
   
-  
+  isStatement Break                     = True
+  isStatement (Case a b)                = True
+  isStatement Continue                  = True
+  isStatement (Default sts)             = True
+  isStatement (DoWhile a b)             = True
+  isStatement Empty                     = True
+  isStatement (For a b c block)         = True
+  isStatement (Goto s)                  = True
+  isStatement (IfThenElse c s (Just e)) = True
+  isStatement (IfThenElse c s _)        = True
+  isStatement (Labeled l s)             = True
+  isStatement (Return a)                = True
+  isStatement (While c a)               = True
+  isStatement _                         = False

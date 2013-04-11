@@ -43,6 +43,7 @@ Library {
                    , process > 1.0
                    , QuickCheck >= 2.3
                    , syb >= 0.1
+                   , random
                    , template-haskell
                    , transformers >= 0.3
                    , uniplate >= 1.6.7
@@ -162,6 +163,7 @@ Test-suite test-pony {
                  , bytestring
                  , data-default
                  , fixplate
+                 , random
                  , HUnit == 1.2.2.3
                  , template-haskell
                  , test-framework

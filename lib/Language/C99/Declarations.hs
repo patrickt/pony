@@ -161,6 +161,7 @@ where
   builderFromSpecifier (SSpec CAuto)     = auto'
   builderFromSpecifier (SSpec CStatic)   = static'
   builderFromSpecifier (SSpec CExtern)   = extern'
+  builderFromSpecifier (SSpec (CAttr (CAttribute as))) = attribute' as
   builderFromSpecifier x = error $ show x
   
   -- builderFromSpecifier (SSpec (CAttr (CAttribute es))) = attribute' (convert <$> es)
@@ -209,16 +210,24 @@ where
     return $ ForwardDeclaration $ Fix Typedef { name = name, typ = typ }
     
   wrapDecl :: [CSpecifier] -> CDeclInfo -> Parser CSyn
-  wrapDecl specs (CDeclInfo { contents, initVal, size}) = Fix <$> do
+  wrapDecl specs (CDeclInfo { contents, initVal, size}) = do
     let sizeWrapper = if isNil size then id else sized' size
     let name = name' <$> declName contents
-    let typ = makeType specs contents
+    let t = makeType specs contents
+    let wrapped = sizeWrapper $ Fix $ Variable { name = fromJust name , typ = t, value = initVal }
+    -- TODO: clean this up
     if isJust name
-      then return Variable { name = fromJust name, typ = sizeWrapper typ, value = initVal }
-      else case unFix typ of
-        (Enumeration {}) -> return $ ForwardDeclaration typ
-        (Composite {}) -> return $ ForwardDeclaration typ
-        _ -> fail ("unexpected unnamed variable of type " ++ show typ)
+      then return wrapped
+      else case unFix t of
+        (Enumeration {}) -> return $ Fix $ ForwardDeclaration t
+        (Composite {}) -> return $ Fix $ ForwardDeclaration t
+        _ -> 
+          if isNil size 
+            then fail ("unexpected unnamed variable of type " ++ show t)
+            else do
+              l <- parserRandom (0, 100000000000) :: Parser Int
+              return $ sizeWrapper $ Fix $ Variable { name = name' ("unused_" ++ show l), typ = t, value = Nothing}
+              
         
     
   func :: Parser CDerivedDeclarator
