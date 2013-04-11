@@ -73,8 +73,8 @@ module Language.C99.Internal
       | isModifier b = GT
       | otherwise = EQ
       where
-        isSignedness a = (a == TSigned) || (a == TUnsigned)
-        isModifier a = (a == TShort) || (a == TLong)
+        isSignedness t = t `elem` [TSigned, TUnsigned]
+        isModifier t = t `elem` [TLong, TShort]
       
   -- | C enumeration specifiers (C99 6.7.2.2).
   data CEnumerator 

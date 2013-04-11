@@ -3,7 +3,6 @@ module Language.C99.Pretty
   
   import Data.Functor.Fix
   import Data.Generics.Fixplate.Zipper
-  import Debug.Trace
   import Language.C99.Syntax
   import Language.Pony.Overture
   import Language.C99.Parser
@@ -66,17 +65,18 @@ module Language.C99.Pretty
     evalPretty _ (LongM t)            = "long" <+> t
     evalPretty _ (Attributed attrs t) = "__attribute__" <> parens (tupled attrs) <+> t
     
-    evalPretty _ VoidT        = "void"
-    evalPretty _ IntT         = "int"
-    evalPretty _ FloatT       = "float"
-    evalPretty _ DoubleT      = "double"
-    evalPretty _ CharT        = "char"
-    evalPretty _ VeryLongT    = "__int128_t"
-    evalPretty _ Struct       = "struct"
-    evalPretty _ Union        = "union"
-    evalPretty _ BoolT        = "_Bool"
-    evalPretty _ (BuiltinT t) = t
-    evalPretty _ (Typedef {typ})  = typ
+    evalPretty _ VoidT           = "void"
+    evalPretty _ IntT            = "int"
+    evalPretty _ FloatT          = "float"
+    evalPretty _ DoubleT         = "double"
+    evalPretty _ CharT           = "char"
+    evalPretty _ VeryLongT       = "__int128_t"
+    evalPretty _ Struct          = "struct"
+    evalPretty _ Union           = "union"
+    evalPretty _ BoolT           = "_Bool"
+    evalPretty _ (BuiltinT t)    = t
+    evalPretty _ (Typedef {typ}) = typ
+    evalPretty _ (TypeOfT t)     = "typeof" <> parens t
 
     evalPretty (µ1 -> Const (PointerToT _)) (Const t)       = t <+> "const"
     evalPretty (µ1 -> Volatile (PointerToT _)) (Volatile t) = t <+> "volatile"
@@ -97,7 +97,7 @@ module Language.C99.Pretty
     evalPretty _ (Function {typ, name, args, body}) = typ <+> name <> args <+> body
     
     evalPretty (µ -> Variable { typ }) (Variable { name, value = Just val }) = printDecl' name (root typ) <+> "=" <+> val
-    evalPretty (µ -> Variable { typ }) (Variable { name }) = printDecl' name (root typ)
+    evalPretty (µ -> Variable { typ }) (Variable { name, value = Nothing }) = printDecl' name (root typ)
     
     evalPretty _ Break                     = "break;"
     evalPretty _ (Case a b)                = "case" <+> a <> colon <+> b <> semi
@@ -112,6 +112,7 @@ module Language.C99.Pretty
     evalPretty _ (Labeled l s)             = l <> colon <+> s
     evalPretty _ (Return a)                = "return" <+> a <> ";"
     evalPretty _ (While c a)               = "while" <+> parens c <+> a
+    evalPretty _ (Switch s b)              = "switch" <+> parens s <+> b
     
     -- literals
     evalPretty _ (CInt t) = pretty t
@@ -129,8 +130,6 @@ module Language.C99.Pretty
     evalPretty _ (Call a bs)  = a <> tupled bs
     evalPretty _ (Index a b)  = a <> brackets b
     evalPretty _ (Access a access b) = hcat [a, access, b]
-    
-    evalPretty _ (Attributed as t) = hsep as <+> t
 
     evalPretty _ (Enumeration a b) = "enum" <+> a <+> b
     evalPretty (µ1 -> Composite { fields = Group []}) (Composite {kind, name}) = kind <+> name
@@ -151,8 +150,6 @@ module Language.C99.Pretty
     evalPretty (µ1 -> ForwardDeclaration (Typedef { name, typ })) _ = "typedef" <+> printDecl' (prettyPrint name) (root typ)
     evalPretty _ (ForwardDeclaration t) = t
     evalPretty _ (Sized s t) = t <+> colon <+> s
-    evalPretty _ (List t) = braces $ hsep $ punctuate comma t
-    evalPretty _ (Typedef name typ) = "typedef" <+> name <+> typ 
     evalPretty _ (CommaGroup cs) = braces $ commaSep cs
     evalPretty _ (Assembly { isVolatile, asmText, inRegs = [], outRegs = [] }) =
       "asm" <> volatility <> parens asmText where volatility = if isVolatile then " volatile " else " "
@@ -161,4 +158,4 @@ module Language.C99.Pretty
         x <:> y = x <> ":" <> y
         volatility = if isVolatile then " volatile " else " "
     
-    evalPretty x _ = error $ "died in evalPretty " ++ show x
+    -- evalPretty x _ = error $ "died in evalPretty " ++ show x

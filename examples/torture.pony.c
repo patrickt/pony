@@ -1,7 +1,7 @@
 
 
 #include <bzlib.h>
-#include <cache.h>
+// #include <cache.h>
 #include <checkint.h>
 // // // #include <complex.h> // complex is not a reserved word yet
 #include <copyfile.h>
@@ -10,11 +10,11 @@
 #include <db.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <getopt.h> // ??
+#include <getopt.h>
 #include <glob.h>
 #include <iconv.h>
 #include <ldap.h>
-#include <libunwind.h> // ??
+#include <libunwind.h>
 #include <limits.h>
 #include <pthread.h>
 #include <regex.h>

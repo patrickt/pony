@@ -35,7 +35,7 @@ module Language.C99.Expressions
   rBinaryOp s p = Operator (Infix (try $ (fbinary' <$> (sname' s <* notFollowedBy (L.symbol s)))) p AssocRight)
   
   logicalOr :: Operator
-  logicalOr = basicBinaryOp "||" 1
+  logicalOr = cautiousBinaryOp "||" 1
   
   logicalAnd :: Operator
   logicalAnd = basicBinaryOp "&&" 2

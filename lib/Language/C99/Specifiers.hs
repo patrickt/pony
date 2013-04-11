@@ -9,17 +9,17 @@ module Language.C99.Specifiers
 
 where
   
-  import Language.Pony.Overture
   import Data.Functor.Fix
-  import qualified Data.Map as M
-  import Language.C99.Expressions
-  import Language.C99.Parser
-  import qualified Language.C99.Lexer as L
+  import Language.C99.Expressions (expression, constantExpression, identifier, opt')
   import Language.C99.Internal
-  import Language.C99.Syntax
-  import {-# SOURCE #-} Language.C99.Declarations
-  import Language.C99.Expressions (expression, constantExpression)
   import Data.List (sort)
+  import Language.C99.Parser
+  import Language.C99.Syntax
+  import Language.Pony.Overture
+  import qualified Data.Map as M
+  import qualified Language.C99.Lexer as L
+  import {-# SOURCE #-} Language.C99.Declarations
+
   
   as name qual = qual <$ L.reserved name
   

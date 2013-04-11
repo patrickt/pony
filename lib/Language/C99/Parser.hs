@@ -14,8 +14,6 @@ module Language.C99.Parser
   )
   where
   
-  import Data.Generics
-  import Language.C99.Internal
   import Language.C99.Syntax
   import {-# SOURCE #-} Language.C99.Expressions
   import Language.Pony.Overture

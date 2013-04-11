@@ -15,20 +15,11 @@ module Language.Pony
   import Data.Functor.Fix
   import Language.C99
   import Language.Pony.Overture
-  import Language.Pony.Transformations.Sanitizers
   import System.Environment
   import System.Exit
   import Text.PrettyPrint.Free
   import Language.C99.QuasiQuote
   import System.Random
-  
-  t = parseUnsafe preprocessedC $ B.pack [here|
-    char *funopen(const void *,
-                     int (*)(void *, char *, int),
-                     int (*)(void *, const char *, int),
-                     float (*)(void *, float, int),
-                     int (*)(void *));
-  |]
   
   data PonyOptions = PonyOptions
     { topDown :: [CSyn -> CSyn]
