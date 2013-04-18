@@ -117,7 +117,14 @@ module Language.C99.Expressions
   groupOps x = (map parserFromOp) <$> groupBy ((==) `on` precedence) x' where x' = unOperator <$> x
 
   unaryOperator :: Parser CSyn
-  unaryOperator = name' <$> (choice (L.symbol <$> ["&", "*", "+", "-", "~", "!", "sizeof"]))
+  unaryOperator = name' <$> choice 
+    [ L.symbol "&"
+    , L.symbol "*"
+    , L.symbol "+"
+    , L.symbol "-"
+    , L.symbol "~"
+    , L.symbol "!"
+    , try $ L.symbol "sizeof"]
   
   postfixOperator :: Parser (CSyn -> CSyn)
   postfixOperator = choice 

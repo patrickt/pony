@@ -64,6 +64,6 @@
 
 int main (int argc, char const *argv[])
 {
-  (void)1;
+  hello;
   return 0;
 }

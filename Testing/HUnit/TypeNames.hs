@@ -19,9 +19,6 @@ module Testing.HUnit.TypeNames
   emit :: String -> Doc a
   emit x = para' evalPretty $ parseUnsafe typeName (B.pack x)
   
-  instance Eq (Doc a) where
-    a == b = (show a) == (show b)
-    
   roundTrip :: ByteString -> Assertion
   roundTrip b = pretty b @=? emit (B.unpack b)
   

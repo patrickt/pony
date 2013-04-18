@@ -35,7 +35,10 @@ module Language.C99.Pretty
       pointer = maybe False (isPointer . focus) (moveUp t)
       seed    = if pointer then parens d else d
       in moveDownL t >>= printDecl (seed <> post)
-    
+  
+  -- this is bad but makes my life easier, TODO take it out
+  instance Eq (Doc a) where
+    a == b = (show a) == (show b)
   
   printDecl :: Doc e -> Loc C99 -> Maybe (Doc e)
   printDecl d t@(focus -> (Fix (Const (Fix (PointerToT _)))))    = moveDownL t >>= printDecl (" const" <+> d)
@@ -43,7 +46,7 @@ module Language.C99.Pretty
   printDecl d t@(focus -> (Fix (PointerToT _)))                  = moveDownL t >>= printDecl ("*" <> d)
   printDecl d t@(focus -> Fix (ArrayT _ len))                    = printParens d t (brackets (prettyPrint len))
   printDecl d t@(focus -> Fix (Function { args }))               = printParens d t $ prettyPrint args
-  printDecl d (focus -> t)                                       = Just $ prettyPrint t <+> d
+  printDecl d (focus -> t)                                       = Just $ if (d == "") then prettyPrint t else prettyPrint t <+> d 
   
   printDecl' :: Doc e -> Loc C99 -> Doc e
   printDecl' a b = error ("Error in printing type " ++ show b) `fromMaybe` printDecl a b

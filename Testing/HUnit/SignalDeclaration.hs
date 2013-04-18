@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Testing.HUnit.SignalDeclaration 
   ( tests ) where
   
@@ -5,14 +7,15 @@ module Testing.HUnit.SignalDeclaration
   import Test.Framework.Providers.HUnit
   import Test.HUnit hiding (Test)
   import Language.C99
-  import Semantics.C
+  import Text.PrettyPrint.Free
+  import Data.ByteString.Char8 (unpack)
+  import Test.Framework.TH
   
   tests :: [Test]
-  tests = [ ]
-  {-
+  tests = [ $(testGroupGenerator) ]
+  
   testSignal :: Assertion
-  testSignal = assertEqual "signal(3)" practice theory
-    where theory = convert $ parseUnsafe preprocessedC "void (*signal(int sig, void (*func)(int)))(int);"
-          practice = [GVariable $ Variable "signal" (SFunctionPointer void [Parameter (Just "sig") signedInt, 
-                                                                           Parameter (Just "func") (SFunctionPointer void [Parameter Nothing signedInt] [])] []) Nothing]
-                                                                           -}
+  testSignal = assertEqual "signal(3)" practice (text $ unpack theory)
+    where theory = "void (*signal(int sig, void (*func)(int)))(int);"
+          practice = prettyPrint $ head $ parseUnsafe declarations theory
+                                                                           

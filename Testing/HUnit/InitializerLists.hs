@@ -8,9 +8,6 @@ module Testing.HUnit.InitializerLists
   import Language.Pony
   import Text.PrettyPrint.Free
   
-  instance Eq (Doc a) where
-    a == b = (show a) == (show b)
-  
   tests :: [Test]
   tests = [$(testGroupGenerator)]
   

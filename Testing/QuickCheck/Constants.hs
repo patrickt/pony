@@ -1,57 +1,53 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Testing.QuickCheck.Constants
-  ( constantTestGroup )
+  ( tests )
   where 
   
+  import Data.Char
   import Test.Framework (Test)
   import Test.Framework.Providers.QuickCheck2 (testProperty)
   import Test.Framework.TH
   import Test.QuickCheck
   import Language.Pony
   import Data.Default
-  import qualified Data.ByteString.Char8 as B
-  import Text.PrettyPrint.Free
+  import Data.ByteString.Char8 (pack)
+  import Text.PrettyPrint.Free hiding ((<>))
   
-  -- bshow :: (Show a) => a -> ByteString
-  -- bshow = B.pack . show
-  -- 
-  -- emit :: String -> Doc a
-  -- emit x = para' evalPretty $ convert $ parseUnsafe constantExpression (B.pack x)
-  -- 
-  -- instance Eq (Doc a) where
-  --   a == b = (show a) == (show b)
-  --   
-  -- roundTrip :: ByteString -> Bool
-  -- roundTrip b = pretty b == emit (B.unpack b)
-  -- 
-  constantTestGroup :: Test
-  constantTestGroup = $(testGroupGenerator)
+  bshow :: (Show a) => a -> ByteString
+  bshow = pack . show
   
+    
+  roundTrip :: ByteString -> Bool
+  roundTrip code = case runParser constantExpression def "test data" code of
+    (Left x) -> error $ show x
+    (Right c) -> if pretty code == prettyPrint c then True else error $ show (c, code)
   
-  -- parseConstant :: ByteString -> Either ParseError CExpr
-  -- parseConstant = runParser constantExpression def "test data"
+  tests :: [Test]
+  tests = [$(testGroupGenerator)]
+    
+  prop_decimalIntegers :: Integer -> Bool
+  prop_decimalIntegers = roundTrip . bshow
   -- 
-  -- prop_decimalIntegers :: Integer -> Bool
-  -- prop_decimalIntegers n = roundTrip (bshow n)
-  -- 
-  -- -- prop_floatingPoint :: Double -> Bool
-  -- -- prop_floatingPoint f = roundTrip (bshow f)
-  -- 
-  -- prop_characters :: Char -> Bool
-  -- prop_characters c = roundTrip (bshow c)
-  -- 
-  -- prop_idents :: Gen Bool 
-  -- prop_idents = (listOf1 $ elements ("abcdefghijklmnopqrstuvwxyz" :: String)) >>= \(c :: String) -> return $ pretty c == emit c
-  -- 
-  -- 
-  -- prop_strings :: String -> Bool
-  -- prop_strings s = case parseConstant (bshow s) of
-  --   (Right (Constant (CString s'))) -> s == s'
-  --   _ -> False
-  -- 
-  -- prop_spaceSeparatedStrings :: [String] -> Bool
-  -- prop_spaceSeparatedStrings s = case parseConstant separated of
-  --   (Right (Constant (CString s'))) -> concat s == s'
-  --   _ -> s == []
-  --   where separated = B.pack $ unwords $ map show s
+  prop_floatingPoint :: Double -> Bool
+  prop_floatingPoint = roundTrip . bshow
+  
+  prop_characters :: Char -> Bool
+  prop_characters = roundTrip . bshow
+  
+  newtype QuotedString = QuotedString { unQuoted :: String } deriving (Show, Eq)
+  
+  instance Arbitrary QuotedString where 
+    arbitrary = do
+      t <- listOf1 $ elements ['A' .. 'Z']
+      return $ QuotedString ("\"" <> t <> "\"")
+  
+  prop_strings :: QuotedString -> Bool
+  prop_strings = roundTrip . pack . unQuoted
+  
+  newtype Identifier = Identifier { unIdent :: String } deriving (Show, Eq)
+  instance Arbitrary Identifier where arbitrary = Identifier <$> (listOf1 $ elements (['A'..'Z'] <> ['a'..'z']))
+  
+  prop_identifiers :: Identifier -> Bool
+  prop_identifiers = roundTrip . pack . unIdent
+  
