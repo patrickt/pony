@@ -116,17 +116,19 @@ Executable hello {
     Buildable: False
   }
 }
--- 
--- Executable logical-shift {
---   Main-is:  Main.hs
---   Hs-source-dirs: examples/logical-shift .
---   LD-Options:          -w
---   if flag(examples) {
---     Buildable: True
---   } else {
---     Buildable: False
---   }
--- }
+
+Executable logical-shift {
+  Build-depends: pony, haskell2010
+  Default-language: Haskell2010
+  Main-is:  Main.hs
+  Hs-source-dirs: examples/logical-shift .
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
 
 -- Executable precise-gc {
 --   Main-is: Main.hs
