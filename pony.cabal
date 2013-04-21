@@ -98,12 +98,12 @@ Library {
 --   }
 -- }
 --                    
--- Executable concat {
---   Default-language: Haskell2010
---   Build-depends: pony, haskell2010
---   Main-is:  Main.hs
---   Hs-source-dirs: examples/concat
--- }
+Executable concat {
+  Default-language: Haskell2010
+  Build-depends: pony, haskell2010
+  Main-is:  Main.hs
+  Hs-source-dirs: examples/concat
+}
 
 Executable hello {
   Build-depends: pony, haskell2010
