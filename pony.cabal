@@ -87,22 +87,29 @@ Library {
                          , ViewPatterns
 }
 
--- Executable check-malloc {
---   Main-is: Main.hs
---   Hs-source-dirs: examples/check-malloc
---   LD-Options: -w
---   if flag(examples) {
---     Buildable: True
---   } else {
---     Buildable: False
---   }
--- }
---                    
+Executable check-malloc {
+  Default-language: Haskell2010
+  Build-depends: pony, haskell2010
+  Main-is: Main.hs
+  Hs-source-dirs: examples/check-malloc
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
+                
 Executable concat {
   Default-language: Haskell2010
   Build-depends: pony, haskell2010
   Main-is:  Main.hs
   Hs-source-dirs: examples/concat
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
 }
 
 Executable hello {

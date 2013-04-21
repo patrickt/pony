@@ -1,20 +1,17 @@
-{-# LANGUAGE OverloadedStrings, ViewPatterns, NamedFieldPuns, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings, ViewPatterns, NamedFieldPuns #-}
 
 module Main where
-  
-  import GHC.Exts
   import Language.Pony
-  import System.IO
-  import Text.PrettyPrint.Free hiding (group)
   
-  instance IsString (Fix Sem) where
-    fromString = Fix . fromString
+  checkMalloc :: CSyn -> C99 CSyn
+  checkMalloc (µ -> Group stmts) = Group $ concatMap checkMalloc' stmts
+  checkMalloc other = out other
   
-  checkMalloc :: Fix Sem -> Fix Sem
-  checkMalloc (µ -> v@(Variable { vname, vtype, vvalue = (Fix (FunCall "malloc" args))})) = 
-    group [ tie v , tie $ (IfThen (Fix (Unary "!" vname)) (Fix (FunCall "abort" [nil']))) ]
-  checkMalloc a = tie $ fmap checkMalloc (out a)
+  checkMalloc' :: CSyn -> [CSyn]
+  checkMalloc' (µ -> v@(Variable { name, typ, value = Just (Fix (Call "malloc" _))})) = 
+    [ Fix v, ifthenelse' (unary' "!" name) (call' "abort" []) Nothing ]
+  checkMalloc' other = [other]
   
   main :: IO ()
-  main = run $ def { topDown = [checkMalloc] }
+  main = run $ def { anamorphisms = [checkMalloc] }
   
