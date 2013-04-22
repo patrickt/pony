@@ -5,6 +5,7 @@ module Main where
   import qualified Testing.QuickCheck.Constants as QC
   import qualified Testing.HUnit.SignalDeclaration as SD
   import qualified Testing.HUnit.Syntax as S
+  import qualified Testing.HUnit.Typedefs as TD
   
   tests :: [Test]
   tests = [ testGroup "HUnit: syntax" S.tests
@@ -12,6 +13,7 @@ module Main where
           , testGroup "HUnit: initializers" IL.tests
           , testGroup "QuickCheck: constants" QC.tests
           , testGroup "HUnit: signal(3) declaration" SD.tests
+          , testGroup "HUnit: Typedefs" TD.tests
           ]
   
   main :: IO ()
