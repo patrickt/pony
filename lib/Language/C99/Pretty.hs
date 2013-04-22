@@ -51,6 +51,11 @@ module Language.C99.Pretty
   printDecl' :: Doc e -> Loc C99 -> Doc e
   printDecl' a b = error ("Error in printing type " ++ show b) `fromMaybe` printDecl a b
   
+  printIfBody :: Doc e -> C99 a -> Doc e
+  printIfBody d (Group _) = d
+  printIfBody d (Variable _ _ _) = d <> semi
+  printIfBody d (isStatement -> False) = d <> semi
+  printIfBody d _ = d
   
   instance PrettyAlg Maybe where
     evalPretty _ (Just a) = a
@@ -110,8 +115,10 @@ module Language.C99.Pretty
     evalPretty _ Empty                     = empty
     evalPretty _ (For a b c block)         = "for" <> (parens $ cat $ semi `punctuate` [commaSep a,b,c]) <+> block
     evalPretty _ (Goto s)                  = "goto" <+> s <> semi
-    evalPretty _ (IfThenElse c s (Just e)) = "if" <+> parens c <+> s <+> "else" <+> e <> semi
-    evalPretty _ (IfThenElse c s _)        = "if" <+> parens c <+> s <> semi
+    evalPretty (µ1 -> IfThenElse _ s' (Just e')) (IfThenElse c s (Just e))
+                                           = "if" <+> parens c <+> printIfBody s s' <+> "else" <+> printIfBody e e'
+    evalPretty (µ1 -> IfThenElse _ s' _) (IfThenElse c s _) 
+                                           = "if" <+> parens c <+> printIfBody s s'
     evalPretty _ (Labeled l s)             = l <> colon <+> s
     evalPretty _ (Return a)                = "return" <+> a <> ";"
     evalPretty _ (While c a)               = "while" <+> parens c <+> a
