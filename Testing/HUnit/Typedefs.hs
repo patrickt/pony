@@ -29,15 +29,9 @@ module Testing.HUnit.Typedefs
   case_namedstruct  = roundTrip' [ "typedef struct foo {"
                                  , "  int field;"
                                  , "} named_foo_struct;" ]
-  case_anonenum     = roundTrip' [ "typedef enum {"
-                                 , "  EnumValue"
-                                 , "} anon_enum;" ]
-  case_namedenum    = roundTrip' [ "typedef enum foo {"
-                                 , "  EnumValue"
-                                 , "} named_foo_enum;" ]
-  case_outboardenum = roundTrip' [ "enum foo {"
-                                 , "  EnumValue"
-                                 , "};"
+  case_anonenum     = roundTrip "typedef enum {EnumValue} anon_enum;"
+  case_namedenum    = roundTrip "typedef enum foo {EnumValue} named_foo_enum;"
+  case_outboardenum = roundTrip' [ "enum foo {EnumValue};"
                                  , "typedef enum foo outboard_enum;" ]
                                   
   

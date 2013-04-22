@@ -143,7 +143,9 @@ module Language.C99.Pretty
     evalPretty _ (Index a b)  = a <> brackets b
     evalPretty _ (Access a access b) = hcat [a, access, b]
 
-    evalPretty _ (Enumeration a b) = "enum" <+> a <+> b
+    evalPretty (µ1 -> Enumeration { name = Empty }) (Enumeration _ b) = "enum" <+> b
+    evalPretty (µ1 -> Enumeration { members = CommaGroup [] }) (Enumeration a _) = "enum" <+> a
+    evalPretty _ (Enumeration a b) = "enum" <+> a <+> b 
     evalPretty (µ1 -> Composite { fields = Group []}) (Composite {kind, name}) = kind <+> name
     evalPretty (µ1 -> Composite { name = Empty }) (Composite {kind, fields}) = kind <+> fields
     evalPretty _ (Composite {kind, name, fields}) = kind <+> name <+> fields
