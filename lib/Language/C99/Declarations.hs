@@ -134,7 +134,7 @@ where
   convertType TBool                                 = bool'
   convertType (TEnumeration n members attrs)        = enumeration' n (Fix (CommaGroup members))
   convertType (TStructOrUnion n kind members attrs) = composite' kind n (group' members)
-  convertType (TTypedef ident typ)                  = typedef' (name' ident) typ
+  convertType (TTypedef ident typ)                  = typedef' typ (name' ident)
   convertType (TBuiltin n)                          = builtin' $ name' n
   
   

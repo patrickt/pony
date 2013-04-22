@@ -78,7 +78,7 @@ module Language.C99.Pretty
     evalPretty _ Union           = "union"
     evalPretty _ BoolT           = "_Bool"
     evalPretty _ (BuiltinT t)    = t
-    evalPretty _ (Typedef {typ}) = typ
+    evalPretty _ (Typedef {name}) = name
     evalPretty _ (TypeOfT t)     = "typeof" <> parens t
 
     evalPretty (µ1 -> Const (PointerToT _)) (Const t)       = t <+> "const"
@@ -153,7 +153,8 @@ module Language.C99.Pretty
     evalPretty (µ1 -> ForwardDeclaration (Typedef { name, typ })) _ = "typedef" <+> printDecl' (prettyPrint name) (root typ)
     evalPretty _ (ForwardDeclaration t) = t
     evalPretty _ (Sized s t) = t <+> colon <+> s
-    evalPretty _ (CommaGroup cs) = braces $ commaSep cs
+    evalPretty _ (CommaGroup cs) | null cs   = ""
+                                 | otherwise = braces $ commaSep cs
     evalPretty _ (Assembly { isVolatile, asmText, inRegs = [], outRegs = [] }) =
       "asm" <> volatility <> parens asmText where volatility = if isVolatile then " volatile " else " "
     evalPretty _ (Assembly { isVolatile, asmText, inRegs, outRegs, clobberList }) =
