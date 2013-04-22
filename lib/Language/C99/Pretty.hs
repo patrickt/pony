@@ -51,11 +51,11 @@ module Language.C99.Pretty
   printDecl' :: Doc e -> Loc C99 -> Doc e
   printDecl' a b = error ("Error in printing type " ++ show b) `fromMaybe` printDecl a b
   
-  printIfBody :: Doc e -> C99 a -> Doc e
-  printIfBody d (Group _) = d
-  printIfBody d (Variable _ _ _) = d <> semi
-  printIfBody d (isStatement -> False) = d <> semi
-  printIfBody d _ = d
+  printBody :: Doc e -> CSyn -> Doc e
+  printBody d (µ -> Group _) = d
+  printBody d (µ -> Variable _ _ _) = d <> semi
+  printBody d (isStatement . µ -> False) = d <> semi
+  printBody d _ = d
   
   instance PrettyAlg Maybe where
     evalPretty _ (Just a) = a
@@ -111,17 +111,19 @@ module Language.C99.Pretty
     evalPretty _ (Case a b)                = "case" <+> a <> colon <+> b <> semi
     evalPretty _ Continue                  = "continue;"
     evalPretty _ (Default sts)             = "default:" <+> sts
-    evalPretty _ (DoWhile a b)             = "do" <+> a <+> "while" <+> parens b <> semi
+    evalPretty (µ -> DoWhile a' _) (DoWhile a b)
+                                           = "do" <+> printBody a a' <+> "while" <+> parens b <> semi
     evalPretty _ Empty                     = empty
-    evalPretty _ (For a b c block)         = "for" <> (parens $ cat $ semi `punctuate` [commaSep a,b,c]) <+> block
+    evalPretty (µ -> For _ _ _ block') (For a b c block)
+                                           = "for" <> (parens $ cat $ semi `punctuate` [commaSep a,b,c]) <+> printBody block block'
     evalPretty _ (Goto s)                  = "goto" <+> s <> semi
-    evalPretty (µ1 -> IfThenElse _ s' (Just e')) (IfThenElse c s (Just e))
-                                           = "if" <+> parens c <+> printIfBody s s' <+> "else" <+> printIfBody e e'
-    evalPretty (µ1 -> IfThenElse _ s' _) (IfThenElse c s _) 
-                                           = "if" <+> parens c <+> printIfBody s s'
+    evalPretty (µ -> IfThenElse _ s' (Just e')) (IfThenElse c s (Just e))
+                                           = "if" <+> parens c <+> printBody s s' <+> "else" <+> printBody e e'
+    evalPretty (µ -> IfThenElse _ s' _) (IfThenElse c s _) 
+                                           = "if" <+> parens c <+> printBody s s'
     evalPretty _ (Labeled l s)             = l <> colon <+> s
     evalPretty _ (Return a)                = "return" <+> a <> ";"
-    evalPretty _ (While c a)               = "while" <+> parens c <+> a
+    evalPretty (µ -> While _ a') (While c a) = "while" <+> parens c <+> printBody a a'
     evalPretty _ (Switch s b)              = "switch" <+> parens s <+> b
     
     -- literals
