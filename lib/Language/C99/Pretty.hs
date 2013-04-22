@@ -136,6 +136,7 @@ module Language.C99.Pretty
 
     evalPretty _ (Enumeration a b) = "enum" <+> a <+> b
     evalPretty (µ1 -> Composite { fields = Group []}) (Composite {kind, name}) = kind <+> name
+    evalPretty (µ1 -> Composite { name = Empty }) (Composite {kind, fields}) = kind <+> fields
     evalPretty _ (Composite {kind, name, fields}) = kind <+> name <+> fields
     evalPretty _ (Program p) = vcat [ s <> semi | s <- p  ]
     evalPretty (µ -> Group nodes) (Group docs) = lbrace `above` groupBody `above` rbrace
