@@ -6,7 +6,18 @@ module Language.C99.Pretty
   import Language.C99.Syntax
   import Language.Pony.Overture
   import Language.C99.Parser
-  import Text.PrettyPrint.Free hiding ((<>))
+  import Text.PrettyPrint.Free hiding ((<>), (<+>))
+  
+  -- this is bad but makes my life easier, TODO take it out
+  instance Eq (Doc a) where
+    a == b = (show a) == (show b)
+  
+  (<+>) :: Doc e -> Doc e -> Doc e
+  infixr 6 <+>
+  a <+> b 
+    | a == ""   = b
+    | b == ""   = a
+    | otherwise = a <> " " <> b
   
   prettyTest :: (PrettyAlg f) => Parser (Mu f) -> ByteString -> IO ()
   prettyTest p s = print $ prettyPrint $ parseUnsafe p s
@@ -17,10 +28,6 @@ module Language.C99.Pretty
   
   class (Functor f) => PrettyAlg f where
     evalPretty :: Mu f -> f (Doc e) -> Doc e
-  
-  printInit :: Fix C99 -> Doc e
-  printInit (Fix Empty) = empty
-  printInit a = " " <> equals <+> prettyPrint a
   
   isPointer :: CSyn -> Bool
   isPointer (µ -> PointerToT _) = True
@@ -35,10 +42,6 @@ module Language.C99.Pretty
       pointer = maybe False (isPointer . focus) (moveUp t)
       seed    = if pointer then parens d else d
       in moveDownL t >>= printDecl (seed <> post)
-  
-  -- this is bad but makes my life easier, TODO take it out
-  instance Eq (Doc a) where
-    a == b = (show a) == (show b)
   
   -- This is an encoding of the right-left rule for reading C declarations. In short:
   --   1. Find the identifier
@@ -68,7 +71,7 @@ module Language.C99.Pretty
     evalPretty _ _ = mempty
   
   instance PrettyAlg C99 where
-    evalPretty _ (Name n)  = text n
+    evalPretty _ (Name n) = text n
     
     evalPretty (µ1 -> Unsigned VeryLongT) _ = "__uint128_t"
     evalPretty (µ1 -> Signed VeryLongT) _   = "__int128_t"
