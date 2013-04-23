@@ -165,8 +165,8 @@ module Language.C99.Pretty
     evalPretty (µ1 -> ForwardDeclaration (Typedef { name, typ })) _ = "typedef" <+> printDecl' (prettyPrint name) (root typ)
     evalPretty _ (ForwardDeclaration t) = t
     evalPretty _ (Sized s t) = t <+> colon <+> s
-    evalPretty _ (CommaGroup cs) | null cs   = ""
-                                 | otherwise = braces $ commaSep cs
+    evalPretty _ (CommaGroup []) = empty
+    evalPretty _ (CommaGroup cs) = braces $ commaSep cs
     evalPretty _ (Assembly { isVolatile, asmText, inRegs = [], outRegs = [] }) =
       "asm" <> volatility <> parens asmText where volatility = if isVolatile then " volatile " else " "
     evalPretty _ (Assembly { isVolatile, asmText, inRegs, outRegs, clobberList }) =
