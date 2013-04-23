@@ -17,7 +17,7 @@ module Main where
     
   separate :: CSyn -> C99 CSyn
   separate (µ -> Group xs) = Group $ a ++ b
-    where (a, b) = partitionStatements' xs
+    where (a, b) = partitionStatements xs
   separate other = out other
   
   main :: IO ()
