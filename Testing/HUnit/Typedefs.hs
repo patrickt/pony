@@ -1,7 +1,6 @@
 module Testing.HUnit.Typedefs
---  ( tests
---  ) where
-    where
+  ( tests
+  ) where
   
   import Data.Generics.Fixplate
   import Language.Pony
