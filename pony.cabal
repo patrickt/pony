@@ -148,16 +148,18 @@ Executable logical-shift {
 --   }
 -- }
 
--- Executable separate-declarations {
---   Main-is: Main.hs
---   Hs-source-dirs: examples/separate-declarations .
---   LD-Options:          -w
---   if flag(examples) {
---     Buildable: True
---   } else {
---     Buildable: False
---   }
--- }
+Executable separate-declarations {
+  Build-depends: pony, haskell2010
+  Default-language: Haskell2010
+  Main-is: Main.hs
+  Hs-source-dirs: examples/separate-declarations .
+  LD-Options:          -w
+  if flag(examples) {
+    Buildable: True
+  } else {
+    Buildable: False
+  }
+}
 
 Test-suite test-pony {
     Default-language: Haskell2010

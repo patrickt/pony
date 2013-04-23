@@ -43,6 +43,11 @@ module Language.C99.Pretty
       seed    = if pointer then parens d else d
       in moveDownL t >>= printDecl (seed <> post)
   
+  -- This is an encoding of the right-left rule for reading C declarations. In short:
+  --   1. Find the identifier
+  --   2. Look to the right. Read () as "function returning". Read [] as "array of". Continue until EOF or ).
+  --   3. Look to the left. Read * as "pointer to". Read types as themselves. Continue until EOF or (.
+  --   4. If any parentheses were involved, go to 2, looking outside the parentheses.
   printDecl :: Doc e -> Loc C99 -> Maybe (Doc e)
   printDecl d t@(focus -> (Fix (Const (Fix (PointerToT _)))))    = moveDownL t >>= printDecl (" const" <+> d)
   printDecl d t@(focus -> (Fix (Volatile (Fix (PointerToT _))))) = moveDownL t >>= printDecl (" volatile" <+> d)
@@ -54,6 +59,12 @@ module Language.C99.Pretty
   printDecl' :: Doc e -> Loc C99 -> Doc e
   printDecl' a b = error ("Error in printing type " ++ show b) `fromMaybe` printDecl a b
   
+  -- Prettys the body of statements where braces are optional, e.g. if, while
+  printBody :: Doc e -> CSyn -> Doc e
+  printBody d (µ -> Group _) = d
+  printBody d (µ -> Variable _ _ _) = d <> semi
+  printBody d (isStatement . µ -> False) = d <> semi
+  printBody d _ = d
   
   instance PrettyAlg Maybe where
     evalPretty _ (Just a) = a
@@ -81,7 +92,7 @@ module Language.C99.Pretty
     evalPretty _ Union           = "union"
     evalPretty _ BoolT           = "_Bool"
     evalPretty _ (BuiltinT t)    = t
-    evalPretty _ (Typedef {typ}) = typ
+    evalPretty _ (Typedef {name}) = name
     evalPretty _ (TypeOfT t)     = "typeof" <> parens t
 
     evalPretty (µ1 -> Const (PointerToT _)) (Const t)       = t <+> "const"
@@ -109,15 +120,19 @@ module Language.C99.Pretty
     evalPretty _ (Case a b)                = "case" <+> a <> colon <+> b <> semi
     evalPretty _ Continue                  = "continue;"
     evalPretty _ (Default sts)             = "default:" <+> sts
-    evalPretty _ (DoWhile a b)             = "do" <+> a <+> "while" <+> parens b <> semi
+    evalPretty (µ -> DoWhile a' _) (DoWhile a b)
+                                           = "do" <+> printBody a a' <+> "while" <+> parens b <> semi
     evalPretty _ Empty                     = empty
-    evalPretty _ (For a b c block)         = "for" <> (parens $ cat $ semi `punctuate` [commaSep a,b,c]) <+> block
+    evalPretty (µ -> For _ _ _ block') (For a b c block)
+                                           = "for" <> (parens $ cat $ semi `punctuate` [commaSep a,b,c]) <+> printBody block block'
     evalPretty _ (Goto s)                  = "goto" <+> s <> semi
-    evalPretty _ (IfThenElse c s (Just e)) = "if" <+> parens c <+> s <+> "else" <+> e <> semi
-    evalPretty _ (IfThenElse c s _)        = "if" <+> parens c <+> s <> semi
+    evalPretty (µ -> IfThenElse _ s' (Just e')) (IfThenElse c s (Just e))
+                                           = "if" <+> parens c <+> printBody s s' <+> "else" <+> printBody e e'
+    evalPretty (µ -> IfThenElse _ s' _) (IfThenElse c s _) 
+                                           = "if" <+> parens c <+> printBody s s'
     evalPretty _ (Labeled l s)             = l <> colon <+> s
     evalPretty _ (Return a)                = "return" <+> a <> ";"
-    evalPretty _ (While c a)               = "while" <+> parens c <+> a
+    evalPretty (µ -> While _ a') (While c a) = "while" <+> parens c <+> printBody a a'
     evalPretty _ (Switch s b)              = "switch" <+> parens s <+> b
     
     -- literals
@@ -137,8 +152,11 @@ module Language.C99.Pretty
     evalPretty _ (Index a b)  = a <> brackets b
     evalPretty _ (Access a access b) = hcat [a, access, b]
 
-    evalPretty _ (Enumeration a b) = "enum" <+> a <+> b
+    evalPretty (µ1 -> Enumeration { name = Empty }) (Enumeration _ b) = "enum" <+> b
+    evalPretty (µ1 -> Enumeration { members = CommaGroup [] }) (Enumeration a _) = "enum" <+> a
+    evalPretty _ (Enumeration a b) = "enum" <+> a <+> b 
     evalPretty (µ1 -> Composite { fields = Group []}) (Composite {kind, name}) = kind <+> name
+    evalPretty (µ1 -> Composite { name = Empty }) (Composite {kind, fields}) = kind <+> fields
     evalPretty _ (Composite {kind, name, fields}) = kind <+> name <+> fields
     evalPretty _ (Program p) = vcat [ s <> semi | s <- p  ]
     evalPretty (µ -> Group nodes) (Group docs) = lbrace `above` groupBody `above` rbrace
@@ -156,6 +174,7 @@ module Language.C99.Pretty
     evalPretty (µ1 -> ForwardDeclaration (Typedef { name, typ })) _ = "typedef" <+> printDecl' (prettyPrint name) (root typ)
     evalPretty _ (ForwardDeclaration t) = t
     evalPretty _ (Sized s t) = t <+> colon <+> s
+    evalPretty _ (CommaGroup []) = empty
     evalPretty _ (CommaGroup cs) = braces $ commaSep cs
     evalPretty _ (Assembly { isVolatile, asmText, inRegs = [], outRegs = [] }) =
       "asm" <> volatility <> parens asmText where volatility = if isVolatile then " volatile " else " "

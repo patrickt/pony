@@ -1,29 +1,26 @@
+{-# LANGUAGE ViewPatterns, OverloadedStrings #-}
 module Main where
   
   import Language.Pony
   
-  declare :: String -> SType -> Local
-  declare n t = LDeclaration (Variable n t Nothing)
+  partitionMap :: (a -> (Maybe b, Maybe c)) -> [a] -> ([b],[c])
+  partitionMap f = foldr go ([], [])
+    where go a (bs, cs) = let (b, c) = f a
+                          in (maybe bs (:bs) b, maybe cs (:cs) c)
   
-  partitionLocals :: [Local] -> ([Local], [Local])
-  partitionLocals ls = partition ls ([], []) 
-    where 
-      partition [] them = them
-      partition (d@(LDeclaration (Variable _ _ Nothing)) : rest) (a,b) = 
-        partition rest (a ++ [d], b)
-      partition (s@(LStatement st) : rest) (a, b) = 
-        partition rest (a, b ++ [s])
-      partition (d@(LDeclaration (Variable n t (Just e))) : rest) (a,b) =
-        partition rest (a ++ [declare n t], 
-                        b ++ [stmt $ Ident n .=. e])
-  
-  separate :: [Local] -> [Local]
-  separate xs = a ++ b where (a, b) = partitionLocals xs
-  
-  separateT :: GenericT
-  separateT = mkT separate
+  partitionStatements :: [CSyn] -> ([CSyn], [CSyn])
+  partitionStatements = partitionMap go
+    where go v@(µ -> Variable _ _ Nothing)  = (Just v, Nothing)
+          go v@(µ -> Variable t n (Just e)) = (Just $ variable' t n Nothing,
+                                               Just $ binary' n "=" e)
+          go other                          = (Nothing, Just other)
+    
+  separate :: CSyn -> C99 CSyn
+  separate (µ -> Group xs) = Group $ a ++ b
+    where (a, b) = partitionStatements xs
+  separate other = out other
   
   main :: IO ()
-  main = run $ pony {
-    transformations = [MkTrans "SeparateDeclarations" TopDown separateT]
-  }
+  main = run $ def 
+    { anamorphisms = [ separate ]
+    }
