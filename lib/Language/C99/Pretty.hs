@@ -40,6 +40,11 @@ module Language.C99.Pretty
   instance Eq (Doc a) where
     a == b = (show a) == (show b)
   
+  -- This is an encoding of the right-left rule for reading C declarations. In short:
+  --   1. Find the identifier
+  --   2. Look to the right. Read () as "function returning". Read [] as "array of". Continue until EOF or ).
+  --   3. Look to the left. Read * as "pointer to". Read types as themselves. Continue until EOF or (.
+  --   4. If any parentheses were involved, go to 2, looking outside the parentheses.
   printDecl :: Doc e -> Loc C99 -> Maybe (Doc e)
   printDecl d t@(focus -> (Fix (Const (Fix (PointerToT _)))))    = moveDownL t >>= printDecl (" const" <+> d)
   printDecl d t@(focus -> (Fix (Volatile (Fix (PointerToT _))))) = moveDownL t >>= printDecl (" volatile" <+> d)
@@ -51,6 +56,7 @@ module Language.C99.Pretty
   printDecl' :: Doc e -> Loc C99 -> Doc e
   printDecl' a b = error ("Error in printing type " ++ show b) `fromMaybe` printDecl a b
   
+  -- Prettys the body of statements where braces are optional, e.g. if, while
   printBody :: Doc e -> CSyn -> Doc e
   printBody d (µ -> Group _) = d
   printBody d (µ -> Variable _ _ _) = d <> semi
