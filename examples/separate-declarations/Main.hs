@@ -3,20 +3,21 @@ module Main where
   
   import Language.Pony
   
-  partitionStatements :: [CSyn] -> ([CSyn], [CSyn])
-  partitionStatements xs = partition xs ([], [])
-    where partition (v@(µ -> Variable _ _ Nothing) : rest) (a,b) =
-            partition rest (a ++ [v], b)
-          partition (v@(µ -> Variable t n (Just e)) : rest) (a,b) =
-            partition rest (a ++ [variable' t n Nothing],
-                            b ++ [binary' n "=" e])
-          partition (other : rest) (a, b) =
-            partition rest (a, b ++ [other])
-          partition [] them = them
+  partitionMap :: (a -> (Maybe b, Maybe c)) -> [a] -> ([b],[c])
+  partitionMap f = foldr go ([], [])
+    where go a (bs, cs) = let (b, c) = f a
+                          in (maybe bs (:bs) b, maybe cs (:cs) c)
   
+  partitionStatements :: [CSyn] -> ([CSyn], [CSyn])
+  partitionStatements = partitionMap go
+    where go v@(µ -> Variable _ _ Nothing)  = (Just v, Nothing)
+          go v@(µ -> Variable t n (Just e)) = (Just $ variable' t n Nothing,
+                                               Just $ binary' n "=" e)
+          go other                          = (Nothing, Just other)
+    
   separate :: CSyn -> C99 CSyn
   separate (µ -> Group xs) = Group $ a ++ b
-    where (a, b) = partitionStatements xs
+    where (a, b) = partitionStatements' xs
   separate other = out other
   
   main :: IO ()
