@@ -132,11 +132,16 @@ where
   convertType TSigned                               = signed' int'
   convertType TUnsigned                             = unsigned' int'
   convertType TBool                                 = bool'
-  convertType (TEnumeration n members attrs)        = enumeration' n (Fix (CommaGroup members))
-  convertType (TStructOrUnion n kind members attrs) = composite' kind n (group' members)
+  convertType (TEnumeration n members attrs)        = foldAttrs attrs $ enumeration' n (Fix (CommaGroup members))
+  convertType (TStructOrUnion n kind members attrs) = foldAttrs attrs $ composite' kind n (group' members)
   convertType (TTypedef ident typ)                  = typedef' typ (name' ident)
   convertType (TBuiltin n)                          = builtin' $ name' n
   convertType (TTypeOf t)                           = typeof' t
+  
+  foldAttrs :: [CAttribute] -> CSyn -> CSyn
+  foldAttrs as c = foldl f c as where 
+    f :: CSyn -> CAttribute -> CSyn
+    f s (CAttribute attrs) = attributed' attrs s
   
   typeFromSpecifiers :: [CSpecifier] -> CSyn
   typeFromSpecifiers specs = foldSpecifiers (init specs') (convertType typeSpec) where 
@@ -180,7 +185,7 @@ where
   
   builderFromDeclarator :: CDeclarator -> SynBuilder
   builderFromDeclarator (CDeclarator pointers body modifiers asmName declAttributes) 
-    = foldBody . foldModifiers . foldPointers where
+    = foldBody <<< foldModifiers <<< foldPointers where
       -- this is the right-left rule. 
       -- first we recurse as deeply as we can into parenthesized subdeclarations.
       foldBody = case body of

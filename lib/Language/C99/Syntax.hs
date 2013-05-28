@@ -119,6 +119,7 @@ module Language.C99.Syntax where
   struct'   = Fix Struct
   union'    = Fix Union
   unsigned' = Fix . Unsigned
+  attributed' attrs a = Fix $ Attributed attrs a
   
   short' = Fix . ShortM
   long'  = Fix . LongM

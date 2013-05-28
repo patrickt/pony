@@ -80,7 +80,7 @@ module Language.C99.Pretty
     evalPretty _ (Unsigned t)         = "unsigned" <+> t
     evalPretty _ (ShortM t)           = "short" <+> t
     evalPretty _ (LongM t)            = "long" <+> t
-    evalPretty _ (Attributed attrs t) = "__attribute__" <> parens (tupled attrs) <+> t
+    evalPretty _ (Attributed attrs t) = t <+> "__attribute__" <> parens (tupled attrs)
     
     evalPretty _ VoidT           = "void"
     evalPretty _ IntT            = "int"

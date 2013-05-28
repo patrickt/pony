@@ -30,6 +30,12 @@ module Testing.HUnit.Syntax
   parse' :: B.ByteString -> CSyn
   parse' = parseUnsafe expression
   
+  case_attributed_structs :: Assertion
+  case_attributed_structs = assertParsingSucceeds "struct foo { int blah; int bar; } __attribute__((deprecated)) blah;"
+  
+  case_attributed_enums :: Assertion
+  case_attributed_enums = assertParsingSucceeds "enum foo { baz, baf, } __attribute__((deprecated)) whatsit;"
+  
   case_whitespace_not_equal_to :: Assertion
   case_whitespace_not_equal_to = parse' "a!=b" @=? parse' "a != b"
      
