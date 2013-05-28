@@ -61,7 +61,7 @@ module Language.C99.Internal
      | TStructOrUnion CSyn CSyn [CSyn] [CAttribute]
      | TEnumeration CSyn [CSyn] [CAttribute]
      | TTypedef String CSyn
-     | TTypeOfExpr CSyn
+     | TTypeOf CSyn
      deriving (Eq, Show)
   
   -- Signedness comes first, then modifiers, then base types

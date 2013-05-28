@@ -136,7 +136,7 @@ where
   convertType (TStructOrUnion n kind members attrs) = composite' kind n (group' members)
   convertType (TTypedef ident typ)                  = typedef' typ (name' ident)
   convertType (TBuiltin n)                          = builtin' $ name' n
-  
+  convertType (TTypeOf t)                           = typeof' t
   
   typeFromSpecifiers :: [CSpecifier] -> CSyn
   typeFromSpecifiers specs = foldSpecifiers (init specs') (convertType typeSpec) where 

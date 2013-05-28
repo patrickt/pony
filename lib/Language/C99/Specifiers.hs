@@ -55,6 +55,7 @@ where
     , "unsigned" `as` TUnsigned
     , "_Bool" `as` TBool
     , TBuiltin <$> (try $ L.symbol "__builtin_va_list")
+    , TTypeOf <$> (L.reserved "typeof" *> L.parens (typeName <|> expression))
     -- , typeof
     , enum
     , composite "struct" struct'
