@@ -11,6 +11,8 @@ module Testing.HUnit.Typedefs
   import Test.Framework.TH
   import Test.HUnit hiding (Test)
   import Text.PrettyPrint.Free
+  import Testing.HUnit.Asserts
+  import Language.C99.QuasiQuote
   
   roundTrip :: ByteString -> Assertion
   roundTrip s = theory @=? practice where
@@ -20,6 +22,16 @@ module Testing.HUnit.Typedefs
   roundTrip' :: [ByteString] -> Assertion
   roundTrip' bs = roundTrip $ B.intercalate "\n" bs 
   
+  case_function_level_typedefs = 
+    assertParsingFails $ B.pack $ [here|
+    void foo() {
+      typedef char TT;
+      TT x;
+    }
+    void bar() {
+      TT whatever;
+    }
+    |]
   
   case_scalar       = roundTrip  "typedef int foo;"
   case_pointer      = roundTrip  "typedef float **foo;"

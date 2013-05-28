@@ -17,8 +17,8 @@ module Testing.HUnit.Syntax
   import Language.Haskell.TH.Syntax
   
   -- TODO more detailed tests, test for enum membership (should have three)
-  case_trailingCommaEnum :: Assertion
-  case_trailingCommaEnum = assertParsingSucceeds $ B.pack [here|
+  case_parse_enum_with_trailing_comma :: Assertion
+  case_parse_enum_with_trailing_comma = assertParsingSucceeds $ B.pack [here|
     enum 
     {
         red,
@@ -26,33 +26,18 @@ module Testing.HUnit.Syntax
         green,
     } color;
   |]
-  -- 
-  -- case_simpleAsm :: Assertion
-  -- case_simpleAsm = theory @=? practice
-  --   where theory = parseUnsafe statement "asm(\"movl %ecx %eax\")"
-  --         practice = AsmStmt Nothing (Simple $ str "movl %ecx %eax")
-  --         str = CStringLiteral . Constant . CString
-  -- 
-  case_NoSpacesNoInfixOps :: Assertion
-  case_NoSpacesNoInfixOps = theory @=? practice where
-    practice = parseUnsafe expression "a!=b"
-    theory = binary' "a" "!=" "b"
+  
+  parse' :: B.ByteString -> CSyn
+  parse' = parseUnsafe expression
+  
+  case_whitespace_not_equal_to :: Assertion
+  case_whitespace_not_equal_to = parse' "a!=b" @=? parse' "a != b"
      
+  case_whitespace_not_equal_to_deref :: Assertion
+  case_whitespace_not_equal_to_deref = parse' "a!=*b" @=? parse' "a != *b"
   
-  pointerOp = binary' (unary' "*" "a") "!=" (unary' "*" "b")
-  
-  case_SpacesAndInfixOps :: Assertion
-  case_SpacesAndInfixOps = pointerOp @=? practice where
-    practice = parseUnsafe expression "*a != *b"
-  
-  case_NoSpacesAndInfixOps :: Assertion
-  case_NoSpacesAndInfixOps = pointerOp @=? practice where
-    practice = parseUnsafe expression "*a!=*b"
-  
-  case_NoSpacesAndOneInfixOp :: Assertion
-  case_NoSpacesAndOneInfixOp = theory @=? practice where
-    practice = parseUnsafe expression "*a!=b"
-    theory = binary' (unary' "*" "a") "!=" "b"
+  case_whitespace_deref_not_equal_to_deref :: Assertion
+  case_whitespace_deref_not_equal_to_deref = parse' "*a!=*b" @=? parse' "*a != *b"
   
   tests :: [Test]
   tests = [$(testGroupGenerator)]
