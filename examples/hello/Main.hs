@@ -1,13 +1,13 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns, TemplateHaskell #-}
 
 module Main where
   
   import Language.Pony
-  import System.IO
+  import Language.C99.QuasiQuote
   
-  changeHello :: CSyn -> C99 CSyn
-  changeHello (out -> Name "hello") = Call (name' "printf") [cstr' "Hello from Pony"]
-  changeHello otherwise = out otherwise
+  changeHello :: CSyn -> Maybe CSyn
+  changeHello (out -> Name "hello") = Just [expr|printf("Hello from Pony!");|] 
+  changeHello _ = Nothing
   
   main :: IO ()
-  main = run $ def { anamorphisms = [changeHello] } 
+  main = runPony def (rewriteAll changeHello)
