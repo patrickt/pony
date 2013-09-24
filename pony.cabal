@@ -29,7 +29,7 @@ Flag examples {
 
 Library {
   Default-language:  Haskell2010
-  Hs-source-dirs:    lib
+  Hs-source-dirs:    src
   Build-depends:     base >= 4.2 && < 5
                    , bytestring >= 0.9.2
                    , containers >= 0.4.2

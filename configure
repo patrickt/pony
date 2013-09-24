@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 echo "Generating MachineSizes.hs..."
 /usr/bin/gcc build/compute_sizes.c -o compute_sizes
-./compute_sizes lib/Language/Pony/MachineSizes.hs
+./compute_sizes src/Language/Pony/MachineSizes.hs
 rm compute_sizes
