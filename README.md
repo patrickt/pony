@@ -5,14 +5,14 @@ I wrote Pony in order to help make C programming suck less. Real-world C code, e
 Installation
 ============
 
-Pony has been tested under GHC 7.0.3 on Mac OS 10.7. Theoretically, it should work on any POSIX platform. If you do not already have a working installation of GHC and Cabal, I recommend that you install the Haskell Platform. You'll also need [cabal-dev](https://github.com/creswick/cabal-dev), installable via cabal.
+Pony has been tested under GHC 7.4.2 on Mac OS 10.8. Theoretically, it should work on any POSIX platform. If you do not already have a working installation of GHC and Cabal, I recommend that you install the Haskell Platform. You'll also need [cabal-dev](https://github.com/creswick/cabal-dev), installable via cabal.
 
 To compile and run Pony, perform the following steps.
 
-    cabal-dev install-deps
+    cabal-dev configure
     cabal-dev install
     
-To run the unit tests, please run the `./tests` shell script. To generate documentation, run `cabal-dev haddock`.
+To run the unit tests, pass `--enable-tests` to `cabal-dev configure` and then run `cabal-dev test`. To generate documentation, run `cabal-dev haddock`.
 
 There are six built-in transformations that you can play with. They are currently being translated to use Pony's new library mechanism.
 
