@@ -48,7 +48,7 @@ Library {
                    , uniplate >= 1.6.7
                    , wl-pprint-extras >= 3.0
                    
-  exposed-modules: Language.Pony, Language.C99, Language.C99.QuasiQuote
+  exposed-modules: Language.Pony, Language.C99, Language.C99.QuasiQuote, Language.Pony.Monad
   other-modules:   Data.Functor.Fix
                  , Language.C99.Declarations
                  , Language.C99.Expressions

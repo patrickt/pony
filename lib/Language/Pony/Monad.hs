@@ -60,8 +60,8 @@ module Language.Pony.Monad where
   evalPonyPretty :: (PrettyAlg a) => Pony a r -> Mu a -> Doc e
   evalPonyPretty p = prettyPrint <<< evalPony (p >> gets topLevel)
     
-  evalPonyPath :: Pony C99 a -> FilePath -> IO (Doc e)
-  evalPonyPath op path = do
-    result <- preprocessAndParse preprocessedC path def
-    either (fail . show) (return . evalPonyPretty op) result
+  evalPonyPath :: Pony C99 a -> FilePath -> [Operator] -> IO (Doc e)
+  evalPonyPath p path ops = do
+    result <- preprocessAndParse preprocessedC path (def { operators = ops })
+    either (fail . show) (return . evalPonyPretty p) result
   

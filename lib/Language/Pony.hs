@@ -48,14 +48,14 @@ module Language.Pony
         let prettied = prettyPrint topdowned
         putDoc prettied
   
-  runPony :: PonyOptions -> Pony C99 a -> IO ()
-  runPony opts p = do
+  runPony :: [Operator] -> Pony C99 a -> IO ()
+  runPony ops p = do
     args <- getArgs
     rand <- getStdGen
     when (null args) $ do
       putStrLn "Error: filename not provided"
       exitFailure
-    parsed <- evalPonyPath p (head args)
+    parsed <- evalPonyPath p (head args) ops
     print parsed
   
 
