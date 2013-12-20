@@ -7,4 +7,5 @@ ponytmp
 *.o
 *.hi
 a.out
-cabal-dev/
+.cabal-sandbox
+cabal.sandbox.config
