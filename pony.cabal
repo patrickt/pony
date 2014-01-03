@@ -33,6 +33,7 @@ Library {
   Build-depends:     base >= 4.2 && < 5
                    , bytestring >= 0.9.2
                    , containers >= 0.4.2
+                   , compdata == 0.7.0.1
                    , data-default >= 0.5
                    , fixplate >= 0.1.5
                    , ghc-prim
@@ -61,6 +62,7 @@ Library {
                  , Language.C99.Specifiers
                  , Language.C99.Statements
                  , Language.C99.Syntax
+                 , Language.C99.Syntax.Types
                  , Language.C99.TopLevel
                  , Language.Pony.Overture
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
