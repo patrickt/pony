@@ -1,4 +1,4 @@
-module Language.C99.Syntax.Statements where
+module Language.C11.Syntax.Statements where
   
   import Data.Comp
   import Data.Comp.Derive

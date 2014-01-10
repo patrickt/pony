@@ -27,8 +27,8 @@ module Language.C99.Syntax.Types where
     -- Composite types: structs, unions, enums, and sized declarations (appearing inside structs).
     Struct           :: Type a
     Union            :: Type a
+    Enum             :: Type a
     Composite        :: { _kind :: a, _name :: Atom, _members :: [a] } -> Type a
-    Enumeration      :: { _name :: Atom, _members :: [a] } -> Type a
     Sized            :: { _typeOf :: a, _size :: a} -> Type a
     
     -- Type modifiers, each of which wraps an "inner" type. 

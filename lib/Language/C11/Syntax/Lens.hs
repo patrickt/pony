@@ -1,4 +1,4 @@
-module Language.C99.Syntax.Lens where
+module Language.C11.Syntax.Lens where
   
   import Control.Lens
   import StringTable.Atom

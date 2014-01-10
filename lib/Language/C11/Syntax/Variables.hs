@@ -1,4 +1,4 @@
-module Language.C99.Syntax.Variables 
+module Language.C11.Syntax.Variables 
   where
   
   import Data.Comp.Derive

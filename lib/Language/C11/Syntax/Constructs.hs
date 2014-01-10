@@ -1,4 +1,4 @@
-module Language.C99.Syntax.Constructs where
+module Language.C11.Syntax.Constructs where
   
   import Control.Lens
   import Control.Lens.TH

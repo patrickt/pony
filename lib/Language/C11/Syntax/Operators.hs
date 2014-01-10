@@ -1,4 +1,4 @@
-module Language.C99.Syntax.Operators where
+module Language.C11.Syntax.Operators where
   
   import Data.Comp.Derive
   import Data.Comp.Show
