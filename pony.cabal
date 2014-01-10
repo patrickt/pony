@@ -37,14 +37,18 @@ Library {
                    , data-default >= 0.5
                    , fixplate >= 0.1.5
                    , ghc-prim
+                   , lens == 3.10.1
                    , mtl >= 2.0.1.0
                    , parsec >= 3.1.3
                    , pretty >= 1.0
                    , process > 1.0
                    , QuickCheck >= 2.3
+                   , scientific == 0.2.0.1
+                   , stringtable-atom == 0.0.6.2
                    , syb >= 0.1
                    , random
                    , template-haskell
+                   , text == 0.11.3.1
                    , transformers >= 0.3
                    , uniplate >= 1.6.7
                    , wl-pprint-extras >= 3.0
@@ -62,9 +66,13 @@ Library {
                  , Language.C99.Specifiers
                  , Language.C99.Statements
                  , Language.C99.Syntax
+                 , Language.C99.Syntax.Constructs
                  , Language.C99.Syntax.Expressions
+                 , Language.C99.Syntax.Literals
                  , Language.C99.Syntax.Statements
+                 , Language.C99.Syntax.Operators
                  , Language.C99.Syntax.Types
+                 , Language.C99.Syntax.Variables
                  , Language.C99.TopLevel
                  , Language.Pony.Overture
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs

@@ -1,7 +1,11 @@
 module Language.C99.Syntax.Types where
   
+  import Control.Lens
   import Data.Comp
   import Data.Comp.Derive
+  import StringTable.Atom
+  
+  import Language.C99.Syntax.Lens
 
   data Type a where
     -- The core C types, prefixed so as to avoid name collisions. Corresponds to C99 6.7.2, type specifiers.
@@ -12,19 +16,20 @@ module Language.C99.Syntax.Types where
     CChar            :: Type a
     CBool            :: Type a
     CInt128          :: Type a
-    CBuiltin          :: { name :: a } -> Type a
+    CBuiltin         :: { _name :: Atom } -> Type a
     
     -- "Derived" types: pointers, arrays, typedefs, and attributes.
-    Pointer    :: { typ :: a } -> Type a
-    Array      :: { typ :: a, len :: a } -> Type a
-    Typedef    :: { typ :: a, name :: a } -> Type a
-    Attributed :: { typ :: a, attr :: a } -> Type a
+    Pointer    :: { _innerType :: a} -> Type a
+    Array      :: { _innerType :: a, _size :: a } -> Type a
+    Typedef    :: { _innerType :: a, _name :: Atom } -> Type a
+    Attributed :: { _innerType :: a, _attr :: [a] } -> Type a
     
-    -- Composite types: structs, unions, and enums.
+    -- Composite types: structs, unions, enums, and sized declarations (appearing inside structs).
     Struct           :: Type a
     Union            :: Type a
-    Composite        :: { kind :: a, name :: a, members :: a } -> Type a
-    Enumeration      :: { name :: a, members :: a } -> Type a
+    Composite        :: { _kind :: a, _name :: Atom, _members :: [a] } -> Type a
+    Enumeration      :: { _name :: Atom, _members :: [a] } -> Type a
+    Sized            :: { _typeOf :: a, _size :: a} -> Type a
     
     -- Type modifiers, each of which wraps an "inner" type. 
     -- These are intended to be human-readable and read left-to-right, in contrast with how C types are actually printed.
@@ -52,6 +57,9 @@ module Language.C99.Syntax.Types where
          , makeEqF
          , makeFunctor
          , makeFoldable
+         , makeLensesFor [("innerType", "_innerType")]
          , makeTraversable
          , smartConstructors] [''Type]
+  
+  instance HasName Type where name = lens _name (\it t -> it { _name = t })
   

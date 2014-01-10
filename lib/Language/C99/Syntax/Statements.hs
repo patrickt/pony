@@ -7,7 +7,7 @@ module Language.C99.Syntax.Statements where
     Break      :: Stmt a
     Case       :: a -> a -> Stmt a
     Continue   :: Stmt a
-    Compound   :: Stmt a
+    Compound   :: [a] -> Stmt a
     Default    :: a -> Stmt a
     DoWhile    :: a -> a -> Stmt a
     For        :: [a] -> a -> a -> a -> Stmt a
@@ -17,6 +17,8 @@ module Language.C99.Syntax.Statements where
     Return     :: a -> Stmt a
     Switch     :: a -> a -> Stmt a
     While      :: a -> a -> Stmt a
+    
+    Assembly   :: { isVolatile :: Bool, text :: a, inRegs :: [a], outRegs :: [a], clobberList :: [a] } -> Stmt a
   
   derive [ makeShowF
          , makeEqF
