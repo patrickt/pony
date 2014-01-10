@@ -66,13 +66,16 @@ Library {
                  , Language.C99.Specifiers
                  , Language.C99.Statements
                  , Language.C99.Syntax
-                 , Language.C99.Syntax.Constructs
-                 , Language.C99.Syntax.Expressions
-                 , Language.C99.Syntax.Literals
-                 , Language.C99.Syntax.Statements
-                 , Language.C99.Syntax.Operators
-                 , Language.C99.Syntax.Types
-                 , Language.C99.Syntax.Variables
+                 , Language.C11.Syntax
+                 , Language.C11.Syntax.Constructs
+                 , Language.C11.Syntax.Functions
+                 , Language.C11.Syntax.Expressions
+                 , Language.C11.Syntax.Lens
+                 , Language.C11.Syntax.Literals
+                 , Language.C11.Syntax.Statements
+                 , Language.C11.Syntax.Operators
+                 , Language.C11.Syntax.Types
+                 , Language.C11.Syntax.Variables
                  , Language.C99.TopLevel
                  , Language.Pony.Overture
   ghc-options:     -O -Wall -fno-warn-orphans -fno-warn-missing-signatures -fwarn-tabs
@@ -81,6 +84,7 @@ Library {
                          , DeriveFunctor
                          , DeriveGeneric
                          , DeriveTraversable
+                         , DisambiguateRecordFields
                          , FlexibleContexts
                          , FlexibleInstances
                          , FunctionalDependencies

@@ -5,18 +5,27 @@ module Language.C11.Syntax.Variables
   import Control.Lens
   import StringTable.Atom
   
-  import Language.C99.Syntax.Lens
+  import Language.C11.Syntax.Lens
   
-  data Variable a where
-    Variable :: { _ofType :: a, _name :: Atom } -> Variable a
+  data Variable a = Variable 
+    { _typ :: a
+    , _name :: Atom
+    , _initializer :: a 
+    } deriving (Show, Eq)
+  
+  data Sized a = Sized 
+    { _target :: a
+    , _size :: a }
       
   derive [ makeShowF
          , makeEqF
          , makeFunctor
          , makeFoldable
          , makeTraversable
-         , smartConstructors] [''Variable]
+         , smartConstructors] [ ''Variable
+                              , ''Sized 
+                              ]
          
-  instance HasType Variable where ofType = lens _ofType (\it t -> it { _ofType = t })
+  instance HasType Variable where typ = lens _typ (\it t -> it { _typ = t })
   instance HasName Variable where name = lens _name (\it t -> it { _name = t })
   

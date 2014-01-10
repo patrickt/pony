@@ -1,13 +1,15 @@
 module Language.C11.Syntax.Statements where
   
-  import Data.Comp
+  import Control.Lens
   import Data.Comp.Derive
+  
+  import Language.C11.Syntax.Lens
   
   data Stmt a where
     Break      :: Stmt a
     Case       :: a -> a -> Stmt a
     Continue   :: Stmt a
-    Compound   :: [a] -> Stmt a
+    Compound   :: { _body :: [a] } -> Stmt a
     Default    :: a -> Stmt a
     DoWhile    :: a -> a -> Stmt a
     For        :: [a] -> a -> a -> a -> Stmt a
@@ -17,8 +19,6 @@ module Language.C11.Syntax.Statements where
     Return     :: a -> Stmt a
     Switch     :: a -> a -> Stmt a
     While      :: a -> a -> Stmt a
-    
-    Assembly   :: { isVolatile :: Bool, text :: a, inRegs :: [a], outRegs :: [a], clobberList :: [a] } -> Stmt a
   
   derive [ makeShowF
          , makeEqF
@@ -26,3 +26,5 @@ module Language.C11.Syntax.Statements where
          , makeFoldable
          , makeTraversable
          , smartConstructors] [''Stmt]
+         
+  instance HasBody Stmt where body = lens _body (\it t -> it { _body = t })

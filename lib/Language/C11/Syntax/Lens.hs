@@ -4,7 +4,7 @@ module Language.C11.Syntax.Lens where
   import StringTable.Atom
   
   class HasType f where
-    ofType :: Lens' (f a) a
+    typ :: Lens' (f a) a
   
   class HasName f where
     name :: Lens' (f a) Atom
@@ -15,5 +15,6 @@ module Language.C11.Syntax.Lens where
   class HasBody f where
     body :: Lens' (f a) [a]
   
-  
+  class HasTarget f where
+    target :: Lens' (f a) a
   

@@ -29,6 +29,9 @@ module Language.C11.Syntax.Operators where
     PostDec :: COperator a
     Bitwise :: a -> COperator a
     WithAssignment :: a -> COperator a
+    
+  deriving instance (Show a) => Show (COperator a)
+  deriving instance (Eq a) => Eq (COperator a)
 
   derive [ makeShowF
          , makeEqF
