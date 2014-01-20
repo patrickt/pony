@@ -10,7 +10,7 @@ module Language.C11.Syntax.Literals where
   import Data.Scientific as Scientific
   
   data Literal a where
-    IntLiteral :: { _integerValue :: Integer, _suffix :: a } -> Literal a
+    IntLiteral :: { _integerValue :: Integer } -> Literal a
     DecLiteral :: { _decimalValue :: Scientific } -> Literal a
     StrLiteral :: { _stringValue  :: Text } -> Literal a
     ChrLiteral :: { _charValue    :: Char } -> Literal a

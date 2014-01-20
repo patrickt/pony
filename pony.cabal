@@ -66,6 +66,8 @@ Library {
                  , Language.C99.Specifiers
                  , Language.C99.Statements
                  , Language.C99.Syntax
+                 , Language.C11.Grammar
+                 , Language.C11.Parsing.Literals
                  , Language.C11.Syntax
                  , Language.C11.Syntax.Constructs
                  , Language.C11.Syntax.Functions

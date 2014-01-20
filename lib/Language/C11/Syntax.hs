@@ -2,7 +2,7 @@ module Language.C11.Syntax
   ( module X )
   where
   
-  import Language.C11.Syntax.Constructs as X hiding (_target)
+  import Language.C11.Syntax.Constructs as X hiding (_target, _typ, _name)
   import Language.C11.Syntax.Expressions as X
   import Language.C11.Syntax.Functions as X hiding (_body, _arguments)
   import Language.C11.Syntax.Lens as X
