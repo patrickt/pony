@@ -1,6 +1,7 @@
 module Language.C11.Syntax.Variables 
   where
   
+  import Language.Pony.Overture
   import Data.Comp.Derive
   import Control.Lens
   import StringTable.Atom
@@ -9,7 +10,7 @@ module Language.C11.Syntax.Variables
   
   data Variable a = Variable 
     { _typ :: a
-    , _name :: Atom
+    , _name :: ByteString
     , _initializer :: a 
     } deriving (Show, Eq)
   

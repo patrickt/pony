@@ -10,6 +10,9 @@ module Language.C99.Lexer
   , charLiteral
   , stringLiteral
   , natural
+  , octal
+  , hex
+  , decimal
   , float
   , symbol
   , lexeme
@@ -32,6 +35,7 @@ module Language.C99.Lexer
   import Control.Applicative
   import Data.ByteString (ByteString)
   import Data.Functor.Identity (Identity)
+  import Data.Scientific
   import Numeric (readOct, readHex)
   import Text.Parsec hiding ((<|>), many)
   import Text.Parsec.Language hiding (LanguageDef)
@@ -63,12 +67,14 @@ module Language.C99.Lexer
     , T.nestedComments = True
     }
 
-  cOctal = char '0' >>
+  octal = char '0' >>
            many1 octDigit >>= 
            return . fst . head . readOct           
-  cHex = char '0' >> oneOf "xX" >>
+  hex = char '0' >> oneOf "xX" >>
          many1 hexDigit >>=
          return . fst . head . readHex
+  
+  decimal = T.decimal lexer
   
   lexer = T.makeTokenParser ponyCDef
 
@@ -80,8 +86,9 @@ module Language.C99.Lexer
   reservedOp' n = reservedOp n >> return n
   charLiteral = T.charLiteral lexer
   stringLiteral = T.stringLiteral lexer
-  natural = try cHex <|> try cOctal <|> T.decimal lexer
-  float = try floating <|> suffixed
+  natural = choice [ try hex, try octal, decimal ]
+  float :: Stream s m Char => ParsecT s u m Scientific
+  float = read <$> (try floating <|> suffixed)
     where
       floating       = assemble <$> (try float1 <|> float2) <*> optional' exponentPart <*> optional' suffix 
       suffixed       = assemble <$> some digit <*> exponentPart <*> optional' suffix

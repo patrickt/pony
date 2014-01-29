@@ -138,7 +138,7 @@ module Language.C99.Pretty
     -- literals
     evalPretty _ (CInt t) = pretty t
     evalPretty _ (CStr s) = dquotes $ text s
-    evalPretty _ (CFloat s) = text s
+    evalPretty _ (CFloat s) = text $ show s
     evalPretty _ (CChar c) = text $ show c
     
     -- expressions

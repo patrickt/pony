@@ -1,5 +1,6 @@
 module Language.C11.Syntax.Lens where
   
+  import Language.Pony.Overture
   import Control.Lens
   import StringTable.Atom
   
@@ -7,7 +8,7 @@ module Language.C11.Syntax.Lens where
     typ :: Lens' (f a) a
   
   class HasName f where
-    name :: Lens' (f a) Atom
+    name :: Lens' (f a) ByteString
   
   class HasArguments f where
     arguments :: Lens' (f a) [a]
@@ -17,4 +18,10 @@ module Language.C11.Syntax.Lens where
   
   class HasTarget f where
     target :: Lens' (f a) a
+    
+  class HasValue f v | f -> v where
+    value :: Lens' (f a) v
+    
+  class HasBase f where
+    base :: Lens' (f a) Int
   

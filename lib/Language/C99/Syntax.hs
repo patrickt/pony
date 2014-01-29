@@ -2,6 +2,7 @@
 
 module Language.C99.Syntax where
   
+  import Data.Scientific
   import Data.Functor.Fix
   import GHC.Exts (IsString (..))
   
@@ -52,7 +53,7 @@ module Language.C99.Syntax where
     -- expressions
     CStr     :: { getString :: String } -> C99 a 
     CInt     :: Integer -> C99 a
-    CFloat   :: String -> C99 a
+    CFloat   :: Scientific -> C99 a
     CChar    :: Char -> C99 a
     CommaSep :: a -> a -> C99 a
     Unary    :: a -> a -> C99 a

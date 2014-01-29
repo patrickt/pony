@@ -9,5 +9,5 @@ module Language.C11.Syntax
   import Language.C11.Syntax.Literals as X hiding (_name)
   import Language.C11.Syntax.Operators as X
   import Language.C11.Syntax.Statements as X hiding (_body)
-  import Language.C11.Syntax.Types as X hiding (_name, _target)
+  import Language.C11.Syntax.Types as X hiding (_name, _target, _typ)
   import Language.C11.Syntax.Variables as X hiding (_name, _target, _typ, _size)

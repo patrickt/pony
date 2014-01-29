@@ -1,5 +1,6 @@
 module Language.C11.Syntax.Constructs where
   
+  import Language.Pony.Overture
   import Control.Lens
   import Control.Lens.TH
   import Data.Comp
@@ -15,7 +16,7 @@ module Language.C11.Syntax.Constructs where
   data ForwardDeclaration a = ForwardDeclaration { _target :: a }
     deriving (Show, Eq)
     
-  data Typedef a = Typedef { _typ :: a, _name :: Atom }
+  data Typedef a = Typedef { _typ :: a, _name :: ByteString }
     deriving (Show, Eq)
     
   data Empty a = Empty deriving (Show, Eq)

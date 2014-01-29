@@ -1,5 +1,6 @@
 module Language.C11.Syntax.Functions where
   
+  import Language.Pony.Overture
   import Control.Lens
   import Data.Comp.Derive
   import StringTable.Atom
@@ -8,7 +9,7 @@ module Language.C11.Syntax.Functions where
   
   data Function a = Function 
     { _typ :: a
-    , _name :: Atom
+    , _name :: ByteString
     , _arguments :: [a]
     , _body :: [a] 
     } deriving (Show, Eq)

@@ -21,6 +21,8 @@ module Language.Pony
   import Language.C99.QuasiQuote
   import System.Random
   
+  import Language.C11.Syntax
+  
   data PonyOptions = PonyOptions
     { topDown :: [CSyn -> CSyn]
     , anamorphisms :: [CSyn -> C99 CSyn]

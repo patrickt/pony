@@ -53,7 +53,12 @@ Library {
                    , uniplate >= 1.6.7
                    , wl-pprint-extras >= 3.0
                    
-  exposed-modules: Language.Pony, Language.C99, Language.C99.QuasiQuote
+  exposed-modules: Language.Pony
+                 , Language.C99
+                 , Language.C99.QuasiQuote
+                 , Language.C11.Syntax
+                 , Language.C11.Syntax.Lens
+                 , Language.C11.Syntax.Literals
   other-modules:   Data.Functor.Fix
                  , Language.C99.Declarations
                  , Language.C99.Expressions
@@ -68,12 +73,10 @@ Library {
                  , Language.C99.Syntax
                  , Language.C11.Grammar
                  , Language.C11.Parsing.Literals
-                 , Language.C11.Syntax
+                 , Language.C11.Pretty
                  , Language.C11.Syntax.Constructs
                  , Language.C11.Syntax.Functions
                  , Language.C11.Syntax.Expressions
-                 , Language.C11.Syntax.Lens
-                 , Language.C11.Syntax.Literals
                  , Language.C11.Syntax.Statements
                  , Language.C11.Syntax.Operators
                  , Language.C11.Syntax.Types
