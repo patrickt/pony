@@ -8,26 +8,26 @@ module Language.C11.Syntax.Functions where
   import Language.C11.Syntax.Lens
   
   data Function a = Function 
-    { _typ :: a
-    , _name :: ByteString
-    , _arguments :: [a]
-    , _body :: [a] 
+    { _fReturning :: a
+    , _fName :: ByteString
+    , _fArguments :: [a]
+    , _fAttributes :: [a]
     } deriving (Show, Eq)
-    
-  data Variadic a = Variadic deriving (Show, Eq)
   
   derive [ makeShowF
          , makeEqF
          , makeFunctor
          , makeFoldable
          , makeTraversable
+         , makePrisms
+         , makeLenses
          , smartConstructors] [ ''Function
-                              , ''Variadic
                               ]
   
-  instance HasType Function where typ = lens _typ (\it t -> it { _typ = t })
-  instance HasName Function where name = lens _name (\it t -> it { _name = t })
-  instance HasArguments Function where arguments = lens _arguments (\it t -> it { _arguments = t })
-  instance HasBody Function where body = lens _body (\it t -> it { _body = t })
+  instance HasType Function where typ = fReturning
+  instance TravName Function where nameT = fName
+  instance HasName Function where name = fName
+  instance HasArguments Function where arguments = fArguments
+  instance HasBody Function where body = fAttributes
   
   

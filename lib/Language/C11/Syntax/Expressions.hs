@@ -26,6 +26,7 @@ module Language.C11.Syntax.Expressions where
                          , ("_left", "left")
                          , ("_right", "right")
                          , ("_condition", "condition")]
+         , makePrisms
          , smartConstructors] [''Expr]
   
   instance HasArguments Expr where arguments = lens _arguments (\it t -> it { _arguments = t })

@@ -1,14 +1,44 @@
+{-# LANGUAGE KindSignatures #-}
+
 module Language.C11.Syntax.Lens where
   
   import Language.Pony.Overture
-  import Control.Lens
+  import Control.Lens hiding (Context)
+  import Data.Coproduct
   import StringTable.Atom
   
   class HasType f where
     typ :: Lens' (f a) a
   
-  class HasName f where
+  class TravName f where
+    nameT :: Traversal' (f a) ByteString
+  
+  class (TravName f) => HasName f where
     name :: Lens' (f a) ByteString
+    
+  
+  sumPrism :: (g :<: f) => Prism' (f a) (g a)
+  sumPrism = prism' inj proj
+  
+  type FTerm = Cxt NoHole
+  
+
+  sumPrismC :: (Functor g, Functor g1, g :<: f1, g1 :<: f1) => Prism (Cxt h f1 a) (Cxt h f1 a) (Const g1) (Const g)
+  sumPrismC = prism' injectConst projectConst
+  
+  sumPrism2 :: (Functor g, g :<: f1, g1 :<: f1) => Prism (Context f1 a) (Context f1 a) (g1 (Context f1 a)) (Context g (Context f1 a))
+  sumPrism2 = prism' injectCxt project
+
+  -- -- The real type of this is 'Prism (PTerm f1) (PTerm f1) (g (PTerm f1)) (g (PTerm f1))
+  -- sumPrism':: (g :<: f1, g1 :<: f1) => Prism (Cxt h f1 a) (Cxt h f1 a) (g1 (Cxt h f1 a)) (g (Cxt h f1 a))
+  -- sumPrism' = prism' inject project
+  
+  
+  
+  -- toEither :: (f :+: g) a -> Either (g a) (f a)
+  -- toEither = caseF Left Right
+  
+  -- liftSum ''TravName
   
   class HasArguments f where
     arguments :: Lens' (f a) [a]

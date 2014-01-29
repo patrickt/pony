@@ -121,6 +121,7 @@ module Language.C11.Syntax.Literals
   instance HasBase IntLit where base = intBase
   instance HasBase FltLit where base = fltBase
   
+  instance TravName Ident where nameT = identName 
   instance HasName Ident where name = identName
   
 

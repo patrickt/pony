@@ -9,24 +9,26 @@ module Language.C11.Syntax.Variables
   import Language.C11.Syntax.Lens
   
   data Variable a = Variable 
-    { _typ :: a
-    , _name :: ByteString
-    , _initializer :: a 
+    { _vType :: a
+    , _vName :: ByteString
+    , _vInitializer :: a 
     } deriving (Show, Eq)
   
   data Sized a = Sized 
-    { _target :: a
-    , _size :: a }
+    { _sTarget :: a
+    , _sSize :: a }
       
   derive [ makeShowF
          , makeEqF
          , makeFunctor
          , makeFoldable
+         , makeLenses
          , makeTraversable
          , smartConstructors] [ ''Variable
                               , ''Sized 
                               ]
          
-  instance HasType Variable where typ = lens _typ (\it t -> it { _typ = t })
-  instance HasName Variable where name = lens _name (\it t -> it { _name = t })
+  instance HasType Variable where typ = vType
+  instance TravName Variable where nameT = vName
+  instance HasName Variable where name = vName
   

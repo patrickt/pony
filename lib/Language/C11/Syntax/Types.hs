@@ -13,13 +13,14 @@ module Language.C11.Syntax.Types where
   data Enumeration a = Enum deriving (Show, Eq)
   
   data Composite a = Composite 
-    { _kind :: a
-    , _name :: ByteString
-    , _members :: [a] 
+    { _cKind :: a
+    , _cName :: ByteString
+    , _cMembers :: [a] 
     } deriving (Show, Eq)
     
-  makeLensesFor [("_kind", "kind"), ("_members", "members")] ''Composite
-  instance HasName Composite where name = lens _name (\it t -> it { _name = t })
+  makeLenses ''Composite
+  instance TravName Composite where nameT = cName
+  instance HasName Composite where name = cName
   
   data Attributed a = Attributed 
     { _target :: a
@@ -39,6 +40,7 @@ module Language.C11.Syntax.Types where
     CBool            :: CType a
     CInt128          :: CType a
     CBuiltin         :: Atom -> CType a
+    Variadic         :: CType a
     
     -- "Derived" types: pointers, arrays, typedefs, and attributes.
     Pointer    :: { _typ :: a} -> CType a
