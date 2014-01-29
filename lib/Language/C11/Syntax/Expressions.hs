@@ -14,7 +14,7 @@ module Language.C11.Syntax.Expressions where
     Index    :: { _left :: a, _right :: a } -> Expr a
     Call     :: { _target :: a, _arguments :: [a] } -> Expr a
     Dot      :: { _target :: a, _identifier :: a } -> Expr a
-    Arrow    :: { _operation :: ByteString, _left :: a, _right :: a } -> Expr a
+    Arrow    :: { _target :: a, _identifier :: a } -> Expr a
     Paren    :: { _target :: a } -> Expr a
   
   derive [ makeShowF
