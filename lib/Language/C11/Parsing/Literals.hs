@@ -2,6 +2,8 @@ module Language.C11.Parsing.Literals
   ( parseChar
   , parseFloat
   , parseInteger
+  , parseLiteral
+  , suffix
   ) where
   
   import Data.Comp
@@ -14,11 +16,11 @@ module Language.C11.Parsing.Literals
   
   import qualified Language.C99.Lexer as L 
 
-  parseInteger :: Parser (Term IntLit)
+  parseInteger :: Parser (Const IntLit)
   parseInteger = choice 
-    [ try $ iIntLit <$> L.hex <*> pure 16 <*> suffix
-    , try $ iIntLit <$> L.octal <*> pure 8 <*> suffix
-    , iIntLit <$> L.decimal <*> pure 10 <*> suffix
+    [ try $ IntLit <$> L.hex <*> pure 16 <*> suffix
+    , try $ IntLit <$> L.octal <*> pure 8 <*> suffix
+    , IntLit <$> L.decimal <*> pure 10 <*> suffix
     ]
     
   suffix :: Parser (Maybe ByteString)
@@ -29,8 +31,13 @@ module Language.C11.Parsing.Literals
       then Nothing
       else Just $ B.pack chars 
     
-  parseChar :: Parser (Term ChrLit)
-  parseChar = iChrLit <$> L.charLiteral
+  parseChar :: Parser (Const ChrLit)
+  parseChar = ChrLit <$> L.charLiteral
   
-  parseFloat :: Parser (Term FltLit)
-  parseFloat = iFltLit <$> L.float <*> pure 10 <*> suffix
+  parseFloat :: Parser (Const FltLit)
+  parseFloat = try $ FltLit <$> L.float <*> pure 10 <*> suffix
+  
+  parseLiteral :: Parser (Term Constant)
+  parseLiteral = choice [ injectConst <$> parseFloat
+                        , injectConst <$> parseInteger
+                        , injectConst <$> parseChar]

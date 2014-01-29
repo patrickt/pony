@@ -13,6 +13,7 @@ module Language.C11.Syntax.Literals
   -- * Reexported Lenses
   , name
   , base
+  , value
   -- * Isomorphisms
   , strLit
   , chrLit
