@@ -35,7 +35,7 @@ module Language.C11.Parsing.Literals
   parseChar = ChrLit <$> L.charLiteral
   
   parseFloat :: Parser (Const FltLit)
-  parseFloat = try $ FltLit <$> L.float <*> pure 10 <*> suffix
+  parseFloat = try $ FltLit <$> L.float <*> pure 10 <*> optional (oneOf "fd")
   
   parseLiteral :: Parser (Term Constant)
   parseLiteral = choice [ injectConst <$> parseFloat

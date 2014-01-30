@@ -1,6 +1,39 @@
 {-# OPTIONS_GHC -ddump-splices #-}
 
 module Language.C11.Syntax.Literals 
+<<<<<<< HEAD
+=======
+  ( 
+  -- * Data types
+    IntLit (..)
+  , FltLit (..)
+  , StrLit (..)
+  , ChrLit (..)
+  , Ident (..)
+  , Constant
+  , Literal
+  -- * Reexported Lenses
+  , name
+  , base
+  , value
+  -- * Prisms
+  , _IntLit
+  , _FltLit
+  , _ChrLit
+  , _StrLit
+  , _Ident
+  -- * Isomorphisms
+  , strLit
+  , chrLit
+  , ident
+  -- * Smart (injective) constructors
+  , iIntLit
+  , iFltLit
+  , iChrLit
+  , iStrLit
+  , iIdent
+  )
+>>>>>>> prisms
 
   where
   
