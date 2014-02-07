@@ -3,7 +3,7 @@
 module Language.C11.Syntax.Lens where
   
   import Language.Pony.Overture
-  import Control.Lens hiding (Context)
+  import Control.Lens hiding (Context, Const)
   import Data.Coproduct
   import StringTable.Atom
   
@@ -19,6 +19,11 @@ module Language.C11.Syntax.Lens where
   
   sumPrism :: (g :<: f) => Prism' (f a) (g a)
   sumPrism = prism' inj proj
+  
+  sumPrism' :: (Applicative f, Choice p, g :<: f1, g1 :<: f1) =>
+     p (g1 (Cxt h f1 a)) (f (g (Cxt h f1 a)))
+     -> p (Cxt h f1 a) (f (Cxt h f1 a))
+  sumPrism' = prism' inject project
   
   type FTerm = Cxt NoHole
   

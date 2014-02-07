@@ -17,11 +17,7 @@ module Language.C11.Syntax.Literals
   , base
   , value
   -- * Prisms
-  , _IntLit
-  , _FltLit
-  , _ChrLit
-  , _StrLit
-  , _Ident
+
   -- * Isomorphisms
   , strLit
   , chrLit
@@ -83,6 +79,3 @@ module Language.C11.Syntax.Literals
          , smartConstructors] [ ''Literal
                               , ''Ident
                               ]
-
-  
-

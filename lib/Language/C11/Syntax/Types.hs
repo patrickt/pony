@@ -2,7 +2,7 @@ module Language.C11.Syntax.Types where
   
   import Language.Pony.Overture
   
-  import Control.Lens
+  import Control.Lens hiding (Const)
   import Data.Comp.Derive
   import StringTable.Atom
   

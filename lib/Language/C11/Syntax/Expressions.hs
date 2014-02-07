@@ -8,7 +8,7 @@ module Language.C11.Syntax.Expressions where
   
   data Expr a where
     Unary    :: { _operation :: ByteString, _target :: a } -> Expr a
-    Binary   :: { _operation :: ByteString, _left :: a, _right :: a } -> Expr a
+    Binary   :: { _condition :: ByteString, _left :: a, _right :: a } -> Expr a
     Ternary  :: { _condition :: ByteString, _left :: a, _right :: a} -> Expr a
     Cast     :: { _left :: a, _right :: a} -> Expr a
     Index    :: { _left :: a, _right :: a } -> Expr a

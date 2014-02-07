@@ -19,7 +19,7 @@ module Language.Pony
   import Text.PrettyPrint.Free
   import Language.C99.QuasiQuote
   import System.Random
-  import Control.Lens
+  import Control.Lens hiding (noneOf, Const)
   import Language.C11.Syntax
   
   data PonyOptions = PonyOptions
