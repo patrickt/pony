@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Language.C11.Syntax.Constructs where
   
   import Language.Pony.Overture
@@ -10,8 +12,10 @@ module Language.C11.Syntax.Constructs where
   
   import Language.C11.Syntax.Lens
   
-  newtype Program a = Program { _programBody :: [a] }
-    deriving (Show, Eq)
+  newtype TranslationUnit a = TranslationUnit [a]
+    deriving (Show, Eq, Monoid, Default)
+    
+  makeWrapped ''TranslationUnit
   
   data ForwardDeclaration a = ForwardDeclaration { _forwardTarget :: a }
     deriving (Show, Eq)
@@ -32,17 +36,15 @@ module Language.C11.Syntax.Constructs where
          , makeTraversable
          , makePrisms
          , makeLenses
-         , smartConstructors] [ ''Program
+         , smartConstructors] [ ''TranslationUnit
                               , ''ForwardDeclaration
                               , ''Typedef
                               , ''Empty
                               , ''Attribute
                               ]
   
-  instance HasBody Program where body = programBody
   instance HasTarget ForwardDeclaration where target = forwardTarget
   
   instance TravName Typedef where nameT = typedefName
-  instance HasName Typedef where name = typedefName
   instance HasType Typedef where typ = typedefType
   

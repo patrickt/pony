@@ -26,7 +26,6 @@ module Language.C11.Syntax.Functions where
   
   instance HasType Function where typ = fReturning
   instance TravName Function where nameT = fName
-  instance HasName Function where name = fName
   instance HasArguments Function where arguments = fArguments
   instance HasBody Function where body = fAttributes
   

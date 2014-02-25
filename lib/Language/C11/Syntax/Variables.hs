@@ -6,12 +6,13 @@ module Language.C11.Syntax.Variables
   import Control.Lens
   import StringTable.Atom
   
+  import Language.C11.Syntax.Literals
   import Language.C11.Syntax.Lens
   
   data Variable a = Variable 
-    { _vType :: a
-    , _vName :: ByteString
-    , _vInitializer :: a 
+    { _variableType :: a
+    , _variableName :: Name
+    , _variableInitializer :: a 
     } deriving (Show, Eq)
   
   data Sized a = Sized 
@@ -27,8 +28,7 @@ module Language.C11.Syntax.Variables
          , smartConstructors] [ ''Variable
                               , ''Sized 
                               ]
-         
-  instance HasType Variable where typ = vType
-  instance TravName Variable where nameT = vName
-  instance HasName Variable where name = vName
+                              
+  instance HasName (Variable a) where name = variableName
+  instance HasType Variable where typ = variableType
   

@@ -6,7 +6,7 @@ module Testing.Examples where
   import Language.C11.Syntax
   import Data.Comp.Sum
   
-  -- nameGetter :: (HasName a, a :<: f) => Prism' (Term f) ByteString
+  -- nameGetter :: (HasOldName a, a :<: f) => Prism' (Term f) ByteString
   -- nameGetter = prism' (view name) project
   
   -- (Decl :+: CType :+: Function :+: Attribute :+: Ident)

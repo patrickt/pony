@@ -20,7 +20,6 @@ module Language.C11.Syntax.Types where
     
   makeLenses ''Composite
   instance TravName Composite where nameT = cName
-  instance HasName Composite where name = cName
   
   data Attributed a = Attributed 
     { _target :: a

@@ -12,9 +12,6 @@ module Language.C11.Syntax.Lens where
   
   class TravName f where
     nameT :: Traversal' (f a) ByteString
-  
-  class (TravName f) => HasName f where
-    name :: Lens' (f a) ByteString
     
   
   sumPrism :: (g :<: f) => Prism' (f a) (g a)
@@ -56,7 +53,4 @@ module Language.C11.Syntax.Lens where
     
   class HasValue f v | f -> v where
     value :: Lens' (f a) v
-    
-  class HasBase f where
-    base :: Lens' (f a) Int
   

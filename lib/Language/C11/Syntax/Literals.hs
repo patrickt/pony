@@ -1,35 +1,7 @@
 {-# OPTIONS_GHC -ddump-splices #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Language.C11.Syntax.Literals 
-<<<<<<< HEAD
-=======
-  ( 
-  -- * Data types
-    IntLit (..)
-  , FltLit (..)
-  , StrLit (..)
-  , ChrLit (..)
-  , Ident (..)
-  , Constant
-  , Literal
-  -- * Reexported Lenses
-  , name
-  , base
-  , value
-  -- * Prisms
-
-  -- * Isomorphisms
-  , strLit
-  , chrLit
-  , ident
-  -- * Smart (injective) constructors
-  , iIntLit
-  , iFltLit
-  , iChrLit
-  , iStrLit
-  , iIdent
-  )
->>>>>>> prisms
+module Language.C11.Syntax.Literals
 
   where
   
@@ -71,8 +43,6 @@ module Language.C11.Syntax.Literals
     
   newtype Ident a = Ident Name
     deriving (Show, Eq, Functor, Foldable, Traversable, Monoid, HasName, IsString, IsByteString)
-    
-  makeWrapped ''Ident
        
   derive [ makeShowF
          , makeEqF
