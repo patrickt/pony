@@ -1,18 +1,11 @@
-Hello. Welcome to Pony.
+Hi there. Pony is a source-to-source transpiler for C programs. It aims to be small, fast, elegant, extensible, and verifiable (to the greatest extent possible). 
 
-I wrote Pony in order to help make C programming suck less. Real-world C code, especially code written for embedded systems, usually focuses on irrelevances and minutae; with Pony's power to abstract over both the syntax and semantics of C, you can bring an end to boilerplate and irrelevant code. Pony's power goes even beyond automatically generating code; you can also transform your code arbitrarily, perhaps to implement garbage collection or dynamic dispatch. There's very little you can't do with Pony.
+It is TOTALLY alpha and is in the process of being entirely rewritten. Do not use it. But please check it out (specifically the experimental branch; master is very old).
 
 Installation
 ============
 
-Pony has been tested under GHC 7.0.3 on Mac OS 10.7. Theoretically, it should work on any POSIX platform. If you do not already have a working installation of GHC and Cabal, I recommend that you install the Haskell Platform. You'll also need [cabal-dev](https://github.com/creswick/cabal-dev), installable via cabal.
-
-To compile and run Pony, perform the following steps.
-
-    cabal-dev install-deps
-    cabal-dev install
-    
-To run the unit tests, please run the `./tests` shell script. To generate documentation, run `cabal-dev haddock`.
+Pony has been tested under GHC 7.6.3 on Mac OS 10.9. Theoretically, it should work on any POSIX platform. If you do not already have a working installation of GHC and Cabal, I recommend that you install the Haskell Platform and use Cabal sandboxing.
 
 There are six built-in transformations that you can play with. They are currently being translated to use Pony's new library mechanism.
 
@@ -23,17 +16,12 @@ There are six built-in transformations that you can play with. They are currentl
 * `SeparateDeclarations` - moves all variable declarations in a given function to the top of the function, as in old-style C.
 * `PreciseGC` - adds shadow-stack garbage collection. The provided example is somewhat of a work in progress and currently only works on the `examples/gc/dlist.pony.c` example.
 
-Please read the LICENSE file for the terms under which Pony is distributed, and please read the CREDITS file to read acknowledgments. 
+Pony is copyright (c) 2009, George Washington University. Please read the LICENSE file for the terms under which Pony is distributed, and please read the CREDITS file to read acknowledgments. 
 
 Miscellaneous Information
 =========================
 
 The module for parsing C (`Language.C99`) is so named in order to distinguish it in nomenclature from Benedikt Huber's `Language.C` module (which was an invaluable resource for Pony development).
-
-Debugging
-=========
-
-If you find a bug, please file it on the bug tracker. If you're having trouble triaging a bug, run `cabal-dev ghci` in the Pony root folder; it will load all of Pony's components into a ghci instance.
 
 --
 Patrick Thomson
