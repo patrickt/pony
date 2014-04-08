@@ -39,13 +39,18 @@ module Language.C11.Syntax.Literals
     | StrLit ByteString
     deriving (Show, Eq, Functor, Foldable, Traversable)
   
-  makePrisms ''Literal
+  derive [ makeShowF, makeEqF, makePrisms ] [ ''Literal ]
+  
+  iIntLit :: (Literal :<: f) => Integer -> Int -> Maybe ByteString -> Term f
+  iIntLit v b s = inject $ IntLit $ Numeric v b s
+  
+  iChrLit :: (Literal :<: f) => Char -> Term f
+  iChrLit = inject . ChrLit
+  
+  iFltLit :: (Literal :<: f) => Scientific -> Int -> Maybe ByteString -> Term f
+  iFltLit v b s = inject $ FltLit $ Numeric v b s
     
   newtype Ident a = Ident Name
     deriving (Show, Eq, Functor, Foldable, Traversable, Monoid, HasName, IsString, IsByteString)
        
-  derive [ makeShowF
-         , makeEqF
-         , smartConstructors] [ ''Literal
-                              , ''Ident
-                              ]
+  smartConstructors ''Ident
