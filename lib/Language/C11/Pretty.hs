@@ -6,6 +6,7 @@ module Language.C11.Pretty where
   import Control.Lens hiding (para)
   import Data.Comp.Ops
   import Data.Foldable
+  import Data.Scientific
   import Data.Traversable hiding (size)
   import StringTable.Atom
   import Language.Pony.Overture
@@ -13,12 +14,13 @@ module Language.C11.Pretty where
   import Text.PrettyPrint.Free hiding ((<>))
   import Debug.Trace
   import Data.Coproduct hiding (size)
+  import qualified Numeric.Lens as N
   
   class (Functor f) => PrettyAlg f where
-    prettyA :: Alg f (Doc e) -- this is actually f (Doc e) -> Doc e
+    prettyA :: Alg f (Doc e)
     
   class (Functor f) => PrettyRAlg f where
-    prettyR :: RAlg f (Doc e) -- this is actually f (Term f, Doc e) -> Doc e
+    prettyR :: RAlg f (Doc e)
   
   instance PrettyAlg f => PrettyRAlg f where
     prettyR = prettyA . fmap snd
@@ -27,7 +29,26 @@ module Language.C11.Pretty where
     pretty = para prettyR
   
   instance (Pretty (f a), Pretty (g a)) => Pretty ((f :+: g) a) where
-    pretty = caseF pretty pretty 
+    pretty = caseF pretty pretty
+  
+  instance Pretty Scientific where
+    pretty s = pretty $ formatScientific Fixed Nothing s 
+    
+  instance PrettyAlg Literal where
+    prettyA (IntLit i) = mconcat [prefix, pretty (i ^. number . intoBase), pretty (i ^. suffix)] where
+      intoBase = re $ N.base (i ^. base)
+      prefix = case (i ^. base) of
+        10 -> mempty
+        16 -> "0x"
+        8 -> "0"
+        2 -> "0b"
+        _ -> mempty -- TODO: error checking here
+    -- TODO: print hexadecimal floats properly
+    prettyA (FltLit f) = pretty (f ^. number) <> pretty (f ^. suffix)
+    prettyA (ChrLit c)  = squotes $ pretty c
+    prettyA (StrLit s)  = dquotes $ pretty s
+  
+  {-
   
   instance Pretty Atom where
     pretty = pretty . (fromAtom :: Atom -> ByteString)
@@ -86,3 +107,4 @@ module Language.C11.Pretty where
     prettyA e@(Call {})    = e^.target <> tupled (e^.arguments)
     prettyA (Paren t)      = parens t
     prettyA a              = fold a
+  -}
