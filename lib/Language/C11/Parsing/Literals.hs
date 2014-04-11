@@ -26,6 +26,7 @@ module Language.C11.Parsing.Literals
   parseChar :: Parser (Term Literal)
   parseChar = iChrLit <$> L.charLiteral
   
+  -- parseFloat is buggy as heck: reading 1.1f fails in Prelude.read
   parseFloat :: Parser (Term Literal)
   parseFloat = try $ iFltLit <$> L.float <*> pure 10 <*> parseSuffix
   

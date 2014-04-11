@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -ddump-splices #-}
-{-# LANGUAGE UndecidableInstances, TupleSections #-}
+{-# LANGUAGE UndecidableInstances, TupleSections, OverloadedStrings #-}
 
 module Language.C11.Pretty where
   
@@ -8,10 +8,13 @@ module Language.C11.Pretty where
   import Data.Foldable
   import Data.Scientific
   import Data.Traversable hiding (size)
+  import Data.Scientific
   import StringTable.Atom
   import Language.Pony.Overture
   import Language.C11.Syntax
+  import Data.String
   import Text.PrettyPrint.Free hiding ((<>))
+  import qualified Numeric.Lens as NL
   import Debug.Trace
   import Data.Coproduct hiding (size)
   import qualified Numeric.Lens as N
@@ -31,29 +34,26 @@ module Language.C11.Pretty where
   instance (Pretty (f a), Pretty (g a)) => Pretty ((f :+: g) a) where
     pretty = caseF pretty pretty
   
-  instance Pretty Scientific where
-    pretty s = pretty $ formatScientific Fixed Nothing s 
-    
+  instance Pretty Scientific where 
+    pretty = pretty . formatScientific Fixed Nothing
+  
+  instance Pretty (Numeric Integer) where
+    pretty i = mconcat [pref, asBase, suff] where
+      b      = i ^. base
+      suff   = views suffix pretty i
+      asBase = views inBase pretty i
+      inBase = number . re (NL.base b)
+      pref = case b of; 16 -> "0x"; 10 -> ""; 8 -> "0"
+  
   instance PrettyAlg Literal where
-    prettyA (IntLit i) = mconcat [prefix, pretty (i ^. number . intoBase), pretty (i ^. suffix)] where
-      intoBase = re $ N.base (i ^. base)
-      prefix = case (i ^. base) of
-        10 -> mempty
-        16 -> "0x"
-        8 -> "0"
-        2 -> "0b"
-        _ -> mempty -- TODO: error checking here
-    -- TODO: print hexadecimal floats properly
-    prettyA (FltLit f) = pretty (f ^. number) <> pretty (f ^. suffix)
-    prettyA (ChrLit c)  = squotes $ pretty c
-    prettyA (StrLit s)  = dquotes $ pretty s
+    prettyA (StrLit s) = dquotes $ pretty s
+    prettyA (ChrLit c) = pretty $ show c
+    prettyA (IntLit i) = pretty i
+    prettyA (FltLit f) = (views number pretty f) <> (views suffix pretty f)
+    
+  
   
   {-
-  
-  instance Pretty Atom where
-    pretty = pretty . (fromAtom :: Atom -> ByteString)
-  
-  -- TODO: print bases and suffixes properly
   instance PrettyAlg IntLit where prettyA (IntLit { .. }) = pretty _intValue
   instance PrettyAlg FltLit where prettyA (FltLit { .. }) = text $ show _fltValue
   
@@ -107,4 +107,4 @@ module Language.C11.Pretty where
     prettyA e@(Call {})    = e^.target <> tupled (e^.arguments)
     prettyA (Paren t)      = parens t
     prettyA a              = fold a
-  -}
+-}
