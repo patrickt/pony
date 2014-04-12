@@ -19,7 +19,7 @@ module Language.C11.Syntax.Types where
     } deriving (Show, Eq)
     
   makeLenses ''Composite
-  instance TravName Composite where nameT = cName
+  instance CanName Composite where nameT = cName
   
   data Attributed a = Attributed 
     { _target :: a

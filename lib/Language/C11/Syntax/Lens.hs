@@ -1,16 +1,28 @@
 {-# LANGUAGE KindSignatures #-}
 
-module Language.C11.Syntax.Lens where
+module Language.C11.Syntax.Lens 
+  ( HasType (..)
+  , HasName (..)
+  , CanName (..)
+  , HasArguments (..)
+  , HasBody (..)
+  , HasTarget (..)
+  , HasValue (..)
+  , module Language.C11.Syntax.Names
+  ) where
   
   import Language.Pony.Overture
   import Control.Lens hiding (Context, Const)
   import Data.Coproduct
   import StringTable.Atom
+  import Language.C11.Syntax.Names
   
   class HasType f where
     typ :: Lens' (f a) a
+   
+  makeClassy ''Name
   
-  class TravName f where
+  class CanName f where
     nameT :: Traversal' (f a) ByteString
     
   
@@ -40,7 +52,7 @@ module Language.C11.Syntax.Lens where
   -- toEither :: (f :+: g) a -> Either (g a) (f a)
   -- toEither = caseF Left Right
   
-  -- liftSum ''TravName
+  -- liftSum ''CanName
   
   class HasArguments f where
     arguments :: Lens' (f a) [a]

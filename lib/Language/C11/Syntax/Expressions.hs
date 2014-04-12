@@ -5,11 +5,12 @@ module Language.C11.Syntax.Expressions where
   import Control.Lens.TH
   import Data.Comp.Derive
   import Language.C11.Syntax.Lens
+  import Language.C11.Syntax.Operators
   
   data Expr a where
-    Unary    :: { _operation :: ByteString, _target :: a } -> Expr a
-    Binary   :: { _condition :: ByteString, _left :: a, _right :: a } -> Expr a
-    Ternary  :: { _condition :: ByteString, _left :: a, _right :: a} -> Expr a
+    Unary    :: { _operation :: a, _target :: a } -> Expr a
+    Binary   :: { _operation :: a, _left :: a, _right :: a } -> Expr a
+    Ternary  :: { _condition :: a, _left :: a, _right :: a} -> Expr a
     Cast     :: { _left :: a, _right :: a} -> Expr a
     Index    :: { _left :: a, _right :: a } -> Expr a
     Call     :: { _target :: a, _arguments :: [a] } -> Expr a

@@ -9,7 +9,7 @@ module Testing.QuickCheck.Constants
   import Test.Framework.Providers.QuickCheck2 (testProperty)
   import Test.Framework.TH
   import Test.QuickCheck
-  import Language.Pony
+  import Language.Pony hiding (elements)
   import Data.Default
   import Data.ByteString.Char8 (pack)
   import Text.PrettyPrint.Free hiding ((<>))
@@ -17,7 +17,7 @@ module Testing.QuickCheck.Constants
   bshow :: (Show a) => a -> ByteString
   bshow = pack . show
   
-    
+  
   roundTrip :: ByteString -> Bool
   roundTrip code = case runParser constantExpression def "test data" code of
     (Left x) -> error $ show x
@@ -28,7 +28,7 @@ module Testing.QuickCheck.Constants
     
   prop_decimal_integers :: Integer -> Bool
   prop_decimal_integers = roundTrip . bshow
-  -- 
+  
   prop_floating_point :: Double -> Bool
   prop_floating_point = roundTrip . bshow
   

@@ -17,5 +17,5 @@ module Language.Pony.Overture
   
   (≠) :: (Eq a) => a -> a -> Bool
   (≠) = (/=)
-
+  infixl 1 <$$>
   a <$$> b = (flip a) <$> b

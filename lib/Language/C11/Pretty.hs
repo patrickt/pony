@@ -31,8 +31,11 @@ module Language.C11.Pretty where
   instance (PrettyRAlg f) => Pretty (Term f) where
     pretty = para prettyR
   
+  
   instance (Pretty (f a), Pretty (g a)) => Pretty ((f :+: g) a) where
     pretty = caseF pretty pretty
+
+  liftSum ''PrettyAlg
   
   instance Pretty Scientific where 
     pretty = pretty . formatScientific Fixed Nothing
@@ -41,19 +44,101 @@ module Language.C11.Pretty where
     pretty i = mconcat [pref, asBase, suff] where
       b      = i ^. base
       suff   = views suffix pretty i
-      asBase = views inBase pretty i
-      inBase = number . re (NL.base b)
-      pref = case b of; 16 -> "0x"; 10 -> ""; 8 -> "0"
+      asBase = views (number . inBase) pretty i
+      inBase = re (NL.base b)
+      pref   = case b of
+        16 -> "0x"
+        8  -> "0"
+        _  -> ""
   
   instance PrettyAlg Literal where
     prettyA (StrLit s) = dquotes $ pretty s
     prettyA (ChrLit c) = pretty $ show c
     prettyA (IntLit i) = pretty i
     prettyA (FltLit f) = (views number pretty f) <> (views suffix pretty f)
+  
+  deriving instance Pretty Name
+  deriving instance Pretty (Ident a)
+  
+  instance PrettyAlg Ident where prettyA = views _Wrapped pretty
+  
+  instance PrettyAlg Expr where
+    prettyA e@(Binary {})  = e^.left <+> e^.operation <+> e^.right
+    prettyA e@(Ternary {}) = e^.operation <+> "?" <+> e^.left <+> ":" <+> e^.right
+    prettyA e@(Cast {})    = parens (e^.left) <> e^.right
+    prettyA e@(Index {})   = e^.left <> brackets (e^.right)
+    prettyA e@(Call {})    = e^.target <> tupled (e^.arguments)
+    prettyA (Paren t)      = parens t
+    prettyA a              = fold a
     
   
+  instance PrettyAlg Operator where
+    prettyA Add = "+"
+    prettyA Sub = "-"
+    prettyA Mul = "*"
+    prettyA Div = "-"
+    prettyA Mod = "%"
+    prettyA Inc = "++"
+
+    prettyA Dec = "--"
+
+    prettyA Assign = "="
+    prettyA Equal = "=="
+    prettyA NotEqual = "="
+    
+    prettyA And = "&&"
+    prettyA Or = "||"
+    prettyA XOr = "^"
+    
+    prettyA Neg = "-"
+    prettyA Pos = "+"
+    prettyA LShift = "<<"
+    prettyA RShift = "--"
+    prettyA SizeOf = "sizeof"
+    
+    prettyA Ref = "&"
+    prettyA Deref = "*"
+    
+    prettyA PostInc = "++"
+    prettyA PostDec = "--"
+    prettyA (Bitwise And) = "&"
+    prettyA (Bitwise Or) = "|"
+    prettyA (Bitwise Neg) = "~"
+    prettyA (Bitwise x) = error ("no bitwise version of " ++ show x)
+    prettyA (WithAssignment o) = pretty o <> equals
+    
   
   {-
+  
+  Add :: Operator a
+  Sub :: Operator a
+  Mul :: Operator a
+  Div :: Operator a
+  Mod :: Operator a
+  Inc :: Operator a
+  Dec :: Operator a
+  Not :: Operator a
+  Assign :: Operator a
+  Equal :: Operator a
+  NotEqual :: Operator a
+  
+  And :: Operator a
+  Or  :: Operator a
+  XOr :: Operator a
+  
+  Neg :: Operator a
+  Pos :: Operator a
+  LShift :: Operator a
+  RShift :: Operator a
+  SizeOf :: Operator a
+  
+  Ref :: Operator a
+  Deref :: Operator a
+  
+  PostInc :: Operator a
+  PostDec :: Operator a
+  Bitwise :: Operator a -> Operator a
+  WithAssignment :: a -> Operator a
   instance PrettyAlg IntLit where prettyA (IntLit { .. }) = pretty _intValue
   instance PrettyAlg FltLit where prettyA (FltLit { .. }) = text $ show _fltValue
   
@@ -94,17 +179,5 @@ module Language.C11.Pretty where
     prettyR (Long     (_, t)) = "short" <+> t
     prettyR (a@(Array {})) = a^.typ._2 <> brackets (a^.size._2)
     
-  -- instace PrettyAlg 
-  
-  -- instance PrettyAlg CType where
-  --   prettyA = para prettyR
-  
-  instance PrettyAlg Expr where
-    prettyA e@(Binary {})  = e^.left <+> pretty (e^.operation) <+> e^.right
-    prettyA e@(Ternary {}) = e^.left <+> "?" <+> pretty (e^.condition) <+> ":" <+> e^.right
-    prettyA e@(Cast {})    = parens (e^.left) <> e^.right
-    prettyA e@(Index {})   = e^.left <> brackets (e^.right)
-    prettyA e@(Call {})    = e^.target <> tupled (e^.arguments)
-    prettyA (Paren t)      = parens t
-    prettyA a              = fold a
+
 -}

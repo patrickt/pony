@@ -20,7 +20,7 @@ module Language.C11.Syntax.Constructs where
   data ForwardDeclaration a = ForwardDeclaration { _forwardTarget :: a }
     deriving (Show, Eq)
     
-  data Typedef a = Typedef { _typedefType :: a, _typedefName :: ByteString }
+  data Typedef a = Typedef { _typedefType :: a, _typedefName :: Name }
     deriving (Show, Eq)
   
   data Attribute a where 
@@ -45,6 +45,6 @@ module Language.C11.Syntax.Constructs where
   
   instance HasTarget ForwardDeclaration where target = forwardTarget
   
-  instance TravName Typedef where nameT = typedefName
+  instance HasName (Typedef a) where name = typedefName
   instance HasType Typedef where typ = typedefType
   

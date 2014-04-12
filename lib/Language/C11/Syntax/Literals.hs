@@ -2,6 +2,15 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Language.C11.Syntax.Literals
+  ( Numeric (..)
+  , number, base, suffix
+  , Name (..), HasName (..)
+  , Literal (..)
+  , iIntLit, iChrLit, iFltLit, iStrLit
+  , _IntLit, _FltLit, _ChrLit, _StrLit
+  , Ident (..)
+  , iIdent
+  )
 
   where
   
@@ -27,11 +36,6 @@ module Language.C11.Syntax.Literals
     
   makeLenses ''Numeric
   
-  newtype Name = Name ByteString
-    deriving (Show, Eq, Monoid, IsString, IsByteString)
-  
-  derive [ makeClassy, makeWrapped ] [''Name]
-  
   data Literal a 
     = IntLit (Numeric Integer)
     | FltLit (Numeric Scientific)
@@ -49,8 +53,11 @@ module Language.C11.Syntax.Literals
   
   iFltLit :: (Literal :<: f) => Scientific -> Int -> Maybe ByteString -> Term f
   iFltLit v b s = inject $ FltLit $ Numeric v b s
-    
+  
+  iStrLit :: (Literal :<: f) => ByteString -> Term f
+  iStrLit = inject . StrLit
+  
   newtype Ident a = Ident Name
     deriving (Show, Eq, Functor, Foldable, Traversable, Monoid, HasName, IsString, IsByteString)
-       
-  smartConstructors ''Ident
+  
+  derive [ makeShowF, makeEqF, makeWrapped, smartConstructors] [''Ident]

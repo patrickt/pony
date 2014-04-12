@@ -3,39 +3,43 @@ module Language.C11.Syntax.Operators where
   import Data.Comp.Derive
   import Data.Comp.Show
   
-  data COperator a where -- TODO: so many name collisions about this
-    Add :: COperator a
-    Sub :: COperator a
-    Mul :: COperator a
-    Div :: COperator a
-    Mod :: COperator a
-    Inc :: COperator a
-    Dec :: COperator a
-    Not :: COperator a
-    Assign :: COperator a
-    Equal :: COperator a
-    NotEqual :: COperator a
+  data Operator a where -- TODO: so many name collisions about this
+    Add :: Operator a
+    Sub :: Operator a
+    Mul :: Operator a
+    Div :: Operator a
+    Mod :: Operator a
+    Inc :: Operator a
+    Dec :: Operator a
+    Not :: Operator a
+    Assign :: Operator a
+    Equal :: Operator a
+    NotEqual :: Operator a
     
-    And :: COperator a
-    Or  :: COperator a
-    XOr :: COperator a
+    And :: Operator a
+    Or  :: Operator a
+    XOr :: Operator a
     
-    Negate :: COperator a
-    LShift :: COperator a
-    RShift :: COperator a
-    SizeOf :: COperator a
+    Neg :: Operator a
+    Pos :: Operator a
+    LShift :: Operator a
+    RShift :: Operator a
+    SizeOf :: Operator a
     
-    PostInc :: COperator a
-    PostDec :: COperator a
-    Bitwise :: a -> COperator a
-    WithAssignment :: a -> COperator a
+    Ref :: Operator a
+    Deref :: Operator a
     
-  deriving instance (Show a) => Show (COperator a)
-  deriving instance (Eq a) => Eq (COperator a)
+    PostInc :: Operator a
+    PostDec :: Operator a
+    Bitwise :: Operator a -> Operator a
+    WithAssignment :: a -> Operator a
+    
+  deriving instance (Show a) => Show (Operator a)
+  deriving instance (Eq a) => Eq (Operator a)
 
   derive [ makeShowF
          , makeEqF
          , makeFunctor
          , makeFoldable
          , makeTraversable
-         , smartConstructors] [''COperator]
+         , smartConstructors] [''Operator]
