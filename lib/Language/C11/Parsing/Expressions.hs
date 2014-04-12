@@ -16,9 +16,8 @@ module Language.C11.Parsing.Expressions
   import qualified Language.C99.Lexer as L 
   import Control.Lens
   
+  -- can we use that new GHC extension to write a synonym for (Functor f, Foo :<: f, Bar :<: f) => f ?
   type ExpressionSig = Literal :+: Ident :+: Expr :+: Operator
-  
-  
   
   parseIdent :: Parser (Term Ident)
   parseIdent = iIdent <$> Name <$> pack <$> L.identifier
@@ -76,3 +75,6 @@ module Language.C11.Parsing.Expressions
     
   prefixExpression :: Parser (Term ExpressionSig)
   prefixExpression = foldl (<<<) id <$> many prefixExpressionBuilder <*> postfixExpression
+  
+  constantExpression :: Parser (Term ExpressionSig)
+  constantExpression = E.buildExpressionParser table prefixExpression

@@ -32,7 +32,7 @@ module Language.C11.Syntax.Operators where
     PostInc :: Operator a
     PostDec :: Operator a
     Bitwise :: Operator a -> Operator a
-    WithAssignment :: a -> Operator a
+    WithAssignment :: Operator a -> Operator a
     
   deriving instance (Show a) => Show (Operator a)
   deriving instance (Eq a) => Eq (Operator a)
